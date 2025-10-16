@@ -57,8 +57,6 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
 
   const login = useCallback(async (email: string, password: string): Promise<boolean> => {
     try {
-      console.log('Login attempt:', email);
-      
       if (email === 'dispatcher@gmi.com') {
         const mockUser: User = {
           id: 'disp-1',
@@ -70,7 +68,6 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
         };
         await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(mockUser));
         setUser(mockUser);
-        console.log('Login successful:', mockUser.role);
         return true;
       }
       
@@ -86,11 +83,9 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
         };
         await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(mockUser));
         setUser(mockUser);
-        console.log('Login successful:', mockUser.role, mockUser.name);
         return true;
       }
       
-      console.log('Login failed: User not found');
       return false;
     } catch (error) {
       console.error('Login failed:', error);
@@ -100,8 +95,6 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
 
   const loginWithQR = useCallback(async (qrToken: string): Promise<boolean> => {
     try {
-      console.log('QR Login attempt with token');
-      
       if (qrToken.startsWith('DISPATCHER-')) {
         const dispatcherSettingsStored = await AsyncStorage.getItem('@gmi_dispatcher_settings');
         if (dispatcherSettingsStored) {
@@ -118,7 +111,6 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
               };
               await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(mockUser));
               setUser(mockUser);
-              console.log('QR Login successful: Dispatcher');
               return true;
             }
           } catch (e) {
@@ -139,11 +131,9 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
         };
         await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(mockUser));
         setUser(mockUser);
-        console.log('QR Login successful:', mockUser.name);
         return true;
       }
       
-      console.log('QR Login failed: Invalid or inactive user');
       return false;
     } catch (error) {
       console.error('QR Login failed:', error);
@@ -155,7 +145,6 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
     try {
       await AsyncStorage.removeItem(STORAGE_KEY);
       setUser(null);
-      console.log('Logout successful');
     } catch (error) {
       console.error('Logout failed:', error);
     }

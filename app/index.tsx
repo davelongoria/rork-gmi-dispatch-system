@@ -56,7 +56,6 @@ export default function LoginScreen() {
   };
 
   const handleQRCodeScanned = async (data: string) => {
-    console.log('QR Code scanned:', data);
     setIsLoading(true);
     const success = await loginWithQR(data);
     setIsLoading(false);

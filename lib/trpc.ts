@@ -21,13 +21,11 @@ const getBaseUrl = (): string => {
   try {
     const envUrl = process.env.EXPO_PUBLIC_TOOLKIT_URL || (Constants as any)?.expoConfig?.extra?.EXPO_PUBLIC_TOOLKIT_URL;
     if (envUrl && typeof envUrl === "string" && envUrl.startsWith("http")) {
-      console.log("Backend URL from env:", envUrl);
       return normalize(envUrl);
     }
 
     if (Platform.OS === "web" && typeof window !== "undefined") {
       const origin = window.location.origin;
-      console.warn("Backend URL fallback to window.origin:", origin);
       return normalize(origin);
     }
 
@@ -36,7 +34,6 @@ const getBaseUrl = (): string => {
       const host = hostUri.split("/")[0];
       const protocol = pickProtocol(host);
       const inferred = `${protocol}${host}`;
-      console.warn("Backend URL inferred from expoGoConfig.hostUri:", inferred);
       return normalize(inferred);
     }
   } catch (e) {
@@ -49,7 +46,6 @@ const getBaseUrl = (): string => {
 };
 
 const apiUrl = `${getBaseUrl()}/api/trpc`;
-console.log("tRPC base URL:", apiUrl);
 
 export const trpcClient = trpc.createClient({
   links: [
@@ -57,7 +53,6 @@ export const trpcClient = trpc.createClient({
       url: apiUrl,
       transformer: superjson,
       fetch: async (url, options) => {
-        console.log("tRPC fetch to:", url);
         try {
           const controller = new AbortController();
           const timeoutId = setTimeout(() => controller.abort(), 10000);
@@ -68,7 +63,6 @@ export const trpcClient = trpc.createClient({
           });
 
           clearTimeout(timeoutId);
-          console.log("tRPC response status:", response.status);
 
           if (!response.ok) {
             const text = await response.text();
@@ -78,7 +72,7 @@ export const trpcClient = trpc.createClient({
           return response;
         } catch (err: any) {
           if (err?.name === 'AbortError') {
-            console.error("tRPC request timeout after 10s");
+            console.error("Request timeout after 10s");
             throw new Error('Request timeout');
           }
           console.error("tRPC fetch error:", err?.message || err);

@@ -5,13 +5,11 @@ import { mkdirSync } from 'fs';
 const dataDir = join(process.cwd(), 'data');
 try {
   mkdirSync(dataDir, { recursive: true });
-  console.log('Data directory created/verified:', dataDir);
 } catch (err) {
   console.error('Error creating data directory:', err);
 }
 
 const dbPath = join(dataDir, 'app.db');
-console.log('Database path:', dbPath);
 
 export const db = new Database(dbPath);
 
@@ -305,7 +303,5 @@ db.exec(`
   CREATE INDEX IF NOT EXISTS idx_messages_toUserId ON messages(toUserId);
   CREATE INDEX IF NOT EXISTS idx_messages_fromUserId ON messages(fromUserId);
 `);
-
-console.log('Database initialized successfully');
 
 export default db;

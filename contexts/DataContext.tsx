@@ -74,16 +74,6 @@ export const [DataProvider, useData] = createContextHook(() => {
 
   useEffect(() => {
     if (getAllQuery.data && !getAllQuery.isLoading && !getAllQuery.isFetching) {
-      console.log('📥 Received data from backend, updating local state');
-      console.log('Backend data counts:', {
-        drivers: getAllQuery.data.drivers?.length || 0,
-        trucks: getAllQuery.data.trucks?.length || 0,
-        customers: getAllQuery.data.customers?.length || 0,
-        yards: getAllQuery.data.yards?.length || 0,
-        dumpSites: getAllQuery.data.dumpSites?.length || 0,
-        jobs: getAllQuery.data.jobs?.length || 0,
-        routes: getAllQuery.data.routes?.length || 0,
-      });
       updateFromBackend(getAllQuery.data);
     }
   }, [getAllQuery.data, getAllQuery.isLoading, getAllQuery.isFetching]);
@@ -127,8 +117,6 @@ export const [DataProvider, useData] = createContextHook(() => {
       AsyncStorage.setItem(STORAGE_KEYS.RECURRING_JOBS, JSON.stringify(data.recurringJobs || [])),
       AsyncStorage.setItem(STORAGE_KEYS.LAST_SYNC, new Date().toISOString()),
     ]);
-
-    console.log('✅ Data synced with backend successfully at', new Date().toLocaleTimeString());
   };
 
   const loadLocalData = async () => {
@@ -351,7 +339,7 @@ export const [DataProvider, useData] = createContextHook(() => {
         }
       }
 
-      console.log('Local data loaded');
+  
     } catch (error) {
       console.error('Failed to load local data:', error);
     } finally {
@@ -363,11 +351,9 @@ export const [DataProvider, useData] = createContextHook(() => {
   const syncToBackend = useCallback(async (data: any) => {
     try {
       setIsSyncing(true);
-      console.log('📤 Syncing to backend:', Object.keys(data));
       await syncMutation.mutateAsync(data);
-      console.log('✅ Data synced to backend successfully');
     } catch (error: any) {
-      console.error('❌ Failed to sync to backend:', error?.message || error);
+      console.error('Failed to sync to backend:', error?.message || error);
     } finally {
       setIsSyncing(false);
     }
@@ -591,15 +577,12 @@ export const [DataProvider, useData] = createContextHook(() => {
 
   const forceRefreshFromBackend = useCallback(async () => {
     try {
-      console.log('Force refreshing from backend...');
       const result = await getAllQuery.refetch();
       if (result.isError) {
-        console.error('❌ Force refresh failed:', result.error);
-      } else {
-        console.log('✅ Force refresh completed successfully');
+        console.error('Force refresh failed:', result.error);
       }
     } catch (error: any) {
-      console.error('❌ Force refresh error:', error?.message || error);
+      console.error('Force refresh error:', error?.message || error);
     }
   }, [getAllQuery]);
 

@@ -42,17 +42,14 @@ function AppContent() {
 
   useEffect(() => {
     const timeout = setTimeout(() => {
-      console.warn('Force rendering app after 3s timeout');
-
       setIsReady(true);
-      SplashScreen.hideAsync().catch(err => console.error('Error hiding splash:', err));
+      SplashScreen.hideAsync().catch(() => {});
     }, 3000);
 
     if (!authLoading && !dataLoading) {
-      console.log('App ready, hiding splash screen');
       clearTimeout(timeout);
       setIsReady(true);
-      SplashScreen.hideAsync().catch(err => console.error('Error hiding splash:', err));
+      SplashScreen.hideAsync().catch(() => {});
     }
 
     return () => clearTimeout(timeout);

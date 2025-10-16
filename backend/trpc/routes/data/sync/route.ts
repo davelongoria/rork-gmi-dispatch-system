@@ -23,8 +23,6 @@ export const syncDataProcedure = publicProcedure
     recurringJobs: z.array(z.any()).optional(),
   }))
   .mutation(async ({ input }) => {
-    console.log('Sync mutation called with keys:', Object.keys(input));
-    
     try {
       const now = new Date().toISOString();
 
@@ -308,7 +306,6 @@ export const syncDataProcedure = publicProcedure
       }
     }
 
-      console.log('Sync completed successfully');
       return { success: true };
     } catch (error: any) {
       console.error('Sync error:', error);
