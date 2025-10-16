@@ -42,7 +42,7 @@ function AppContent() {
     const timer = setTimeout(() => {
       setIsReady(true);
       SplashScreen.hideAsync().catch(() => {});
-    }, 500);
+    }, 100);
 
     return () => clearTimeout(timer);
   }, []);

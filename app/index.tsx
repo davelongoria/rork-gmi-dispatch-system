@@ -67,10 +67,11 @@ export default function LoginScreen() {
     }
   };
 
-  if (!auth || auth.isLoading) {
+  if (!auth) {
     return (
       <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color={Colors.primary} />
+        <Text style={styles.loadingText}>Loading...</Text>
       </View>
     );
   }

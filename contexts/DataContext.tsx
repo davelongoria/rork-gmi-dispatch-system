@@ -130,7 +130,7 @@ export const [DataProvider, useData] = createContextHook(() => {
     const timeout = setTimeout(() => {
       console.warn('Data loading timeout, continuing anyway');
       setIsLoading(false);
-    }, 1000);
+    }, 400);
 
     try {
       const [
