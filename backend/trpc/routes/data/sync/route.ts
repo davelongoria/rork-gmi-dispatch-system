@@ -1,6 +1,6 @@
-import { publicProcedure } from "../../../create-context";
+import { publicProcedure } from "@/backend/trpc/create-context";
 import { z } from "zod";
-import db from "../../../db/index";
+import { db } from "@/backend/db";
 
 export const syncDataProcedure = publicProcedure
   .input(z.object({

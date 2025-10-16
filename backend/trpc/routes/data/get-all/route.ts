@@ -1,5 +1,5 @@
-import { publicProcedure } from "../../../create-context";
-import db from "../../../db/index";
+import { publicProcedure } from "@/backend/trpc/create-context";
+import { db } from "@/backend/db";
 
 export const getAllDataProcedure = publicProcedure.query(() => {
   const drivers = db.prepare('SELECT * FROM drivers').all();
