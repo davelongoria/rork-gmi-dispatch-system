@@ -57,10 +57,10 @@ export const [DataProvider, useData] = createContextHook(() => {
   const [isSyncing, setIsSyncing] = useState<boolean>(false);
 
   const getAllQuery = trpc.data.getAll.useQuery(undefined, {
-    refetchInterval: 10000,
-    refetchOnWindowFocus: true,
+    refetchInterval: 300000,
+    refetchOnWindowFocus: false,
     retry: 3,
-    staleTime: 5000,
+    staleTime: 240000,
   });
   const syncMutation = trpc.data.sync.useMutation();
 
