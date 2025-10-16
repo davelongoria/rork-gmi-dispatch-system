@@ -349,7 +349,7 @@ export default function SyncDataScreen() {
         <View style={styles.noteCard}>
           <RefreshCw color={Colors.primary} size={20} />
           <Text style={styles.noteText}>
-            After the initial upload, all devices will automatically sync every 10 seconds. You only need to use this screen once to migrate your data.
+            After the initial upload, all devices will automatically sync every 5 minutes. You only need to use this screen once to migrate your data.
           </Text>
         </View>
       </ScrollView>
