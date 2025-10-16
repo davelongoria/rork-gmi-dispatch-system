@@ -6,15 +6,15 @@ import superjson from "superjson";
 export const trpc = createTRPCReact<AppRouter>();
 
 const getBaseUrl = () => {
-  const baseUrl = process.env.EXPO_PUBLIC_RORK_API_BASE_URL;
-  console.log('EXPO_PUBLIC_RORK_API_BASE_URL:', baseUrl);
+  const baseUrl = process.env.EXPO_PUBLIC_TOOLKIT_URL;
+  console.log('Backend URL:', baseUrl);
   
   if (baseUrl) {
     return baseUrl;
   }
 
   throw new Error(
-    "No base url found, please set EXPO_PUBLIC_RORK_API_BASE_URL. Current env: " + JSON.stringify(process.env)
+    "No backend URL found. Make sure backend is enabled in your Rork project."
   );
 };
 
