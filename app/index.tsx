@@ -27,27 +27,27 @@ export default function LoginScreen() {
   const [showQRScanner, setShowQRScanner] = useState<boolean>(true);
   const [logoLoaded, setLogoLoaded] = useState<boolean>(false);
   const [permission, requestPermission] = useCameraPermissions();
-  const { login, loginWithQR, isAuthenticated, isDispatcher, isDriver, isLoading: authLoading } = useAuth();
+  const auth = useAuth();
   const router = useRouter();
 
   useEffect(() => {
-    if (isAuthenticated && !authLoading) {
-      if (isDispatcher) {
+    if (auth && auth.isAuthenticated && !auth.isLoading) {
+      if (auth.isDispatcher) {
         router.replace('/dispatcher' as any);
-      } else if (isDriver) {
+      } else if (auth.isDriver) {
         router.replace('/driver' as any);
       }
     }
-  }, [isAuthenticated, isDispatcher, isDriver, authLoading, router]);
+  }, [auth, router]);
 
   const handleLogin = async () => {
-    if (!email || !password) {
+    if (!auth || !email || !password) {
       Alert.alert('Error', 'Please enter email and password');
       return;
     }
 
     setIsLoading(true);
-    const success = await login(email, password);
+    const success = await auth.login(email, password);
     setIsLoading(false);
 
     if (!success) {
@@ -56,8 +56,10 @@ export default function LoginScreen() {
   };
 
   const handleQRCodeScanned = async (data: string) => {
+    if (!auth) return;
+    
     setIsLoading(true);
-    const success = await loginWithQR(data);
+    const success = await auth.loginWithQR(data);
     setIsLoading(false);
 
     if (!success) {
@@ -65,7 +67,7 @@ export default function LoginScreen() {
     }
   };
 
-  if (authLoading) {
+  if (!auth || auth.isLoading) {
     return (
       <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color={Colors.primary} />
@@ -252,6 +254,12 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: Colors.background,
+    gap: 16,
+  },
+  loadingText: {
+    fontSize: 16,
+    color: Colors.text,
+    marginTop: 8,
   },
   scrollContent: {
     flexGrow: 1,
