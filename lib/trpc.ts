@@ -20,32 +20,49 @@ const pickProtocol = (host: string) => {
 const getBaseUrl = (): string => {
   try {
     const envUrl = process.env.EXPO_PUBLIC_TOOLKIT_URL || (Constants as any)?.expoConfig?.extra?.EXPO_PUBLIC_TOOLKIT_URL;
+    console.log('Environment URL check:', envUrl);
+    
     if (envUrl && typeof envUrl === "string" && envUrl.startsWith("http")) {
+      console.log('Using environment URL:', envUrl);
       return normalize(envUrl);
     }
 
     if (Platform.OS === "web" && typeof window !== "undefined") {
       const origin = window.location.origin;
+      console.log('Using web origin:', origin);
       return normalize(origin);
     }
 
     const hostUri = (Constants as any)?.expoGoConfig?.hostUri as string | undefined;
+    console.log('Host URI from Expo:', hostUri);
+    
     if (hostUri) {
       const host = hostUri.split("/")[0];
       const protocol = pickProtocol(host);
       const inferred = `${protocol}${host}`;
+      console.log('Using inferred URL:', inferred);
       return normalize(inferred);
     }
   } catch (e) {
     console.error("Error while resolving base URL:", e);
   }
 
+  console.error(
+    "No backend URL found. Available info:",
+    {
+      envUrl: process.env.EXPO_PUBLIC_TOOLKIT_URL,
+      platform: Platform.OS,
+      hostUri: (Constants as any)?.expoGoConfig?.hostUri
+    }
+  );
+  
   throw new Error(
-    "No backend URL found. Set EXPO_PUBLIC_TOOLKIT_URL (rork start sets it)."
+    "No backend URL found. Ensure you're running with 'npm start' or 'bun start'."
   );
 };
 
 const apiUrl = `${getBaseUrl()}/api/trpc`;
+console.log('tRPC API URL:', apiUrl);
 
 export const trpcClient = trpc.createClient({
   links: [

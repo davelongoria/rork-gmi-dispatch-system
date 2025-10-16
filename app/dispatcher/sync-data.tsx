@@ -12,6 +12,7 @@ import { Stack } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Upload, Download, RefreshCw } from 'lucide-react-native';
 import { trpc } from '@/lib/trpc';
+import { useData } from '@/contexts/DataContext';
 import Colors from '@/constants/colors';
 
 const STORAGE_KEYS = {
@@ -36,6 +37,7 @@ const STORAGE_KEYS = {
 };
 
 export default function SyncDataScreen() {
+  const { backendAvailable } = useData();
   const [isUploading, setIsUploading] = useState<boolean>(false);
   const [isDownloading, setIsDownloading] = useState<boolean>(false);
   const [lastSync, setLastSync] = useState<string | null>(null);
@@ -289,6 +291,20 @@ export default function SyncDataScreen() {
           <Text style={styles.infoText}>
             Use this screen to sync data between devices. Upload your phone data to the backend, then all other devices will automatically receive it.
           </Text>
+          
+          <View style={[styles.statusBadge, backendAvailable ? styles.statusOnline : styles.statusOffline]}>
+            <View style={[styles.statusDot, backendAvailable ? styles.dotOnline : styles.dotOffline]} />
+            <Text style={styles.statusText}>
+              Backend: {backendAvailable ? 'Connected' : 'Offline (Local mode)'}
+            </Text>
+          </View>
+          
+          {!backendAvailable && (
+            <Text style={styles.warningText}>
+              The app is running in local mode. Data will be saved to your device only. To enable sync, ensure you&apos;re running the app with &apos;npm start&apos; or &apos;bun start&apos; and check the console logs for connection details.
+            </Text>
+          )}
+          
           {lastSync && (
             <Text style={styles.lastSyncText}>
               Last sync: {new Date(lastSync).toLocaleString()}
@@ -297,9 +313,9 @@ export default function SyncDataScreen() {
         </View>
 
         <TouchableOpacity
-          style={[styles.actionButton, isUploading && styles.buttonDisabled]}
+          style={[styles.actionButton, (isUploading || !backendAvailable) && styles.buttonDisabled]}
           onPress={handleUpload}
-          disabled={isUploading || isDownloading}
+          disabled={isUploading || isDownloading || !backendAvailable}
         >
           {isUploading ? (
             <ActivityIndicator color="#fff" />
@@ -313,9 +329,9 @@ export default function SyncDataScreen() {
         </TouchableOpacity>
 
         <TouchableOpacity
-          style={[styles.actionButton, styles.downloadButton, isDownloading && styles.buttonDisabled]}
+          style={[styles.actionButton, styles.downloadButton, (isDownloading || !backendAvailable) && styles.buttonDisabled]}
           onPress={handleDownload}
-          disabled={isUploading || isDownloading}
+          disabled={isUploading || isDownloading || !backendAvailable}
         >
           {isDownloading ? (
             <ActivityIndicator color="#fff" />
@@ -346,12 +362,14 @@ export default function SyncDataScreen() {
           </View>
         )}
 
-        <View style={styles.noteCard}>
-          <RefreshCw color={Colors.primary} size={20} />
-          <Text style={styles.noteText}>
-            After the initial upload, all devices will automatically sync every 5 minutes. You only need to use this screen once to migrate your data.
-          </Text>
-        </View>
+        {backendAvailable && (
+          <View style={styles.noteCard}>
+            <RefreshCw color={Colors.primary} size={20} />
+            <Text style={styles.noteText}>
+              Data is automatically synced when you make changes. Use these buttons to force a manual sync if needed.
+            </Text>
+          </View>
+        )}
       </ScrollView>
     </View>
   );
@@ -447,5 +465,45 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: Colors.textSecondary,
     fontFamily: 'Courier',
+  },
+  statusBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 8,
+    gap: 8,
+    marginTop: 12,
+  },
+  statusOnline: {
+    backgroundColor: '#E8F5E9',
+  },
+  statusOffline: {
+    backgroundColor: '#FFF3E0',
+  },
+  statusDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+  },
+  dotOnline: {
+    backgroundColor: '#4CAF50',
+  },
+  dotOffline: {
+    backgroundColor: '#FF9800',
+  },
+  statusText: {
+    fontSize: 14,
+    fontWeight: '600' as const,
+    color: Colors.text,
+  },
+  warningText: {
+    fontSize: 13,
+    color: '#E65100',
+    lineHeight: 20,
+    marginTop: 8,
+    backgroundColor: '#FFF3E0',
+    padding: 12,
+    borderRadius: 8,
   },
 });

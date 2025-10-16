@@ -56,15 +56,17 @@ export const [DataProvider, useData] = createContextHook(() => {
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [isSyncing, setIsSyncing] = useState<boolean>(false);
 
+  const [backendAvailable, setBackendAvailable] = useState<boolean>(true);
+
   const getAllQuery = trpc.data.getAll.useQuery(undefined, {
     refetchInterval: false,
     refetchOnWindowFocus: false,
-    retry: 2,
+    retry: 1,
     retryDelay: 1000,
     staleTime: Infinity,
-    enabled: true,
+    enabled: backendAvailable,
     refetchOnMount: false,
-    refetchOnReconnect: true,
+    refetchOnReconnect: false,
   });
   const syncMutation = trpc.data.sync.useMutation();
 
@@ -73,10 +75,14 @@ export const [DataProvider, useData] = createContextHook(() => {
   }, []);
 
   useEffect(() => {
-    if (getAllQuery.data && !getAllQuery.isLoading && !getAllQuery.isFetching) {
+    if (getAllQuery.isError) {
+      console.error('Backend not available, using local data only');
+      setBackendAvailable(false);
+    } else if (getAllQuery.data && !getAllQuery.isLoading && !getAllQuery.isFetching) {
+      console.log('Backend data received, syncing to local storage');
       updateFromBackend(getAllQuery.data);
     }
-  }, [getAllQuery.data, getAllQuery.isLoading, getAllQuery.isFetching]);
+  }, [getAllQuery.data, getAllQuery.isLoading, getAllQuery.isFetching, getAllQuery.isError]);
 
   const updateFromBackend = async (data: any) => {
     setDrivers(data.drivers || []);
@@ -349,15 +355,23 @@ export const [DataProvider, useData] = createContextHook(() => {
   };
 
   const syncToBackend = useCallback(async (data: any) => {
+    if (!backendAvailable) {
+      console.log('Backend not available, skipping sync');
+      return;
+    }
+    
     try {
       setIsSyncing(true);
+      console.log('Syncing to backend:', Object.keys(data));
       await syncMutation.mutateAsync(data);
+      console.log('Backend sync successful');
     } catch (error: any) {
       console.error('Failed to sync to backend:', error?.message || error);
+      setBackendAvailable(false);
     } finally {
       setIsSyncing(false);
     }
-  }, [syncMutation]);
+  }, [syncMutation, backendAvailable]);
 
   const addDriver = useCallback(async (driver: Driver) => {
     const updated = [...drivers, driver];
@@ -577,12 +591,18 @@ export const [DataProvider, useData] = createContextHook(() => {
 
   const forceRefreshFromBackend = useCallback(async () => {
     try {
+      setBackendAvailable(true);
+      console.log('Attempting backend refresh...');
       const result = await getAllQuery.refetch();
       if (result.isError) {
         console.error('Force refresh failed:', result.error);
+        setBackendAvailable(false);
+      } else {
+        console.log('Backend refresh successful');
       }
     } catch (error: any) {
       console.error('Force refresh error:', error?.message || error);
+      setBackendAvailable(false);
     }
   }, [getAllQuery]);
 
@@ -606,6 +626,7 @@ export const [DataProvider, useData] = createContextHook(() => {
     recurringJobs,
     isLoading: isLoading,
     isSyncing,
+    backendAvailable,
     forceRefreshFromBackend,
     addDriver,
     updateDriver,
@@ -645,7 +666,7 @@ export const [DataProvider, useData] = createContextHook(() => {
   }), [
     drivers, trucks, dumpSites, yards, customers, jobs, routes,
     timeLogs, dvirs, fuelLogs, dumpTickets, messages, gpsBreadcrumbs, mileageLogs, dispatcherSettings, reports, recurringJobs,
-    isLoading, isSyncing,
+    isLoading, isSyncing, backendAvailable,
     forceRefreshFromBackend,
     addDriver, updateDriver, deleteDriver, addTruck, updateTruck, deleteTruck,
     addCustomer, updateCustomer, deleteCustomer, addJob, updateJob, deleteJob,
