@@ -59,14 +59,14 @@ export const [DataProvider, useData] = createContextHook(() => {
   const [backendAvailable, setBackendAvailable] = useState<boolean>(true);
 
   const getAllQuery = trpc.data.getAll.useQuery(undefined, {
-    refetchInterval: false,
+    refetchInterval: 60_000,
     refetchOnWindowFocus: false,
-    retry: 0,
+    retry: 2,
     retryDelay: 1000,
-    staleTime: Infinity,
-    enabled: false,
-    refetchOnMount: false,
-    refetchOnReconnect: false,
+    staleTime: 30_000,
+    enabled: true,
+    refetchOnMount: true,
+    refetchOnReconnect: true,
   });
   const syncMutation = trpc.data.sync.useMutation();
 
@@ -76,10 +76,11 @@ export const [DataProvider, useData] = createContextHook(() => {
 
   useEffect(() => {
     if (getAllQuery.isError) {
-      console.error('Backend not available, using local data only');
+      console.warn('Backend not available, using local data only');
       setBackendAvailable(false);
     } else if (getAllQuery.data && !getAllQuery.isLoading && !getAllQuery.isFetching) {
       console.log('Backend data received, syncing to local storage');
+      setBackendAvailable(true);
       updateFromBackend(getAllQuery.data);
     }
   }, [getAllQuery.data, getAllQuery.isLoading, getAllQuery.isFetching, getAllQuery.isError]);
