@@ -57,10 +57,10 @@ export const [DataProvider, useData] = createContextHook(() => {
   const [isSyncing, setIsSyncing] = useState<boolean>(false);
 
   const getAllQuery = trpc.data.getAll.useQuery(undefined, {
-    refetchInterval: false,
-    refetchOnWindowFocus: false,
-    retry: 1,
-    staleTime: 30000,
+    refetchInterval: 10000,
+    refetchOnWindowFocus: true,
+    retry: 3,
+    staleTime: 5000,
   });
   const syncMutation = trpc.data.sync.useMutation();
 
@@ -576,6 +576,11 @@ export const [DataProvider, useData] = createContextHook(() => {
     await syncToBackend({ recurringJobs: updated });
   }, [recurringJobs, syncToBackend]);
 
+  const forceRefreshFromBackend = useCallback(async () => {
+    console.log('Force refreshing from backend...');
+    await getAllQuery.refetch();
+  }, [getAllQuery]);
+
   return useMemo(() => ({
     drivers,
     trucks,
@@ -596,6 +601,7 @@ export const [DataProvider, useData] = createContextHook(() => {
     recurringJobs,
     isLoading: isLoading || getAllQuery.isLoading,
     isSyncing,
+    forceRefreshFromBackend,
     addDriver,
     updateDriver,
     deleteDriver,
@@ -635,6 +641,7 @@ export const [DataProvider, useData] = createContextHook(() => {
     drivers, trucks, dumpSites, yards, customers, jobs, routes,
     timeLogs, dvirs, fuelLogs, dumpTickets, messages, gpsBreadcrumbs, mileageLogs, dispatcherSettings, reports, recurringJobs,
     isLoading, isSyncing, getAllQuery.isLoading,
+    forceRefreshFromBackend,
     addDriver, updateDriver, deleteDriver, addTruck, updateTruck, deleteTruck,
     addCustomer, updateCustomer, deleteCustomer, addJob, updateJob, deleteJob,
     addRoute, updateRoute, deleteRoute, addTimeLog, addDVIR, addFuelLog,
