@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback, useMemo } from 'react';
 import { trpc } from '@/lib/trpc';
 import type {
   Driver, Truck, DumpSite, Yard, Customer, Job, Route,
-  TimeLog, DVIR, FuelLog, DumpTicket, Message, GPSBreadcrumb, MileageLog, DispatcherSettings, Report, RecurringJob
+  TimeLog, DVIR, FuelLog, DumpTicket, Message, GPSBreadcrumb, MileageLog, DispatcherSettings, Report, RecurringJob, CommercialRoute, CommercialStop
 } from '@/types';
 import {
   sampleDrivers,
@@ -32,6 +32,8 @@ const STORAGE_KEYS = {
   DISPATCHER_SETTINGS: '@gmi_dispatcher_settings',
   REPORTS: '@gmi_reports',
   RECURRING_JOBS: '@gmi_recurring_jobs',
+  COMMERCIAL_ROUTES: '@gmi_commercial_routes',
+  COMMERCIAL_STOPS: '@gmi_commercial_stops',
   LAST_SYNC: '@gmi_last_sync',
 };
 
@@ -53,6 +55,8 @@ export const [DataProvider, useData] = createContextHook(() => {
   const [dispatcherSettings, setDispatcherSettings] = useState<DispatcherSettings | null>(null);
   const [reports, setReports] = useState<Report[]>([]);
   const [recurringJobs, setRecurringJobs] = useState<RecurringJob[]>([]);
+  const [commercialRoutes, setCommercialRoutes] = useState<CommercialRoute[]>([]);
+  const [commercialStops, setCommercialStops] = useState<CommercialStop[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [isSyncing, setIsSyncing] = useState<boolean>(false);
 
@@ -103,6 +107,8 @@ export const [DataProvider, useData] = createContextHook(() => {
     setDispatcherSettings(data.dispatcherSettings);
     setReports(data.reports || []);
     setRecurringJobs(data.recurringJobs || []);
+    setCommercialRoutes(data.commercialRoutes || []);
+    setCommercialStops(data.commercialStops || []);
 
     await Promise.all([
       AsyncStorage.setItem(STORAGE_KEYS.DRIVERS, JSON.stringify(data.drivers || [])),
@@ -122,6 +128,8 @@ export const [DataProvider, useData] = createContextHook(() => {
       AsyncStorage.setItem(STORAGE_KEYS.DISPATCHER_SETTINGS, JSON.stringify(data.dispatcherSettings)),
       AsyncStorage.setItem(STORAGE_KEYS.REPORTS, JSON.stringify(data.reports || [])),
       AsyncStorage.setItem(STORAGE_KEYS.RECURRING_JOBS, JSON.stringify(data.recurringJobs || [])),
+      AsyncStorage.setItem(STORAGE_KEYS.COMMERCIAL_ROUTES, JSON.stringify(data.commercialRoutes || [])),
+      AsyncStorage.setItem(STORAGE_KEYS.COMMERCIAL_STOPS, JSON.stringify(data.commercialStops || [])),
       AsyncStorage.setItem(STORAGE_KEYS.LAST_SYNC, new Date().toISOString()),
     ]);
   };
@@ -136,7 +144,7 @@ export const [DataProvider, useData] = createContextHook(() => {
       const [
         driversData, trucksData, dumpSitesData, yardsData, customersData,
         jobsData, routesData, timeLogsData, dvirsData, fuelLogsData,
-        dumpTicketsData, messagesData, gpsData, mileageLogsData, settingsData, reportsData, recurringJobsData
+        dumpTicketsData, messagesData, gpsData, mileageLogsData, settingsData, reportsData, recurringJobsData, commercialRoutesData, commercialStopsData
       ] = await Promise.all([
         AsyncStorage.getItem(STORAGE_KEYS.DRIVERS),
         AsyncStorage.getItem(STORAGE_KEYS.TRUCKS),
@@ -155,6 +163,8 @@ export const [DataProvider, useData] = createContextHook(() => {
         AsyncStorage.getItem(STORAGE_KEYS.DISPATCHER_SETTINGS),
         AsyncStorage.getItem(STORAGE_KEYS.REPORTS),
         AsyncStorage.getItem(STORAGE_KEYS.RECURRING_JOBS),
+        AsyncStorage.getItem(STORAGE_KEYS.COMMERCIAL_ROUTES),
+        AsyncStorage.getItem(STORAGE_KEYS.COMMERCIAL_STOPS),
       ]);
 
       if (driversData && driversData !== 'null' && driversData !== 'undefined') {
@@ -343,6 +353,24 @@ export const [DataProvider, useData] = createContextHook(() => {
           if (Array.isArray(parsed)) setRecurringJobs(parsed);
         } catch (e) {
           console.error('Failed to parse recurring jobs data:', e);
+        }
+      }
+      
+      if (commercialRoutesData && commercialRoutesData !== 'null' && commercialRoutesData !== 'undefined') {
+        try {
+          const parsed = JSON.parse(commercialRoutesData);
+          if (Array.isArray(parsed)) setCommercialRoutes(parsed);
+        } catch (e) {
+          console.error('Failed to parse commercial routes data:', e);
+        }
+      }
+      
+      if (commercialStopsData && commercialStopsData !== 'null' && commercialStopsData !== 'undefined') {
+        try {
+          const parsed = JSON.parse(commercialStopsData);
+          if (Array.isArray(parsed)) setCommercialStops(parsed);
+        } catch (e) {
+          console.error('Failed to parse commercial stops data:', e);
         }
       }
 
@@ -590,6 +618,42 @@ export const [DataProvider, useData] = createContextHook(() => {
     await syncToBackend({ recurringJobs: updated });
   }, [recurringJobs, syncToBackend]);
 
+  const addCommercialRoute = useCallback(async (route: CommercialRoute) => {
+    const updated = [...commercialRoutes, route];
+    setCommercialRoutes(updated);
+    await syncToBackend({ commercialRoutes: updated });
+  }, [commercialRoutes, syncToBackend]);
+
+  const updateCommercialRoute = useCallback(async (id: string, updates: Partial<CommercialRoute>) => {
+    const updated = commercialRoutes.map(r => r.id === id ? { ...r, ...updates } : r);
+    setCommercialRoutes(updated);
+    await syncToBackend({ commercialRoutes: updated });
+  }, [commercialRoutes, syncToBackend]);
+
+  const deleteCommercialRoute = useCallback(async (id: string) => {
+    const updated = commercialRoutes.filter(r => r.id !== id);
+    setCommercialRoutes(updated);
+    await syncToBackend({ commercialRoutes: updated });
+  }, [commercialRoutes, syncToBackend]);
+
+  const addCommercialStop = useCallback(async (stop: CommercialStop) => {
+    const updated = [...commercialStops, stop];
+    setCommercialStops(updated);
+    await syncToBackend({ commercialStops: updated });
+  }, [commercialStops, syncToBackend]);
+
+  const updateCommercialStop = useCallback(async (id: string, updates: Partial<CommercialStop>) => {
+    const updated = commercialStops.map(s => s.id === id ? { ...s, ...updates } : s);
+    setCommercialStops(updated);
+    await syncToBackend({ commercialStops: updated });
+  }, [commercialStops, syncToBackend]);
+
+  const deleteCommercialStop = useCallback(async (id: string) => {
+    const updated = commercialStops.filter(s => s.id !== id);
+    setCommercialStops(updated);
+    await syncToBackend({ commercialStops: updated });
+  }, [commercialStops, syncToBackend]);
+
   const forceRefreshFromBackend = useCallback(async () => {
     try {
       setBackendAvailable(true);
@@ -625,6 +689,8 @@ export const [DataProvider, useData] = createContextHook(() => {
     dispatcherSettings,
     reports,
     recurringJobs,
+    commercialRoutes,
+    commercialStops,
     isLoading: isLoading,
     isSyncing,
     backendAvailable,
@@ -664,9 +730,15 @@ export const [DataProvider, useData] = createContextHook(() => {
     addRecurringJob,
     updateRecurringJob,
     deleteRecurringJob,
+    addCommercialRoute,
+    updateCommercialRoute,
+    deleteCommercialRoute,
+    addCommercialStop,
+    updateCommercialStop,
+    deleteCommercialStop,
   }), [
     drivers, trucks, dumpSites, yards, customers, jobs, routes,
-    timeLogs, dvirs, fuelLogs, dumpTickets, messages, gpsBreadcrumbs, mileageLogs, dispatcherSettings, reports, recurringJobs,
+    timeLogs, dvirs, fuelLogs, dumpTickets, messages, gpsBreadcrumbs, mileageLogs, dispatcherSettings, reports, recurringJobs, commercialRoutes, commercialStops,
     isLoading, isSyncing, backendAvailable,
     forceRefreshFromBackend,
     addDriver, updateDriver, deleteDriver, addTruck, updateTruck, deleteTruck,
@@ -674,6 +746,7 @@ export const [DataProvider, useData] = createContextHook(() => {
     addRoute, updateRoute, deleteRoute, addTimeLog, addDVIR, addFuelLog,
     addDumpTicket, addMessage, addGPSBreadcrumb, addDumpSite, updateDumpSite,
     deleteDumpSite, addYard, updateYard, deleteYard, addMileageLog, updateDispatcherSettings,
-    addReport, updateReport, deleteReport, addRecurringJob, updateRecurringJob, deleteRecurringJob
+    addReport, updateReport, deleteReport, addRecurringJob, updateRecurringJob, deleteRecurringJob,
+    addCommercialRoute, updateCommercialRoute, deleteCommercialRoute, addCommercialStop, updateCommercialStop, deleteCommercialStop
   ]);
 });

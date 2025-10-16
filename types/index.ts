@@ -305,3 +305,51 @@ export interface RecurringJob {
   projectName?: string;
   createdAt: string;
 }
+
+export type RouteType = 'DUMP_TRUCK' | 'COMMERCIAL_FRONTLOAD';
+export type ServiceFrequency = 'ONCE_WEEK' | 'TWICE_WEEK' | 'THREE_WEEK' | 'FOUR_WEEK' | 'FIVE_WEEK' | 'BIWEEKLY' | 'MONTHLY' | 'ON_CALL';
+export type StopStatus = 'PENDING' | 'COMPLETED' | 'NOT_OUT' | 'BLOCKED' | 'SKIPPED';
+export type ContainerSize = '1' | '1.5' | '2' | '4' | '6' | '8' | 'COMPACTOR';
+
+export interface CommercialStop {
+  id: string;
+  customerId: string;
+  customerName?: string;
+  address: string;
+  latitude?: number;
+  longitude?: number;
+  containerSize: ContainerSize;
+  containerCount: number;
+  serviceFrequency: ServiceFrequency;
+  serviceDay?: string;
+  specialInstructions?: string;
+  status: StopStatus;
+  completedAt?: string;
+  completedByDriverId?: string;
+  completionPhotos?: string[];
+  issuePhotos?: string[];
+  issueNotes?: string;
+  notOutReason?: string;
+  blockedReason?: string;
+  active: boolean;
+  createdAt: string;
+}
+
+export interface CommercialRoute {
+  id: string;
+  name: string;
+  date: string;
+  driverId?: string;
+  driverName?: string;
+  truckId?: string;
+  truckUnitNumber?: string;
+  stopIds: string[];
+  status: RouteStatus;
+  routeType: 'COMMERCIAL_FRONTLOAD';
+  dispatchedAt?: string;
+  startedAt?: string;
+  completedAt?: string;
+  startMileage?: number;
+  endMileage?: number;
+  createdAt: string;
+}
