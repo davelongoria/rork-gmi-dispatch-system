@@ -39,6 +39,8 @@ export default function SyncDataScreen() {
   const [isUploading, setIsUploading] = useState<boolean>(false);
   const [isDownloading, setIsDownloading] = useState<boolean>(false);
   const [lastSync, setLastSync] = useState<string | null>(null);
+  const [uploadLog, setUploadLog] = useState<string[]>([]);
+  const [downloadLog, setDownloadLog] = useState<string[]>([]);
 
   const syncMutation = trpc.data.sync.useMutation();
   const getAllQuery = trpc.data.getAll.useQuery();
@@ -55,6 +57,7 @@ export default function SyncDataScreen() {
   const uploadLocalDataToBackend = async () => {
     try {
       setIsUploading(true);
+      setUploadLog(['Starting upload...']);
       
       const [
         driversData, trucksData, dumpSitesData, yardsData, customersData,
@@ -135,6 +138,26 @@ export default function SyncDataScreen() {
         payload.recurringJobs = JSON.parse(recurringJobsData);
       }
 
+      const logEntries: string[] = [
+        'Data collected from device:',
+        `- Drivers: ${payload.drivers?.length || 0}`,
+        `- Trucks: ${payload.trucks?.length || 0}`,
+        `- Customers: ${payload.customers?.length || 0}`,
+        `- Yards: ${payload.yards?.length || 0}`,
+        `- Dump Sites: ${payload.dumpSites?.length || 0}`,
+        `- Jobs: ${payload.jobs?.length || 0}`,
+        `- Routes: ${payload.routes?.length || 0}`,
+        `- Time Logs: ${payload.timeLogs?.length || 0}`,
+        `- DVIRs: ${payload.dvirs?.length || 0}`,
+        `- Fuel Logs: ${payload.fuelLogs?.length || 0}`,
+        `- Dump Tickets: ${payload.dumpTickets?.length || 0}`,
+        `- Messages: ${payload.messages?.length || 0}`,
+        `- GPS Breadcrumbs: ${payload.gpsBreadcrumbs?.length || 0}`,
+        `- Mileage Logs: ${payload.mileageLogs?.length || 0}`,
+        `- Reports: ${payload.reports?.length || 0}`,
+        `- Recurring Jobs: ${payload.recurringJobs?.length || 0}`,
+      ];
+      setUploadLog(logEntries);
       console.log('Uploading local data to backend:', Object.keys(payload));
       console.log('Payload sample:', {
         driversCount: payload.drivers?.length,
@@ -142,12 +165,15 @@ export default function SyncDataScreen() {
         jobsCount: payload.jobs?.length,
       });
       
+      setUploadLog(prev => [...prev, 'Uploading to backend...']);
       await syncMutation.mutateAsync(payload);
+      
+      setUploadLog(prev => [...prev, '✓ Upload complete!']);
       
       await AsyncStorage.setItem(STORAGE_KEYS.LAST_SYNC, new Date().toISOString());
       await loadLastSync();
       
-      Alert.alert('Success', 'All local data has been uploaded to the backend. All devices will now see the same data.');
+      Alert.alert('Success', `Upload complete!\n\nUploaded:\n${logEntries.slice(1).join('\n')}\n\nAll devices will sync automatically.`);
       
     } catch (error) {
       console.error('Upload error:', error);
@@ -162,7 +188,9 @@ export default function SyncDataScreen() {
   const downloadBackendData = async () => {
     try {
       setIsDownloading(true);
+      setDownloadLog(['Starting download...']);
       
+      setDownloadLog(prev => [...prev, 'Fetching from backend...']);
       await getAllQuery.refetch();
       
       if (!getAllQuery.data) {
@@ -171,6 +199,18 @@ export default function SyncDataScreen() {
       }
 
       const data = getAllQuery.data;
+      
+      const logEntries: string[] = [
+        'Data received from backend:',
+        `- Drivers: ${data.drivers?.length || 0}`,
+        `- Trucks: ${data.trucks?.length || 0}`,
+        `- Customers: ${data.customers?.length || 0}`,
+        `- Yards: ${data.yards?.length || 0}`,
+        `- Dump Sites: ${data.dumpSites?.length || 0}`,
+        `- Jobs: ${data.jobs?.length || 0}`,
+        `- Routes: ${data.routes?.length || 0}`,
+      ];
+      setDownloadLog(logEntries);
       
       await Promise.all([
         AsyncStorage.setItem(STORAGE_KEYS.DRIVERS, JSON.stringify(data.drivers || [])),
@@ -195,7 +235,9 @@ export default function SyncDataScreen() {
       
       await loadLastSync();
       
-      Alert.alert('Success', 'Backend data downloaded successfully. Please restart the app to see the changes.', [
+      setDownloadLog(prev => [...prev, '✓ Download complete!']);
+      
+      Alert.alert('Success', `Download complete!\n\nDownloaded:\n${logEntries.slice(1).join('\n')}\n\nPlease restart the app to see the changes.`, [
         { text: 'OK' }
       ]);
       
@@ -286,6 +328,24 @@ export default function SyncDataScreen() {
           </Text>
         </TouchableOpacity>
 
+        {uploadLog.length > 0 && (
+          <View style={styles.logCard}>
+            <Text style={styles.logTitle}>Upload Log:</Text>
+            {uploadLog.map((log, idx) => (
+              <Text key={idx} style={styles.logText}>{log}</Text>
+            ))}
+          </View>
+        )}
+
+        {downloadLog.length > 0 && (
+          <View style={styles.logCard}>
+            <Text style={styles.logTitle}>Download Log:</Text>
+            {downloadLog.map((log, idx) => (
+              <Text key={idx} style={styles.logText}>{log}</Text>
+            ))}
+          </View>
+        )}
+
         <View style={styles.noteCard}>
           <RefreshCw color={Colors.primary} size={20} />
           <Text style={styles.noteText}>
@@ -368,5 +428,24 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: Colors.text,
     lineHeight: 20,
+  },
+  logCard: {
+    backgroundColor: '#F5F5F5',
+    borderRadius: 12,
+    padding: 16,
+    gap: 8,
+    borderLeftWidth: 4,
+    borderLeftColor: Colors.primary,
+  },
+  logTitle: {
+    fontSize: 16,
+    fontWeight: '700' as const,
+    color: Colors.text,
+    marginBottom: 4,
+  },
+  logText: {
+    fontSize: 13,
+    color: Colors.textSecondary,
+    fontFamily: 'Courier',
   },
 });

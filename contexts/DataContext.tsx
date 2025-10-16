@@ -70,7 +70,16 @@ export const [DataProvider, useData] = createContextHook(() => {
 
   useEffect(() => {
     if (getAllQuery.data && !getAllQuery.isLoading) {
-      console.log('Received data from backend, updating local state');
+      console.log('📥 Received data from backend, updating local state');
+      console.log('Backend data counts:', {
+        drivers: getAllQuery.data.drivers?.length || 0,
+        trucks: getAllQuery.data.trucks?.length || 0,
+        customers: getAllQuery.data.customers?.length || 0,
+        yards: getAllQuery.data.yards?.length || 0,
+        dumpSites: getAllQuery.data.dumpSites?.length || 0,
+        jobs: getAllQuery.data.jobs?.length || 0,
+        routes: getAllQuery.data.routes?.length || 0,
+      });
       updateFromBackend(getAllQuery.data);
     }
   }, [getAllQuery.data, getAllQuery.isLoading]);
@@ -115,7 +124,7 @@ export const [DataProvider, useData] = createContextHook(() => {
       AsyncStorage.setItem(STORAGE_KEYS.LAST_SYNC, new Date().toISOString()),
     ]);
 
-    console.log('Data synced with backend successfully');
+    console.log('✅ Data synced with backend successfully at', new Date().toLocaleTimeString());
   };
 
   const loadLocalData = async () => {
@@ -350,11 +359,12 @@ export const [DataProvider, useData] = createContextHook(() => {
   const syncToBackend = useCallback(async (data: any) => {
     try {
       setIsSyncing(true);
+      console.log('📤 Syncing to backend:', Object.keys(data));
       await syncMutation.mutateAsync(data);
       await getAllQuery.refetch();
-      console.log('Data synced to backend');
+      console.log('✅ Data synced to backend successfully');
     } catch (error) {
-      console.error('Failed to sync to backend:', error);
+      console.error('❌ Failed to sync to backend:', error);
     } finally {
       setIsSyncing(false);
     }
