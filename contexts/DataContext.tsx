@@ -61,10 +61,10 @@ export const [DataProvider, useData] = createContextHook(() => {
   const getAllQuery = trpc.data.getAll.useQuery(undefined, {
     refetchInterval: false,
     refetchOnWindowFocus: false,
-    retry: 1,
+    retry: 0,
     retryDelay: 1000,
     staleTime: Infinity,
-    enabled: backendAvailable,
+    enabled: false,
     refetchOnMount: false,
     refetchOnReconnect: false,
   });

@@ -4,10 +4,10 @@ import * as SplashScreen from "expo-splash-screen";
 import React, { useEffect, useState } from "react";
 import { View, ActivityIndicator, Text, StyleSheet } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
-import { AuthProvider, useAuth } from "@/contexts/AuthContext";
-import { DataProvider, useData } from "@/contexts/DataContext";
+import { AuthProvider } from "@/contexts/AuthContext";
+import { DataProvider } from "@/contexts/DataContext";
 import Colors from "@/constants/colors";
-import { trpc, trpcClient } from "@/lib/trpc";
+import { trpc, getTRPCClient } from "@/lib/trpc";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 
 SplashScreen.preventAutoHideAsync();
@@ -17,6 +17,7 @@ const queryClient = new QueryClient({
     queries: {
       retry: 2,
       retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 5000),
+      staleTime: 5 * 60 * 1000,
     },
     mutations: {
       retry: 1,
@@ -35,25 +36,16 @@ function RootLayoutNav() {
 }
 
 function AppContent() {
-  const { isLoading: authLoading } = useAuth();
-  const { isLoading: dataLoading } = useData();
-
   const [isReady, setIsReady] = useState(false);
 
   useEffect(() => {
-    const timeout = setTimeout(() => {
+    const timer = setTimeout(() => {
       setIsReady(true);
       SplashScreen.hideAsync().catch(() => {});
-    }, 3000);
+    }, 1500);
 
-    if (!authLoading && !dataLoading) {
-      clearTimeout(timeout);
-      setIsReady(true);
-      SplashScreen.hideAsync().catch(() => {});
-    }
-
-    return () => clearTimeout(timeout);
-  }, [authLoading, dataLoading]);
+    return () => clearTimeout(timer);
+  }, []);
 
   if (!isReady) {
     return (
@@ -68,6 +60,8 @@ function AppContent() {
 }
 
 export default function RootLayout() {
+  const [trpcClient] = useState(() => getTRPCClient());
+
   return (
     <ErrorBoundary>
       <trpc.Provider client={trpcClient} queryClient={queryClient}>
