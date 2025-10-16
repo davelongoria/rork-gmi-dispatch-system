@@ -12,11 +12,13 @@ import {
 } from 'react-native';
 import { useData } from '@/contexts/DataContext';
 import Colors from '@/constants/colors';
-import { Settings as SettingsIcon, Mail, Save, QrCode, Download, Send } from 'lucide-react-native';
+import { Settings as SettingsIcon, Mail, Save, QrCode, Download, Send, RefreshCw } from 'lucide-react-native';
 import QRCode from 'react-native-qrcode-svg';
 import * as FileSystem from 'expo-file-system';
+import { useRouter } from 'expo-router';
 
 export default function SettingsScreen() {
+  const router = useRouter();
   const { dispatcherSettings, updateDispatcherSettings } = useData();
   const [reportEmail, setReportEmail] = useState<string>('');
   const [qrToken, setQrToken] = useState<string>('');
@@ -186,6 +188,20 @@ export default function SettingsScreen() {
       </View>
 
       <View style={styles.section}>
+        <Text style={styles.sectionTitle}>Data Synchronization</Text>
+        <Text style={styles.sectionDescription}>
+          Sync data between your phone and PC to ensure all devices see the same information.
+        </Text>
+        <TouchableOpacity
+          style={styles.syncButton}
+          onPress={() => router.push('/dispatcher/sync-data')}
+        >
+          <RefreshCw size={20} color={Colors.primary} />
+          <Text style={styles.syncButtonText}>Sync Data Between Devices</Text>
+        </TouchableOpacity>
+      </View>
+
+      <View style={styles.section}>
         <Text style={styles.sectionTitle}>User Management</Text>
         <Text style={styles.sectionDescription}>
           Manage driver and dispatcher login credentials in the Drivers screen.
@@ -313,5 +329,22 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: '600' as const,
     color: Colors.background,
+  },
+  syncButton: {
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    justifyContent: 'center' as const,
+    backgroundColor: Colors.backgroundSecondary,
+    padding: 14,
+    borderRadius: 8,
+    gap: 8,
+    marginTop: 8,
+    borderWidth: 1,
+    borderColor: Colors.primary,
+  },
+  syncButtonText: {
+    fontSize: 15,
+    fontWeight: '600' as const,
+    color: Colors.primary,
   },
 });

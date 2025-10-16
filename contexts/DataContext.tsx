@@ -1,6 +1,7 @@
 import createContextHook from '@nkzw/create-context-hook';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useState, useEffect, useCallback, useMemo } from 'react';
+import { trpc } from '@/lib/trpc';
 import type {
   Driver, Truck, DumpSite, Yard, Customer, Job, Route,
   TimeLog, DVIR, FuelLog, DumpTicket, Message, GPSBreadcrumb, MileageLog, DispatcherSettings, Report, RecurringJob
@@ -31,6 +32,7 @@ const STORAGE_KEYS = {
   DISPATCHER_SETTINGS: '@gmi_dispatcher_settings',
   REPORTS: '@gmi_reports',
   RECURRING_JOBS: '@gmi_recurring_jobs',
+  LAST_SYNC: '@gmi_last_sync',
 };
 
 export const [DataProvider, useData] = createContextHook(() => {
@@ -52,12 +54,69 @@ export const [DataProvider, useData] = createContextHook(() => {
   const [reports, setReports] = useState<Report[]>([]);
   const [recurringJobs, setRecurringJobs] = useState<RecurringJob[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [isSyncing, setIsSyncing] = useState<boolean>(false);
+
+  const getAllQuery = trpc.data.getAll.useQuery(undefined, {
+    refetchInterval: 5000,
+    refetchIntervalInBackground: true,
+  });
+  const syncMutation = trpc.data.sync.useMutation();
 
   useEffect(() => {
-    loadAllData();
+    loadLocalData();
   }, []);
 
-  const loadAllData = async () => {
+  useEffect(() => {
+    if (getAllQuery.data && !getAllQuery.isLoading) {
+      console.log('Received data from backend, updating local state');
+      updateFromBackend(getAllQuery.data);
+    }
+  }, [getAllQuery.data]);
+
+  const updateFromBackend = async (data: any) => {
+    setDrivers(data.drivers || []);
+    setTrucks(data.trucks || []);
+    setDumpSites(data.dumpSites || []);
+    setYards(data.yards || []);
+    setCustomers(data.customers || []);
+    setJobs(data.jobs || []);
+    setRoutes(data.routes || []);
+    setTimeLogs(data.timeLogs || []);
+    setDvirs(data.dvirs || []);
+    setFuelLogs(data.fuelLogs || []);
+    setDumpTickets(data.dumpTickets || []);
+    setMessages(data.messages || []);
+    setGpsBreadcrumbs(data.gpsBreadcrumbs || []);
+    setMileageLogs(data.mileageLogs || []);
+    setDispatcherSettings(data.dispatcherSettings);
+    setReports(data.reports || []);
+    setRecurringJobs(data.recurringJobs || []);
+
+    await Promise.all([
+      AsyncStorage.setItem(STORAGE_KEYS.DRIVERS, JSON.stringify(data.drivers || [])),
+      AsyncStorage.setItem(STORAGE_KEYS.TRUCKS, JSON.stringify(data.trucks || [])),
+      AsyncStorage.setItem(STORAGE_KEYS.DUMP_SITES, JSON.stringify(data.dumpSites || [])),
+      AsyncStorage.setItem(STORAGE_KEYS.YARDS, JSON.stringify(data.yards || [])),
+      AsyncStorage.setItem(STORAGE_KEYS.CUSTOMERS, JSON.stringify(data.customers || [])),
+      AsyncStorage.setItem(STORAGE_KEYS.JOBS, JSON.stringify(data.jobs || [])),
+      AsyncStorage.setItem(STORAGE_KEYS.ROUTES, JSON.stringify(data.routes || [])),
+      AsyncStorage.setItem(STORAGE_KEYS.TIME_LOGS, JSON.stringify(data.timeLogs || [])),
+      AsyncStorage.setItem(STORAGE_KEYS.DVIRS, JSON.stringify(data.dvirs || [])),
+      AsyncStorage.setItem(STORAGE_KEYS.FUEL_LOGS, JSON.stringify(data.fuelLogs || [])),
+      AsyncStorage.setItem(STORAGE_KEYS.DUMP_TICKETS, JSON.stringify(data.dumpTickets || [])),
+      AsyncStorage.setItem(STORAGE_KEYS.MESSAGES, JSON.stringify(data.messages || [])),
+      AsyncStorage.setItem(STORAGE_KEYS.GPS_BREADCRUMBS, JSON.stringify(data.gpsBreadcrumbs || [])),
+      AsyncStorage.setItem(STORAGE_KEYS.MILEAGE_LOGS, JSON.stringify(data.mileageLogs || [])),
+      AsyncStorage.setItem(STORAGE_KEYS.DISPATCHER_SETTINGS, JSON.stringify(data.dispatcherSettings)),
+      AsyncStorage.setItem(STORAGE_KEYS.REPORTS, JSON.stringify(data.reports || [])),
+      AsyncStorage.setItem(STORAGE_KEYS.RECURRING_JOBS, JSON.stringify(data.recurringJobs || [])),
+      AsyncStorage.setItem(STORAGE_KEYS.LAST_SYNC, new Date().toISOString()),
+    ]);
+
+    console.log('Data synced with backend successfully');
+  };
+
+  const loadLocalData = async () => {
     const timeout = setTimeout(() => {
       console.warn('Data loading timeout, continuing anyway');
       setIsLoading(false);
@@ -94,18 +153,15 @@ export const [DataProvider, useData] = createContextHook(() => {
           if (Array.isArray(parsed)) {
             setDrivers(parsed);
           } else {
-            console.error('Drivers data is not an array, resetting');
+            console.error('Drivers data is not an array, using samples');
             setDrivers(sampleDrivers);
-            await AsyncStorage.setItem(STORAGE_KEYS.DRIVERS, JSON.stringify(sampleDrivers));
           }
         } catch (e) {
-          console.error('Failed to parse drivers data:', e, 'Data:', driversData?.substring(0, 100));
+          console.error('Failed to parse drivers data:', e);
           setDrivers(sampleDrivers);
-          await AsyncStorage.setItem(STORAGE_KEYS.DRIVERS, JSON.stringify(sampleDrivers));
         }
       } else {
         setDrivers(sampleDrivers);
-        await AsyncStorage.setItem(STORAGE_KEYS.DRIVERS, JSON.stringify(sampleDrivers));
       }
       
       if (trucksData && trucksData !== 'null' && trucksData !== 'undefined') {
@@ -114,18 +170,14 @@ export const [DataProvider, useData] = createContextHook(() => {
           if (Array.isArray(parsed)) {
             setTrucks(parsed);
           } else {
-            console.error('Trucks data is not an array, resetting');
             setTrucks(sampleTrucks);
-            await AsyncStorage.setItem(STORAGE_KEYS.TRUCKS, JSON.stringify(sampleTrucks));
           }
         } catch (e) {
-          console.error('Failed to parse trucks data:', e, 'Data:', trucksData?.substring(0, 100));
+          console.error('Failed to parse trucks data:', e);
           setTrucks(sampleTrucks);
-          await AsyncStorage.setItem(STORAGE_KEYS.TRUCKS, JSON.stringify(sampleTrucks));
         }
       } else {
         setTrucks(sampleTrucks);
-        await AsyncStorage.setItem(STORAGE_KEYS.TRUCKS, JSON.stringify(sampleTrucks));
       }
       
       if (dumpSitesData && dumpSitesData !== 'null' && dumpSitesData !== 'undefined') {
@@ -134,18 +186,14 @@ export const [DataProvider, useData] = createContextHook(() => {
           if (Array.isArray(parsed)) {
             setDumpSites(parsed);
           } else {
-            console.error('Dump sites data is not an array, resetting');
             setDumpSites(sampleDumpSites);
-            await AsyncStorage.setItem(STORAGE_KEYS.DUMP_SITES, JSON.stringify(sampleDumpSites));
           }
         } catch (e) {
-          console.error('Failed to parse dump sites data:', e, 'Data:', dumpSitesData?.substring(0, 100));
+          console.error('Failed to parse dump sites data:', e);
           setDumpSites(sampleDumpSites);
-          await AsyncStorage.setItem(STORAGE_KEYS.DUMP_SITES, JSON.stringify(sampleDumpSites));
         }
       } else {
         setDumpSites(sampleDumpSites);
-        await AsyncStorage.setItem(STORAGE_KEYS.DUMP_SITES, JSON.stringify(sampleDumpSites));
       }
       
       if (yardsData && yardsData !== 'null' && yardsData !== 'undefined') {
@@ -154,18 +202,14 @@ export const [DataProvider, useData] = createContextHook(() => {
           if (Array.isArray(parsed)) {
             setYards(parsed);
           } else {
-            console.error('Yards data is not an array, resetting');
             setYards(sampleYards);
-            await AsyncStorage.setItem(STORAGE_KEYS.YARDS, JSON.stringify(sampleYards));
           }
         } catch (e) {
-          console.error('Failed to parse yards data:', e, 'Data:', yardsData?.substring(0, 100));
+          console.error('Failed to parse yards data:', e);
           setYards(sampleYards);
-          await AsyncStorage.setItem(STORAGE_KEYS.YARDS, JSON.stringify(sampleYards));
         }
       } else {
         setYards(sampleYards);
-        await AsyncStorage.setItem(STORAGE_KEYS.YARDS, JSON.stringify(sampleYards));
       }
       
       if (customersData && customersData !== 'null' && customersData !== 'undefined') {
@@ -174,152 +218,94 @@ export const [DataProvider, useData] = createContextHook(() => {
           if (Array.isArray(parsed)) {
             setCustomers(parsed);
           } else {
-            console.error('Customers data is not an array, resetting');
             setCustomers(sampleCustomers);
-            await AsyncStorage.setItem(STORAGE_KEYS.CUSTOMERS, JSON.stringify(sampleCustomers));
           }
         } catch (e) {
-          console.error('Failed to parse customers data:', e, 'Data:', customersData?.substring(0, 100));
+          console.error('Failed to parse customers data:', e);
           setCustomers(sampleCustomers);
-          await AsyncStorage.setItem(STORAGE_KEYS.CUSTOMERS, JSON.stringify(sampleCustomers));
         }
       } else {
         setCustomers(sampleCustomers);
-        await AsyncStorage.setItem(STORAGE_KEYS.CUSTOMERS, JSON.stringify(sampleCustomers));
       }
       
       if (jobsData && jobsData !== 'null' && jobsData !== 'undefined') {
         try {
           const parsed = JSON.parse(jobsData);
-          if (Array.isArray(parsed)) {
-            setJobs(parsed);
-          } else {
-            console.error('Jobs data is not an array, resetting');
-            setJobs([]);
-          }
+          if (Array.isArray(parsed)) setJobs(parsed);
         } catch (e) {
-          console.error('Failed to parse jobs data:', e, 'Data:', jobsData?.substring(0, 100));
-          setJobs([]);
+          console.error('Failed to parse jobs data:', e);
         }
       }
       
       if (routesData && routesData !== 'null' && routesData !== 'undefined') {
         try {
           const parsed = JSON.parse(routesData);
-          if (Array.isArray(parsed)) {
-            setRoutes(parsed);
-          } else {
-            console.error('Routes data is not an array, resetting');
-            setRoutes([]);
-          }
+          if (Array.isArray(parsed)) setRoutes(parsed);
         } catch (e) {
-          console.error('Failed to parse routes data:', e, 'Data:', routesData?.substring(0, 100));
-          setRoutes([]);
+          console.error('Failed to parse routes data:', e);
         }
       }
       
       if (timeLogsData && timeLogsData !== 'null' && timeLogsData !== 'undefined') {
         try {
           const parsed = JSON.parse(timeLogsData);
-          if (Array.isArray(parsed)) {
-            setTimeLogs(parsed);
-          } else {
-            console.error('Time logs data is not an array, resetting');
-            setTimeLogs([]);
-          }
+          if (Array.isArray(parsed)) setTimeLogs(parsed);
         } catch (e) {
-          console.error('Failed to parse time logs data:', e, 'Data:', timeLogsData?.substring(0, 100));
-          setTimeLogs([]);
+          console.error('Failed to parse time logs data:', e);
         }
       }
       
       if (dvirsData && dvirsData !== 'null' && dvirsData !== 'undefined') {
         try {
           const parsed = JSON.parse(dvirsData);
-          if (Array.isArray(parsed)) {
-            setDvirs(parsed);
-          } else {
-            console.error('DVIRs data is not an array, resetting');
-            setDvirs([]);
-          }
+          if (Array.isArray(parsed)) setDvirs(parsed);
         } catch (e) {
-          console.error('Failed to parse dvirs data:', e, 'Data:', dvirsData?.substring(0, 100));
-          setDvirs([]);
+          console.error('Failed to parse dvirs data:', e);
         }
       }
       
       if (fuelLogsData && fuelLogsData !== 'null' && fuelLogsData !== 'undefined') {
         try {
           const parsed = JSON.parse(fuelLogsData);
-          if (Array.isArray(parsed)) {
-            setFuelLogs(parsed);
-          } else {
-            console.error('Fuel logs data is not an array, resetting');
-            setFuelLogs([]);
-          }
+          if (Array.isArray(parsed)) setFuelLogs(parsed);
         } catch (e) {
-          console.error('Failed to parse fuel logs data:', e, 'Data:', fuelLogsData?.substring(0, 100));
-          setFuelLogs([]);
+          console.error('Failed to parse fuel logs data:', e);
         }
       }
       
       if (dumpTicketsData && dumpTicketsData !== 'null' && dumpTicketsData !== 'undefined') {
         try {
           const parsed = JSON.parse(dumpTicketsData);
-          if (Array.isArray(parsed)) {
-            setDumpTickets(parsed);
-          } else {
-            console.error('Dump tickets data is not an array, resetting');
-            setDumpTickets([]);
-          }
+          if (Array.isArray(parsed)) setDumpTickets(parsed);
         } catch (e) {
-          console.error('Failed to parse dump tickets data:', e, 'Data:', dumpTicketsData?.substring(0, 100));
-          setDumpTickets([]);
+          console.error('Failed to parse dump tickets data:', e);
         }
       }
       
       if (messagesData && messagesData !== 'null' && messagesData !== 'undefined') {
         try {
           const parsed = JSON.parse(messagesData);
-          if (Array.isArray(parsed)) {
-            setMessages(parsed);
-          } else {
-            console.error('Messages data is not an array, resetting');
-            setMessages([]);
-          }
+          if (Array.isArray(parsed)) setMessages(parsed);
         } catch (e) {
-          console.error('Failed to parse messages data:', e, 'Data:', messagesData?.substring(0, 100));
-          setMessages([]);
+          console.error('Failed to parse messages data:', e);
         }
       }
       
       if (gpsData && gpsData !== 'null' && gpsData !== 'undefined') {
         try {
           const parsed = JSON.parse(gpsData);
-          if (Array.isArray(parsed)) {
-            setGpsBreadcrumbs(parsed);
-          } else {
-            console.error('GPS data is not an array, resetting');
-            setGpsBreadcrumbs([]);
-          }
+          if (Array.isArray(parsed)) setGpsBreadcrumbs(parsed);
         } catch (e) {
-          console.error('Failed to parse GPS data:', e, 'Data:', gpsData?.substring(0, 100));
-          setGpsBreadcrumbs([]);
+          console.error('Failed to parse GPS data:', e);
         }
       }
       
       if (mileageLogsData && mileageLogsData !== 'null' && mileageLogsData !== 'undefined') {
         try {
           const parsed = JSON.parse(mileageLogsData);
-          if (Array.isArray(parsed)) {
-            setMileageLogs(parsed);
-          } else {
-            console.error('Mileage logs data is not an array, resetting');
-            setMileageLogs([]);
-          }
+          if (Array.isArray(parsed)) setMileageLogs(parsed);
         } catch (e) {
-          console.error('Failed to parse mileage logs data:', e, 'Data:', mileageLogsData?.substring(0, 100));
-          setMileageLogs([]);
+          console.error('Failed to parse mileage logs data:', e);
         }
       }
       
@@ -329,212 +315,198 @@ export const [DataProvider, useData] = createContextHook(() => {
           setDispatcherSettings(parsed);
         } catch (e) {
           console.error('Failed to parse settings data:', e);
-          const defaultSettings: DispatcherSettings = {
-            id: 'settings-1',
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString(),
-          };
-          setDispatcherSettings(defaultSettings);
-          await AsyncStorage.setItem(STORAGE_KEYS.DISPATCHER_SETTINGS, JSON.stringify(defaultSettings));
         }
-      } else {
-        const defaultSettings: DispatcherSettings = {
-          id: 'settings-1',
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-        };
-        setDispatcherSettings(defaultSettings);
-        await AsyncStorage.setItem(STORAGE_KEYS.DISPATCHER_SETTINGS, JSON.stringify(defaultSettings));
       }
       
       if (reportsData && reportsData !== 'null' && reportsData !== 'undefined') {
         try {
           const parsed = JSON.parse(reportsData);
-          if (Array.isArray(parsed)) {
-            setReports(parsed);
-          } else {
-            console.error('Reports data is not an array, resetting');
-            setReports([]);
-          }
+          if (Array.isArray(parsed)) setReports(parsed);
         } catch (e) {
           console.error('Failed to parse reports data:', e);
-          setReports([]);
         }
       }
       
       if (recurringJobsData && recurringJobsData !== 'null' && recurringJobsData !== 'undefined') {
         try {
           const parsed = JSON.parse(recurringJobsData);
-          if (Array.isArray(parsed)) {
-            setRecurringJobs(parsed);
-          } else {
-            console.error('Recurring jobs data is not an array, resetting');
-            setRecurringJobs([]);
-          }
+          if (Array.isArray(parsed)) setRecurringJobs(parsed);
         } catch (e) {
           console.error('Failed to parse recurring jobs data:', e);
-          setRecurringJobs([]);
         }
       }
 
-      console.log('Data loaded successfully');
+      console.log('Local data loaded');
     } catch (error) {
-      console.error('Failed to load data:', error);
+      console.error('Failed to load local data:', error);
     } finally {
       clearTimeout(timeout);
       setIsLoading(false);
     }
   };
 
+  const syncToBackend = useCallback(async (data: any) => {
+    try {
+      setIsSyncing(true);
+      await syncMutation.mutateAsync(data);
+      await getAllQuery.refetch();
+      console.log('Data synced to backend');
+    } catch (error) {
+      console.error('Failed to sync to backend:', error);
+    } finally {
+      setIsSyncing(false);
+    }
+  }, [syncMutation, getAllQuery]);
+
   const addDriver = useCallback(async (driver: Driver) => {
     const updated = [...drivers, driver];
     setDrivers(updated);
-    await AsyncStorage.setItem(STORAGE_KEYS.DRIVERS, JSON.stringify(updated));
-  }, [drivers]);
+    await syncToBackend({ drivers: updated });
+  }, [drivers, syncToBackend]);
 
   const updateDriver = useCallback(async (id: string, updates: Partial<Driver>) => {
     const updated = drivers.map(d => d.id === id ? { ...d, ...updates } : d);
     setDrivers(updated);
-    await AsyncStorage.setItem(STORAGE_KEYS.DRIVERS, JSON.stringify(updated));
-  }, [drivers]);
+    await syncToBackend({ drivers: updated });
+  }, [drivers, syncToBackend]);
 
   const addTruck = useCallback(async (truck: Truck) => {
     const updated = [...trucks, truck];
     setTrucks(updated);
-    await AsyncStorage.setItem(STORAGE_KEYS.TRUCKS, JSON.stringify(updated));
-  }, [trucks]);
+    await syncToBackend({ trucks: updated });
+  }, [trucks, syncToBackend]);
 
   const updateTruck = useCallback(async (id: string, updates: Partial<Truck>) => {
     const updated = trucks.map(t => t.id === id ? { ...t, ...updates } : t);
     setTrucks(updated);
-    await AsyncStorage.setItem(STORAGE_KEYS.TRUCKS, JSON.stringify(updated));
-  }, [trucks]);
+    await syncToBackend({ trucks: updated });
+  }, [trucks, syncToBackend]);
 
   const addCustomer = useCallback(async (customer: Customer) => {
     const updated = [...customers, customer];
     setCustomers(updated);
-    await AsyncStorage.setItem(STORAGE_KEYS.CUSTOMERS, JSON.stringify(updated));
-  }, [customers]);
+    await syncToBackend({ customers: updated });
+  }, [customers, syncToBackend]);
 
   const addJob = useCallback(async (job: Job) => {
     const updated = [...jobs, job];
     setJobs(updated);
-    await AsyncStorage.setItem(STORAGE_KEYS.JOBS, JSON.stringify(updated));
-  }, [jobs]);
+    await syncToBackend({ jobs: updated });
+  }, [jobs, syncToBackend]);
 
   const updateJob = useCallback(async (id: string, updates: Partial<Job>) => {
     const updated = jobs.map(j => j.id === id ? { ...j, ...updates } : j);
     setJobs(updated);
-    await AsyncStorage.setItem(STORAGE_KEYS.JOBS, JSON.stringify(updated));
-  }, [jobs]);
+    await syncToBackend({ jobs: updated });
+  }, [jobs, syncToBackend]);
 
   const addRoute = useCallback(async (route: Route) => {
     const updated = [...routes, route];
     setRoutes(updated);
-    await AsyncStorage.setItem(STORAGE_KEYS.ROUTES, JSON.stringify(updated));
-  }, [routes]);
+    await syncToBackend({ routes: updated });
+  }, [routes, syncToBackend]);
 
   const updateRoute = useCallback(async (id: string, updates: Partial<Route>) => {
     const updated = routes.map(r => r.id === id ? { ...r, ...updates } : r);
     setRoutes(updated);
-    await AsyncStorage.setItem(STORAGE_KEYS.ROUTES, JSON.stringify(updated));
-  }, [routes]);
+    await syncToBackend({ routes: updated });
+  }, [routes, syncToBackend]);
 
   const addTimeLog = useCallback(async (timeLog: TimeLog) => {
     const updated = [...timeLogs, timeLog];
     setTimeLogs(updated);
-    await AsyncStorage.setItem(STORAGE_KEYS.TIME_LOGS, JSON.stringify(updated));
-  }, [timeLogs]);
+    await syncToBackend({ timeLogs: updated });
+  }, [timeLogs, syncToBackend]);
 
   const addDVIR = useCallback(async (dvir: DVIR) => {
     const updated = [...dvirs, dvir];
     setDvirs(updated);
-    await AsyncStorage.setItem(STORAGE_KEYS.DVIRS, JSON.stringify(updated));
-  }, [dvirs]);
+    await syncToBackend({ dvirs: updated });
+  }, [dvirs, syncToBackend]);
 
   const addFuelLog = useCallback(async (fuelLog: FuelLog) => {
     const updated = [...fuelLogs, fuelLog];
     setFuelLogs(updated);
-    await AsyncStorage.setItem(STORAGE_KEYS.FUEL_LOGS, JSON.stringify(updated));
-  }, [fuelLogs]);
+    await syncToBackend({ fuelLogs: updated });
+  }, [fuelLogs, syncToBackend]);
 
   const addDumpTicket = useCallback(async (dumpTicket: DumpTicket) => {
     const updated = [...dumpTickets, dumpTicket];
     setDumpTickets(updated);
-    await AsyncStorage.setItem(STORAGE_KEYS.DUMP_TICKETS, JSON.stringify(updated));
-  }, [dumpTickets]);
+    await syncToBackend({ dumpTickets: updated });
+  }, [dumpTickets, syncToBackend]);
 
   const addMessage = useCallback(async (message: Message) => {
     const updated = [...messages, message];
     setMessages(updated);
-    await AsyncStorage.setItem(STORAGE_KEYS.MESSAGES, JSON.stringify(updated));
-  }, [messages]);
+    await syncToBackend({ messages: updated });
+  }, [messages, syncToBackend]);
 
   const addGPSBreadcrumb = useCallback(async (breadcrumb: GPSBreadcrumb) => {
     const updated = [...gpsBreadcrumbs, breadcrumb];
     setGpsBreadcrumbs(updated);
-    await AsyncStorage.setItem(STORAGE_KEYS.GPS_BREADCRUMBS, JSON.stringify(updated));
-  }, [gpsBreadcrumbs]);
+    await syncToBackend({ gpsBreadcrumbs: updated });
+  }, [gpsBreadcrumbs, syncToBackend]);
 
   const addDumpSite = useCallback(async (dumpSite: DumpSite) => {
     const updated = [...dumpSites, dumpSite];
     setDumpSites(updated);
-    await AsyncStorage.setItem(STORAGE_KEYS.DUMP_SITES, JSON.stringify(updated));
-  }, [dumpSites]);
+    await syncToBackend({ dumpSites: updated });
+  }, [dumpSites, syncToBackend]);
 
   const addYard = useCallback(async (yard: Yard) => {
     const updated = [...yards, yard];
     setYards(updated);
-    await AsyncStorage.setItem(STORAGE_KEYS.YARDS, JSON.stringify(updated));
-  }, [yards]);
+    await syncToBackend({ yards: updated });
+  }, [yards, syncToBackend]);
 
   const deleteDriver = useCallback(async (id: string) => {
     const updated = drivers.filter(d => d.id !== id);
     setDrivers(updated);
-    await AsyncStorage.setItem(STORAGE_KEYS.DRIVERS, JSON.stringify(updated));
-  }, [drivers]);
+    await syncToBackend({ drivers: updated });
+  }, [drivers, syncToBackend]);
 
   const deleteTruck = useCallback(async (id: string) => {
     const updated = trucks.filter(t => t.id !== id);
     setTrucks(updated);
-    await AsyncStorage.setItem(STORAGE_KEYS.TRUCKS, JSON.stringify(updated));
-  }, [trucks]);
+    await syncToBackend({ trucks: updated });
+  }, [trucks, syncToBackend]);
 
   const deleteCustomer = useCallback(async (id: string) => {
     const updated = customers.filter(c => c.id !== id);
     setCustomers(updated);
-    await AsyncStorage.setItem(STORAGE_KEYS.CUSTOMERS, JSON.stringify(updated));
-  }, [customers]);
+    await syncToBackend({ customers: updated });
+  }, [customers, syncToBackend]);
 
   const deleteJob = useCallback(async (id: string) => {
     const updated = jobs.filter(j => j.id !== id);
     setJobs(updated);
-    await AsyncStorage.setItem(STORAGE_KEYS.JOBS, JSON.stringify(updated));
-  }, [jobs]);
+    await syncToBackend({ jobs: updated });
+  }, [jobs, syncToBackend]);
 
   const deleteRoute = useCallback(async (id: string) => {
     const updated = routes.filter(r => r.id !== id);
     setRoutes(updated);
-    await AsyncStorage.setItem(STORAGE_KEYS.ROUTES, JSON.stringify(updated));
-  }, [routes]);
+    await syncToBackend({ routes: updated });
+  }, [routes, syncToBackend]);
 
   const deleteDumpSite = useCallback(async (id: string) => {
     const updated = dumpSites.filter(d => d.id !== id);
     setDumpSites(updated);
-    await AsyncStorage.setItem(STORAGE_KEYS.DUMP_SITES, JSON.stringify(updated));
-  }, [dumpSites]);
+    await syncToBackend({ dumpSites: updated });
+  }, [dumpSites, syncToBackend]);
 
   const deleteYard = useCallback(async (id: string) => {
     const updated = yards.filter(y => y.id !== id);
     setYards(updated);
-    await AsyncStorage.setItem(STORAGE_KEYS.YARDS, JSON.stringify(updated));
-  }, [yards]);
+    await syncToBackend({ yards: updated });
+  }, [yards, syncToBackend]);
 
   const addMileageLog = useCallback(async (mileageLog: MileageLog) => {
     const updated = [...mileageLogs, mileageLog];
     setMileageLogs(updated);
-    await AsyncStorage.setItem(STORAGE_KEYS.MILEAGE_LOGS, JSON.stringify(updated));
-  }, [mileageLogs]);
+    await syncToBackend({ mileageLogs: updated });
+  }, [mileageLogs, syncToBackend]);
 
   const updateDispatcherSettings = useCallback(async (updates: Partial<DispatcherSettings>) => {
     const updated: DispatcherSettings = {
@@ -545,62 +517,62 @@ export const [DataProvider, useData] = createContextHook(() => {
       updatedAt: new Date().toISOString(),
     };
     setDispatcherSettings(updated);
-    await AsyncStorage.setItem(STORAGE_KEYS.DISPATCHER_SETTINGS, JSON.stringify(updated));
-  }, [dispatcherSettings]);
+    await syncToBackend({ dispatcherSettings: updated });
+  }, [dispatcherSettings, syncToBackend]);
 
   const updateCustomer = useCallback(async (id: string, updates: Partial<Customer>) => {
     const updated = customers.map(c => c.id === id ? { ...c, ...updates } : c);
     setCustomers(updated);
-    await AsyncStorage.setItem(STORAGE_KEYS.CUSTOMERS, JSON.stringify(updated));
-  }, [customers]);
+    await syncToBackend({ customers: updated });
+  }, [customers, syncToBackend]);
 
   const updateDumpSite = useCallback(async (id: string, updates: Partial<DumpSite>) => {
     const updated = dumpSites.map(d => d.id === id ? { ...d, ...updates } : d);
     setDumpSites(updated);
-    await AsyncStorage.setItem(STORAGE_KEYS.DUMP_SITES, JSON.stringify(updated));
-  }, [dumpSites]);
+    await syncToBackend({ dumpSites: updated });
+  }, [dumpSites, syncToBackend]);
 
   const updateYard = useCallback(async (id: string, updates: Partial<Yard>) => {
     const updated = yards.map(y => y.id === id ? { ...y, ...updates } : y);
     setYards(updated);
-    await AsyncStorage.setItem(STORAGE_KEYS.YARDS, JSON.stringify(updated));
-  }, [yards]);
+    await syncToBackend({ yards: updated });
+  }, [yards, syncToBackend]);
 
   const addReport = useCallback(async (report: Report) => {
     const updated = [...reports, report];
     setReports(updated);
-    await AsyncStorage.setItem(STORAGE_KEYS.REPORTS, JSON.stringify(updated));
-  }, [reports]);
+    await syncToBackend({ reports: updated });
+  }, [reports, syncToBackend]);
 
   const updateReport = useCallback(async (id: string, updates: Partial<Report>) => {
     const updated = reports.map(r => r.id === id ? { ...r, ...updates } : r);
     setReports(updated);
-    await AsyncStorage.setItem(STORAGE_KEYS.REPORTS, JSON.stringify(updated));
-  }, [reports]);
+    await syncToBackend({ reports: updated });
+  }, [reports, syncToBackend]);
 
   const deleteReport = useCallback(async (id: string) => {
     const updated = reports.filter(r => r.id !== id);
     setReports(updated);
-    await AsyncStorage.setItem(STORAGE_KEYS.REPORTS, JSON.stringify(updated));
-  }, [reports]);
+    await syncToBackend({ reports: updated });
+  }, [reports, syncToBackend]);
 
   const addRecurringJob = useCallback(async (recurringJob: RecurringJob) => {
     const updated = [...recurringJobs, recurringJob];
     setRecurringJobs(updated);
-    await AsyncStorage.setItem(STORAGE_KEYS.RECURRING_JOBS, JSON.stringify(updated));
-  }, [recurringJobs]);
+    await syncToBackend({ recurringJobs: updated });
+  }, [recurringJobs, syncToBackend]);
 
   const updateRecurringJob = useCallback(async (id: string, updates: Partial<RecurringJob>) => {
     const updated = recurringJobs.map(rj => rj.id === id ? { ...rj, ...updates } : rj);
     setRecurringJobs(updated);
-    await AsyncStorage.setItem(STORAGE_KEYS.RECURRING_JOBS, JSON.stringify(updated));
-  }, [recurringJobs]);
+    await syncToBackend({ recurringJobs: updated });
+  }, [recurringJobs, syncToBackend]);
 
   const deleteRecurringJob = useCallback(async (id: string) => {
     const updated = recurringJobs.filter(rj => rj.id !== id);
     setRecurringJobs(updated);
-    await AsyncStorage.setItem(STORAGE_KEYS.RECURRING_JOBS, JSON.stringify(updated));
-  }, [recurringJobs]);
+    await syncToBackend({ recurringJobs: updated });
+  }, [recurringJobs, syncToBackend]);
 
   return useMemo(() => ({
     drivers,
@@ -620,7 +592,8 @@ export const [DataProvider, useData] = createContextHook(() => {
     dispatcherSettings,
     reports,
     recurringJobs,
-    isLoading,
+    isLoading: isLoading || getAllQuery.isLoading,
+    isSyncing,
     addDriver,
     updateDriver,
     deleteDriver,
@@ -658,7 +631,8 @@ export const [DataProvider, useData] = createContextHook(() => {
     deleteRecurringJob,
   }), [
     drivers, trucks, dumpSites, yards, customers, jobs, routes,
-    timeLogs, dvirs, fuelLogs, dumpTickets, messages, gpsBreadcrumbs, mileageLogs, dispatcherSettings, reports, recurringJobs, isLoading,
+    timeLogs, dvirs, fuelLogs, dumpTickets, messages, gpsBreadcrumbs, mileageLogs, dispatcherSettings, reports, recurringJobs,
+    isLoading, isSyncing, getAllQuery.isLoading,
     addDriver, updateDriver, deleteDriver, addTruck, updateTruck, deleteTruck,
     addCustomer, updateCustomer, deleteCustomer, addJob, updateJob, deleteJob,
     addRoute, updateRoute, deleteRoute, addTimeLog, addDVIR, addFuelLog,
