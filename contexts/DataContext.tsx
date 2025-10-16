@@ -57,8 +57,10 @@ export const [DataProvider, useData] = createContextHook(() => {
   const [isSyncing, setIsSyncing] = useState<boolean>(false);
 
   const getAllQuery = trpc.data.getAll.useQuery(undefined, {
-    refetchInterval: 5000,
-    refetchIntervalInBackground: true,
+    refetchInterval: false,
+    refetchOnWindowFocus: false,
+    retry: 1,
+    staleTime: 30000,
   });
   const syncMutation = trpc.data.sync.useMutation();
 
@@ -71,7 +73,7 @@ export const [DataProvider, useData] = createContextHook(() => {
       console.log('Received data from backend, updating local state');
       updateFromBackend(getAllQuery.data);
     }
-  }, [getAllQuery.data]);
+  }, [getAllQuery.data, getAllQuery.isLoading]);
 
   const updateFromBackend = async (data: any) => {
     setDrivers(data.drivers || []);
