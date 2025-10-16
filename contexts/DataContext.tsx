@@ -57,12 +57,14 @@ export const [DataProvider, useData] = createContextHook(() => {
   const [isSyncing, setIsSyncing] = useState<boolean>(false);
 
   const getAllQuery = trpc.data.getAll.useQuery(undefined, {
-    refetchInterval: 300000,
+    refetchInterval: false,
     refetchOnWindowFocus: false,
-    retry: 1,
-    staleTime: 240000,
+    retry: 2,
+    retryDelay: 1000,
+    staleTime: Infinity,
     enabled: true,
     refetchOnMount: false,
+    refetchOnReconnect: true,
   });
   const syncMutation = trpc.data.sync.useMutation();
 
@@ -71,7 +73,7 @@ export const [DataProvider, useData] = createContextHook(() => {
   }, []);
 
   useEffect(() => {
-    if (getAllQuery.data && !getAllQuery.isLoading) {
+    if (getAllQuery.data && !getAllQuery.isLoading && !getAllQuery.isFetching) {
       console.log('📥 Received data from backend, updating local state');
       console.log('Backend data counts:', {
         drivers: getAllQuery.data.drivers?.length || 0,
@@ -84,7 +86,7 @@ export const [DataProvider, useData] = createContextHook(() => {
       });
       updateFromBackend(getAllQuery.data);
     }
-  }, [getAllQuery.data, getAllQuery.isLoading]);
+  }, [getAllQuery.data, getAllQuery.isLoading, getAllQuery.isFetching]);
 
   const updateFromBackend = async (data: any) => {
     setDrivers(data.drivers || []);
@@ -363,14 +365,13 @@ export const [DataProvider, useData] = createContextHook(() => {
       setIsSyncing(true);
       console.log('📤 Syncing to backend:', Object.keys(data));
       await syncMutation.mutateAsync(data);
-      await getAllQuery.refetch();
       console.log('✅ Data synced to backend successfully');
-    } catch (error) {
-      console.error('❌ Failed to sync to backend:', error);
+    } catch (error: any) {
+      console.error('❌ Failed to sync to backend:', error?.message || error);
     } finally {
       setIsSyncing(false);
     }
-  }, [syncMutation, getAllQuery]);
+  }, [syncMutation]);
 
   const addDriver = useCallback(async (driver: Driver) => {
     const updated = [...drivers, driver];
@@ -589,8 +590,17 @@ export const [DataProvider, useData] = createContextHook(() => {
   }, [recurringJobs, syncToBackend]);
 
   const forceRefreshFromBackend = useCallback(async () => {
-    console.log('Force refreshing from backend...');
-    await getAllQuery.refetch();
+    try {
+      console.log('Force refreshing from backend...');
+      const result = await getAllQuery.refetch();
+      if (result.isError) {
+        console.error('❌ Force refresh failed:', result.error);
+      } else {
+        console.log('✅ Force refresh completed successfully');
+      }
+    } catch (error: any) {
+      console.error('❌ Force refresh error:', error?.message || error);
+    }
   }, [getAllQuery]);
 
   return useMemo(() => ({

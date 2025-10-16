@@ -59,16 +59,29 @@ export const trpcClient = trpc.createClient({
       fetch: async (url, options) => {
         console.log("tRPC fetch to:", url);
         try {
-          const response = await fetch(url, options);
+          const controller = new AbortController();
+          const timeoutId = setTimeout(() => controller.abort(), 10000);
+
+          const response = await fetch(url, {
+            ...options,
+            signal: controller.signal,
+          });
+
+          clearTimeout(timeoutId);
           console.log("tRPC response status:", response.status);
+
           if (!response.ok) {
             const text = await response.text();
-            console.error("tRPC error response:", text.substring(0, 500));
-            throw new Error(`HTTP ${response.status}: ${text.substring(0, 200)}`);
+            console.error("tRPC error response:", text.substring(0, 200));
+            throw new Error(`HTTP ${response.status}`);
           }
           return response;
-        } catch (err) {
-          console.error("tRPC fetch error:", err);
+        } catch (err: any) {
+          if (err?.name === 'AbortError') {
+            console.error("tRPC request timeout after 10s");
+            throw new Error('Request timeout');
+          }
+          console.error("tRPC fetch error:", err?.message || err);
           throw err;
         }
       },

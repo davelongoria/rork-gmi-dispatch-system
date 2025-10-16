@@ -1,17 +1,28 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
-import React, { useEffect } from "react";
-import { View, ActivityIndicator } from "react-native";
+import React, { useEffect, useState } from "react";
+import { View, ActivityIndicator, Text, StyleSheet } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { DataProvider, useData } from "@/contexts/DataContext";
 import Colors from "@/constants/colors";
 import { trpc, trpcClient } from "@/lib/trpc";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 
 SplashScreen.preventAutoHideAsync();
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: 2,
+      retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 5000),
+    },
+    mutations: {
+      retry: 1,
+    },
+  },
+});
 
 function RootLayoutNav() {
   return (
@@ -26,27 +37,32 @@ function RootLayoutNav() {
 function AppContent() {
   const { isLoading: authLoading } = useAuth();
   const { isLoading: dataLoading } = useData();
-  const [forceRender, setForceRender] = React.useState(false);
+
+  const [isReady, setIsReady] = useState(false);
 
   useEffect(() => {
     const timeout = setTimeout(() => {
-      console.warn('Force rendering app after timeout');
-      setForceRender(true);
-      SplashScreen.hideAsync();
-    }, 4000);
+      console.warn('Force rendering app after 3s timeout');
+
+      setIsReady(true);
+      SplashScreen.hideAsync().catch(err => console.error('Error hiding splash:', err));
+    }, 3000);
 
     if (!authLoading && !dataLoading) {
+      console.log('App ready, hiding splash screen');
       clearTimeout(timeout);
-      SplashScreen.hideAsync();
+      setIsReady(true);
+      SplashScreen.hideAsync().catch(err => console.error('Error hiding splash:', err));
     }
 
     return () => clearTimeout(timeout);
   }, [authLoading, dataLoading]);
 
-  if ((authLoading || dataLoading) && !forceRender) {
+  if (!isReady) {
     return (
-      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: Colors.background }}>
+      <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color={Colors.primary} />
+        <Text style={styles.loadingText}>Loading...</Text>
       </View>
     );
   }
@@ -56,16 +72,33 @@ function AppContent() {
 
 export default function RootLayout() {
   return (
-    <trpc.Provider client={trpcClient} queryClient={queryClient}>
-      <QueryClientProvider client={queryClient}>
-        <AuthProvider>
-          <DataProvider>
-            <GestureHandlerRootView style={{ flex: 1 }}>
-              <AppContent />
-            </GestureHandlerRootView>
-          </DataProvider>
-        </AuthProvider>
-      </QueryClientProvider>
-    </trpc.Provider>
+    <ErrorBoundary>
+      <trpc.Provider client={trpcClient} queryClient={queryClient}>
+        <QueryClientProvider client={queryClient}>
+          <AuthProvider>
+            <DataProvider>
+              <GestureHandlerRootView style={{ flex: 1 }}>
+                <AppContent />
+              </GestureHandlerRootView>
+            </DataProvider>
+          </AuthProvider>
+        </QueryClientProvider>
+      </trpc.Provider>
+    </ErrorBoundary>
   );
 }
+
+const styles = StyleSheet.create({
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: Colors.background,
+    gap: 16,
+  },
+  loadingText: {
+    fontSize: 16,
+    color: Colors.text,
+    marginTop: 8,
+  },
+});
