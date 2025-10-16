@@ -59,8 +59,10 @@ export const [DataProvider, useData] = createContextHook(() => {
   const getAllQuery = trpc.data.getAll.useQuery(undefined, {
     refetchInterval: 300000,
     refetchOnWindowFocus: false,
-    retry: 3,
+    retry: 1,
     staleTime: 240000,
+    enabled: true,
+    refetchOnMount: false,
   });
   const syncMutation = trpc.data.sync.useMutation();
 
@@ -131,7 +133,7 @@ export const [DataProvider, useData] = createContextHook(() => {
     const timeout = setTimeout(() => {
       console.warn('Data loading timeout, continuing anyway');
       setIsLoading(false);
-    }, 5000);
+    }, 2000);
 
     try {
       const [
@@ -609,7 +611,7 @@ export const [DataProvider, useData] = createContextHook(() => {
     dispatcherSettings,
     reports,
     recurringJobs,
-    isLoading: isLoading || getAllQuery.isLoading,
+    isLoading: isLoading,
     isSyncing,
     forceRefreshFromBackend,
     addDriver,
@@ -650,7 +652,7 @@ export const [DataProvider, useData] = createContextHook(() => {
   }), [
     drivers, trucks, dumpSites, yards, customers, jobs, routes,
     timeLogs, dvirs, fuelLogs, dumpTickets, messages, gpsBreadcrumbs, mileageLogs, dispatcherSettings, reports, recurringJobs,
-    isLoading, isSyncing, getAllQuery.isLoading,
+    isLoading, isSyncing,
     forceRefreshFromBackend,
     addDriver, updateDriver, deleteDriver, addTruck, updateTruck, deleteTruck,
     addCustomer, updateCustomer, deleteCustomer, addJob, updateJob, deleteJob,

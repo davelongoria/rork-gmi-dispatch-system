@@ -32,7 +32,8 @@ function AppContent() {
     const timeout = setTimeout(() => {
       console.warn('Force rendering app after timeout');
       setForceRender(true);
-    }, 8000);
+      SplashScreen.hideAsync();
+    }, 4000);
 
     if (!authLoading && !dataLoading) {
       clearTimeout(timeout);
