@@ -9,9 +9,17 @@ export const trpc = createTRPCReact<AppRouter>();
 
 const normalize = (u: string) => u.replace(/\/$/, "");
 
+const pickProtocol = (host: string) => {
+  const h = host.toLowerCase();
+  if (h.includes(":443") || h.includes("https") || h.includes("ngrok") || h.includes("exp.direct") || h.includes("trycloudflare") || h.endsWith(".dev")) {
+    return "https://";
+  }
+  return "http://";
+};
+
 const getBaseUrl = (): string => {
   try {
-    const envUrl = process.env.EXPO_PUBLIC_TOOLKIT_URL;
+    const envUrl = process.env.EXPO_PUBLIC_TOOLKIT_URL || (Constants as any)?.expoConfig?.extra?.EXPO_PUBLIC_TOOLKIT_URL;
     if (envUrl && typeof envUrl === "string" && envUrl.startsWith("http")) {
       console.log("Backend URL from env:", envUrl);
       return normalize(envUrl);
@@ -25,7 +33,9 @@ const getBaseUrl = (): string => {
 
     const hostUri = (Constants as any)?.expoGoConfig?.hostUri as string | undefined;
     if (hostUri) {
-      const inferred = `http://${hostUri.split("/")[0]}`;
+      const host = hostUri.split("/")[0];
+      const protocol = pickProtocol(host);
+      const inferred = `${protocol}${host}`;
       console.warn("Backend URL inferred from expoGoConfig.hostUri:", inferred);
       return normalize(inferred);
     }
@@ -47,18 +57,18 @@ export const trpcClient = trpc.createClient({
       url: apiUrl,
       transformer: superjson,
       fetch: async (url, options) => {
-        console.log('tRPC fetch to:', url);
+        console.log("tRPC fetch to:", url);
         try {
           const response = await fetch(url, options);
-          console.log('tRPC response status:', response.status);
+          console.log("tRPC response status:", response.status);
           if (!response.ok) {
             const text = await response.text();
-            console.error('tRPC error response:', text.substring(0, 500));
+            console.error("tRPC error response:", text.substring(0, 500));
             throw new Error(`HTTP ${response.status}: ${text.substring(0, 200)}`);
           }
           return response;
         } catch (err) {
-          console.error('tRPC fetch error:', err);
+          console.error("tRPC fetch error:", err);
           throw err;
         }
       },
