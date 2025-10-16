@@ -1,7 +1,17 @@
 import Database from 'better-sqlite3';
 import { join } from 'path';
+import { mkdirSync } from 'fs';
 
-const dbPath = join(process.cwd(), 'data', 'app.db');
+const dataDir = join(process.cwd(), 'data');
+try {
+  mkdirSync(dataDir, { recursive: true });
+  console.log('Data directory created/verified:', dataDir);
+} catch (err) {
+  console.error('Error creating data directory:', err);
+}
+
+const dbPath = join(dataDir, 'app.db');
+console.log('Database path:', dbPath);
 
 export const db = new Database(dbPath);
 

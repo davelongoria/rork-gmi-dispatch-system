@@ -136,6 +136,11 @@ export default function SyncDataScreen() {
       }
 
       console.log('Uploading local data to backend:', Object.keys(payload));
+      console.log('Payload sample:', {
+        driversCount: payload.drivers?.length,
+        trucksCount: payload.trucks?.length,
+        jobsCount: payload.jobs?.length,
+      });
       
       await syncMutation.mutateAsync(payload);
       
@@ -146,7 +151,9 @@ export default function SyncDataScreen() {
       
     } catch (error) {
       console.error('Upload error:', error);
-      Alert.alert('Error', 'Failed to upload data: ' + (error as Error).message);
+      console.error('Error details:', JSON.stringify(error, null, 2));
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      Alert.alert('Error', 'Failed to sync to backend: ' + errorMessage + '\n\nPlease ensure backend is enabled and running.');
     } finally {
       setIsUploading(false);
     }
@@ -194,7 +201,9 @@ export default function SyncDataScreen() {
       
     } catch (error) {
       console.error('Download error:', error);
-      Alert.alert('Error', 'Failed to download data: ' + (error as Error).message);
+      console.error('Error details:', JSON.stringify(error, null, 2));
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      Alert.alert('Error', 'Failed to download from backend: ' + errorMessage + '\n\nPlease ensure backend is enabled and running.');
     } finally {
       setIsDownloading(false);
     }
