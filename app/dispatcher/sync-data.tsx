@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -7,13 +7,15 @@ import {
   ScrollView,
   Alert,
   ActivityIndicator,
+  Platform,
 } from 'react-native';
 import { Stack } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { Upload, Download, RefreshCw } from 'lucide-react-native';
+import { Upload, Download, RefreshCw, Info } from 'lucide-react-native';
 import { trpc } from '@/lib/trpc';
 import { useData } from '@/contexts/DataContext';
 import Colors from '@/constants/colors';
+import Constants from 'expo-constants';
 
 const STORAGE_KEYS = {
   DRIVERS: '@gmi_drivers',
@@ -43,13 +45,41 @@ export default function SyncDataScreen() {
   const [lastSync, setLastSync] = useState<string | null>(null);
   const [uploadLog, setUploadLog] = useState<string[]>([]);
   const [downloadLog, setDownloadLog] = useState<string[]>([]);
+  const [diagnosticInfo, setDiagnosticInfo] = useState<string>('');
 
   const syncMutation = trpc.data.sync.useMutation();
   const getAllQuery = trpc.data.getAll.useQuery();
 
-  React.useEffect(() => {
+  useEffect(() => {
     loadLastSync();
+    loadDiagnosticInfo();
   }, []);
+
+  const loadDiagnosticInfo = () => {
+    try {
+      const envUrl = process.env.EXPO_PUBLIC_TOOLKIT_URL || (Constants as any)?.expoConfig?.extra?.EXPO_PUBLIC_TOOLKIT_URL;
+      const hostUri = (Constants as any)?.expoGoConfig?.hostUri as string | undefined;
+      
+      let info = 'Backend Connection Info:\n\n';
+      info += `Platform: ${Platform.OS}\n`;
+      info += `Env URL: ${envUrl || 'Not set'}\n`;
+      info += `Host URI: ${hostUri || 'Not available'}\n`;
+      
+      if (hostUri) {
+        const host = hostUri.split('/')[0].split(':')[0];
+        info += `Extracted Host: ${host}\n`;
+        info += `Backend URL: http://${host}/api/trpc\n`;
+      }
+      
+      if (Platform.OS === 'web') {
+        info += `Web Origin: ${typeof window !== 'undefined' ? window.location.origin : 'N/A'}\n`;
+      }
+      
+      setDiagnosticInfo(info);
+    } catch (error) {
+      setDiagnosticInfo('Error loading diagnostic info: ' + (error instanceof Error ? error.message : 'Unknown error'));
+    }
+  };
 
   const loadLastSync = async () => {
     const sync = await AsyncStorage.getItem(STORAGE_KEYS.LAST_SYNC);
@@ -286,6 +316,14 @@ export default function SyncDataScreen() {
       />
       
       <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent}>
+        <View style={styles.diagnosticCard}>
+          <Info color={Colors.primary} size={20} />
+          <View style={styles.diagnosticContent}>
+            <Text style={styles.diagnosticTitle}>Backend Diagnostics</Text>
+            <Text style={styles.diagnosticText}>{diagnosticInfo}</Text>
+          </View>
+        </View>
+
         <View style={styles.infoCard}>
           <Text style={styles.infoTitle}>Data Synchronization</Text>
           <Text style={styles.infoText}>
@@ -505,5 +543,30 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFF3E0',
     padding: 12,
     borderRadius: 8,
+  },
+  diagnosticCard: {
+    backgroundColor: '#E3F2FD',
+    borderRadius: 12,
+    padding: 16,
+    flexDirection: 'row',
+    gap: 12,
+    alignItems: 'flex-start',
+    borderWidth: 1,
+    borderColor: '#90CAF9',
+  },
+  diagnosticContent: {
+    flex: 1,
+    gap: 8,
+  },
+  diagnosticTitle: {
+    fontSize: 16,
+    fontWeight: '700' as const,
+    color: Colors.text,
+  },
+  diagnosticText: {
+    fontSize: 12,
+    color: Colors.textSecondary,
+    fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace',
+    lineHeight: 18,
   },
 });
