@@ -312,6 +312,22 @@ export type StopStatus = 'PENDING' | 'COMPLETED' | 'NOT_OUT' | 'BLOCKED' | 'SKIP
 export type ContainerSize = '1' | '1.5' | '2' | '4' | '6' | '8' | 'COMPACTOR';
 export type DayOfWeek = 'MONDAY' | 'TUESDAY' | 'WEDNESDAY' | 'THURSDAY' | 'FRIDAY' | 'SATURDAY' | 'SUNDAY';
 
+export interface StopHistoryEntry {
+  id: string;
+  timestamp: string;
+  driverId?: string;
+  driverName?: string;
+  status: StopStatus;
+  notes?: string;
+  photos?: string[];
+}
+
+export interface StopRouteAssignment {
+  dayOfWeek: DayOfWeek;
+  routeId: string;
+  routeName: string;
+}
+
 export interface CommercialStop {
   id: string;
   jobName: string;
@@ -324,6 +340,7 @@ export interface CommercialStop {
   containerCount: number;
   serviceFrequency: ServiceFrequency;
   serviceDays: DayOfWeek[];
+  routeAssignments?: StopRouteAssignment[];
   specialInstructions?: string;
   status: StopStatus;
   completedAt?: string;
@@ -333,6 +350,7 @@ export interface CommercialStop {
   issueNotes?: string;
   notOutReason?: string;
   blockedReason?: string;
+  history?: StopHistoryEntry[];
   active: boolean;
   createdAt: string;
 }

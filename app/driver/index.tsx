@@ -26,7 +26,7 @@ import type { TimeLog } from '@/types';
 
 export default function DriverDashboard() {
   const { user, logout } = useAuth();
-  const { timeLogs, routes, addTimeLog, dvirs, fuelLogs, dumpTickets, jobs } = useData();
+  const { timeLogs, routes, commercialRoutes, addTimeLog, dvirs, fuelLogs, dumpTickets, jobs } = useData();
   const router = useRouter();
   const [isClockedIn, setIsClockedIn] = useState<boolean>(false);
   const [isOnLunch, setIsOnLunch] = useState<boolean>(false);
@@ -213,8 +213,15 @@ export default function DriverDashboard() {
     return r.date === today && r.driverId === user?.id;
   });
 
+  const todayCommercialRoutes = commercialRoutes.filter(r => {
+    const today = new Date().toISOString().split('T')[0];
+    return r.date === today && r.driverId === user?.id;
+  });
+
   const activeRoutes = todayRoutes.filter(r => r.status !== 'COMPLETED');
   const completedRoutes = todayRoutes.filter(r => r.status === 'COMPLETED');
+  const activeCommercialRoutes = todayCommercialRoutes.filter(r => r.status !== 'COMPLETED');
+  const completedCommercialRoutes = todayCommercialRoutes.filter(r => r.status === 'COMPLETED');
 
   const todayDVIRs = dvirs.filter(d => {
     const today = new Date().toISOString().split('T')[0];
@@ -284,7 +291,7 @@ export default function DriverDashboard() {
 
         <View style={styles.statsGrid}>
           <View style={styles.statCard}>
-            <Text style={styles.statValue}>{todayRoutes.length}</Text>
+            <Text style={styles.statValue}>{todayRoutes.length + todayCommercialRoutes.length}</Text>
             <Text style={styles.statLabel}>Routes Today</Text>
           </View>
           <View style={styles.statCard}>
@@ -396,6 +403,58 @@ export default function DriverDashboard() {
           </View>
         )}
 
+        {activeCommercialRoutes.length > 0 && (
+          <View style={styles.routesSection}>
+            <Text style={styles.sectionTitle}>Active Commercial Routes</Text>
+            {activeCommercialRoutes.map(route => {
+              const hasPreTrip = todayDVIRs.some(d => d.type === 'PRE_TRIP');
+              const canStartRoute = isClockedIn && hasPreTrip;
+              
+              return (
+                <TouchableOpacity 
+                  key={route.id} 
+                  style={[styles.routeCard, !canStartRoute && route.status === 'DISPATCHED' && styles.routeCardDisabled]}
+                  onPress={() => {
+                    if (!isClockedIn) {
+                      Alert.alert('Clock In Required', 'You must clock in before accessing your route.');
+                      return;
+                    }
+                    if (!hasPreTrip && route.status === 'DISPATCHED') {
+                      Alert.alert(
+                        'Pre-Trip Required',
+                        'You must complete a pre-trip inspection before starting your route.',
+                        [
+                          { text: 'Cancel', style: 'cancel' },
+                          { text: 'Do Inspection', onPress: () => router.push('/driver/dvir' as any) },
+                        ]
+                      );
+                      return;
+                    }
+                    router.push(`/driver/commercial-route?routeId=${route.id}` as any);
+                  }}
+                >
+                  <View style={styles.routeHeader}>
+                    <Text style={styles.routeTitle}>{route.name}</Text>
+                    <View style={[styles.routeBadge, { backgroundColor: Colors.primary }]}>
+                      <Text style={styles.routeBadgeText}>{route.status}</Text>
+                    </View>
+                  </View>
+                  <Text style={styles.routeInfo}>{route.stopIds.length} stops assigned</Text>
+                  {!canStartRoute && route.status === 'DISPATCHED' && (
+                    <Text style={styles.routeWarning}>
+                      {!isClockedIn ? '⚠️ Clock in required' : '⚠️ Pre-trip inspection required'}
+                    </Text>
+                  )}
+                  <View style={styles.routeFooter}>
+                    <Text style={styles.routeFooterText}>Tap to view details</Text>
+                    <ArrowRight size={16} color={Colors.primary} />
+                  </View>
+                </TouchableOpacity>
+              );
+            })}
+          </View>
+        )}
+
         {completedRoutes.length > 0 && (
           <View style={styles.routesSection}>
             <Text style={styles.sectionTitle}>Completed Today</Text>
@@ -412,6 +471,32 @@ export default function DriverDashboard() {
                   </View>
                 </View>
                 <Text style={styles.routeInfo}>{route.jobIds.length} jobs</Text>
+                {route.completedAt && (
+                  <Text style={styles.routeInfo}>
+                    Completed at {new Date(route.completedAt).toLocaleTimeString()}
+                  </Text>
+                )}
+              </TouchableOpacity>
+            ))}
+          </View>
+        )}
+
+        {completedCommercialRoutes.length > 0 && (
+          <View style={styles.routesSection}>
+            <Text style={styles.sectionTitle}>Completed Commercial Routes Today</Text>
+            {completedCommercialRoutes.map(route => (
+              <TouchableOpacity 
+                key={route.id} 
+                style={styles.routeCard}
+                onPress={() => router.push(`/driver/commercial-route?routeId=${route.id}` as any)}
+              >
+                <View style={styles.routeHeader}>
+                  <Text style={styles.routeTitle}>{route.name}</Text>
+                  <View style={[styles.routeBadge, { backgroundColor: Colors.success }]}>
+                    <Text style={styles.routeBadgeText}>COMPLETED</Text>
+                  </View>
+                </View>
+                <Text style={styles.routeInfo}>{route.stopIds.length} stops</Text>
                 {route.completedAt && (
                   <Text style={styles.routeInfo}>
                     Completed at {new Date(route.completedAt).toLocaleTimeString()}

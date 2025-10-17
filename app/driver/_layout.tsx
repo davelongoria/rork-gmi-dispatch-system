@@ -43,6 +43,13 @@ export default function DriverLayout() {
           presentation: 'modal',
         }}
       />
+      <Stack.Screen
+        name="commercial-route"
+        options={{
+          title: 'Commercial Route',
+          headerShown: true,
+        }}
+      />
     </Stack>
   );
 }

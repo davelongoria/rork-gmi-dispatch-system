@@ -12,8 +12,8 @@ import {
 } from 'react-native';
 import { useData } from '@/contexts/DataContext';
 import Colors from '@/constants/colors';
-import { Plus, Calendar, User, Truck as TruckIcon, MapPin, Send, X, Package, Trash2, Edit3 } from 'lucide-react-native';
-import type { CommercialRoute, CommercialStop, ContainerSize, ServiceFrequency, DayOfWeek } from '@/types';
+import { Plus, Calendar, User, Truck as TruckIcon, MapPin, Send, X, Package, Trash2, Edit3, ArrowUpDown, History, MoveRight } from 'lucide-react-native';
+import type { CommercialRoute, CommercialStop, ContainerSize, ServiceFrequency, DayOfWeek, StopRouteAssignment } from '@/types';
 
 const CONTAINER_SIZES: ContainerSize[] = ['1', '1.5', '2', '4', '6', '8', 'COMPACTOR'];
 const SERVICE_FREQUENCIES: { value: ServiceFrequency; label: string }[] = [
@@ -54,13 +54,17 @@ export default function CommercialRoutesScreen() {
   const [modalVisible, setModalVisible] = useState<boolean>(false);
   const [stopModalVisible, setStopModalVisible] = useState<boolean>(false);
   const [editStopModalVisible, setEditStopModalVisible] = useState<boolean>(false);
+  const [reorderModalVisible, setReorderModalVisible] = useState<boolean>(false);
+  const [historyModalVisible, setHistoryModalVisible] = useState<boolean>(false);
   const [selectedRoute, setSelectedRoute] = useState<CommercialRoute | null>(null);
+  const [selectedStop, setSelectedStop] = useState<CommercialStop | null>(null);
   const [routeName, setRouteName] = useState<string>('');
   const [routeDayOfWeek, setRouteDayOfWeek] = useState<DayOfWeek>('MONDAY');
   const [routeScheduledFor, setRouteScheduledFor] = useState<string>('');
   const [selectedDriver, setSelectedDriver] = useState<string>('');
   const [selectedTruck, setSelectedTruck] = useState<string>('');
   const [selectedStops, setSelectedStops] = useState<string[]>([]);
+  const [reorderedStops, setReorderedStops] = useState<string[]>([]);
   
   const [stopJobName, setStopJobName] = useState<string>('');
   const [stopCustomerId, setStopCustomerId] = useState<string>('');
@@ -74,11 +78,86 @@ export default function CommercialRoutesScreen() {
 
   const [showCompleted, setShowCompleted] = useState<boolean>(false);
 
-  const getDayOfWeek = (dateString: string): DayOfWeek => {
-    const date = new Date(dateString);
-    const dayIndex = date.getDay();
-    const days: DayOfWeek[] = ['SUNDAY', 'MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY'];
-    return days[dayIndex];
+  const getStopAssignmentForDay = (stop: CommercialStop, day: DayOfWeek): StopRouteAssignment | undefined => {
+    return stop.routeAssignments?.find(a => a.dayOfWeek === day);
+  };
+
+  const isStopAssignedToAnotherRoute = (stopId: string, day: DayOfWeek, currentRouteId?: string): boolean => {
+    const stop = commercialStops.find(s => s.id === stopId);
+    if (!stop) return false;
+    const assignment = getStopAssignmentForDay(stop, day);
+    return assignment !== undefined && assignment.routeId !== currentRouteId;
+  };
+
+  const getAssignedRouteForStopDay = (stopId: string, day: DayOfWeek): CommercialRoute | undefined => {
+    const stop = commercialStops.find(s => s.id === stopId);
+    if (!stop) return undefined;
+    const assignment = getStopAssignmentForDay(stop, day);
+    if (!assignment) return undefined;
+    return commercialRoutes.find(r => r.id === assignment.routeId);
+  };
+
+  const moveStopToRoute = async (stopId: string, fromRouteId: string, toRouteId: string, day: DayOfWeek) => {
+    const fromRoute = commercialRoutes.find(r => r.id === fromRouteId);
+    const toRoute = commercialRoutes.find(r => r.id === toRouteId);
+    const stop = commercialStops.find(s => s.id === stopId);
+    
+    if (!fromRoute || !toRoute || !stop) return;
+
+    await updateCommercialRoute(fromRouteId, {
+      stopIds: fromRoute.stopIds.filter(id => id !== stopId),
+    });
+
+    await updateCommercialRoute(toRouteId, {
+      stopIds: [...toRoute.stopIds, stopId],
+    });
+
+    const updatedAssignments = stop.routeAssignments?.filter(a => a.dayOfWeek !== day) || [];
+    updatedAssignments.push({
+      dayOfWeek: day,
+      routeId: toRouteId,
+      routeName: toRoute.name,
+    });
+
+    await updateCommercialStop(stopId, {
+      routeAssignments: updatedAssignments,
+    });
+
+    Alert.alert('Success', `Stop moved from ${fromRoute.name} to ${toRoute.name}`);
+  };
+
+  const handleReorderStops = () => {
+    if (!selectedRoute) return;
+    setReorderedStops([...selectedRoute.stopIds]);
+    setReorderModalVisible(true);
+  };
+
+  const moveStopUp = (index: number) => {
+    if (index === 0) return;
+    const newOrder = [...reorderedStops];
+    [newOrder[index - 1], newOrder[index]] = [newOrder[index], newOrder[index - 1]];
+    setReorderedStops(newOrder);
+  };
+
+  const moveStopDown = (index: number) => {
+    if (index === reorderedStops.length - 1) return;
+    const newOrder = [...reorderedStops];
+    [newOrder[index], newOrder[index + 1]] = [newOrder[index + 1], newOrder[index]];
+    setReorderedStops(newOrder);
+  };
+
+  const saveStopOrder = async () => {
+    if (!selectedRoute) return;
+    await updateCommercialRoute(selectedRoute.id, {
+      stopIds: reorderedStops,
+    });
+    setReorderModalVisible(false);
+    Alert.alert('Success', 'Stop order updated');
+  };
+
+  const viewStopHistory = (stop: CommercialStop) => {
+    setSelectedStop(stop);
+    setHistoryModalVisible(true);
   };
 
   const getCurrentWeekRoutes = () => {
@@ -141,6 +220,31 @@ export default function CommercialRoutesScreen() {
     const truck = trucks.find(t => t.id === selectedTruck);
 
     if (selectedRoute) {
+      const oldStopIds = selectedRoute.stopIds;
+      const removedStops = oldStopIds.filter(id => !selectedStops.includes(id));
+      const addedStops = selectedStops.filter(id => !oldStopIds.includes(id));
+
+      for (const stopId of removedStops) {
+        const stop = commercialStops.find(s => s.id === stopId);
+        if (stop) {
+          const updatedAssignments = stop.routeAssignments?.filter(a => a.routeId !== selectedRoute.id) || [];
+          await updateCommercialStop(stopId, { routeAssignments: updatedAssignments });
+        }
+      }
+
+      for (const stopId of addedStops) {
+        const stop = commercialStops.find(s => s.id === stopId);
+        if (stop) {
+          const updatedAssignments = stop.routeAssignments || [];
+          updatedAssignments.push({
+            dayOfWeek: routeDayOfWeek,
+            routeId: selectedRoute.id,
+            routeName: routeName,
+          });
+          await updateCommercialStop(stopId, { routeAssignments: updatedAssignments });
+        }
+      }
+
       await updateCommercialRoute(selectedRoute.id, {
         name: routeName,
         dayOfWeek: routeDayOfWeek,
@@ -153,8 +257,9 @@ export default function CommercialRoutesScreen() {
       });
       Alert.alert('Success', 'Route updated successfully');
     } else {
+      const newRouteId = `cr-${Date.now()}`;
       const newRoute: CommercialRoute = {
-        id: `cr-${Date.now()}`,
+        id: newRouteId,
         name: routeName,
         dayOfWeek: routeDayOfWeek,
         scheduledFor: routeScheduledFor || undefined,
@@ -168,6 +273,19 @@ export default function CommercialRoutesScreen() {
         routeType: 'COMMERCIAL_FRONTLOAD',
         createdAt: new Date().toISOString(),
       };
+
+      for (const stopId of selectedStops) {
+        const stop = commercialStops.find(s => s.id === stopId);
+        if (stop) {
+          const updatedAssignments = stop.routeAssignments || [];
+          updatedAssignments.push({
+            dayOfWeek: routeDayOfWeek,
+            routeId: newRouteId,
+            routeName: routeName,
+          });
+          await updateCommercialStop(stopId, { routeAssignments: updatedAssignments });
+        }
+      }
 
       await addCommercialRoute(newRoute);
       Alert.alert('Success', 'Route created successfully');
@@ -224,8 +342,10 @@ export default function CommercialRoutesScreen() {
       containerCount: count,
       serviceFrequency: stopFrequency,
       serviceDays: stopServiceDays,
+      routeAssignments: [],
       specialInstructions: stopInstructions,
       status: 'PENDING',
+      history: [],
       active: true,
       createdAt: new Date().toISOString(),
     };
@@ -325,6 +445,13 @@ export default function CommercialRoutesScreen() {
           text: 'Delete',
           style: 'destructive',
           onPress: async () => {
+            for (const stopId of route.stopIds) {
+              const stop = commercialStops.find(s => s.id === stopId);
+              if (stop) {
+                const updatedAssignments = stop.routeAssignments?.filter(a => a.routeId !== route.id) || [];
+                await updateCommercialStop(stopId, { routeAssignments: updatedAssignments });
+              }
+            }
             await deleteCommercialRoute(route.id);
             Alert.alert('Success', 'Route deleted successfully');
           },
@@ -397,13 +524,25 @@ export default function CommercialRoutesScreen() {
 
       {item.status === 'PLANNED' && (
         <View style={styles.routeActions}>
-          <TouchableOpacity
-            style={styles.editButton}
-            onPress={() => handleEditRoute(item)}
-          >
-            <Edit3 size={16} color={Colors.primary} />
-            <Text style={styles.editButtonText}>Edit Route</Text>
-          </TouchableOpacity>
+          <View style={styles.routeActionsRow}>
+            <TouchableOpacity
+              style={styles.editButton}
+              onPress={() => handleEditRoute(item)}
+            >
+              <Edit3 size={16} color={Colors.primary} />
+              <Text style={styles.editButtonText}>Edit</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.reorderButton}
+              onPress={() => {
+                setSelectedRoute(item);
+                handleReorderStops();
+              }}
+            >
+              <ArrowUpDown size={16} color={Colors.primary} />
+              <Text style={styles.reorderButtonText}>Reorder</Text>
+            </TouchableOpacity>
+          </View>
           <View style={styles.routeActionsRow}>
             <TouchableOpacity
               style={styles.dispatchButton}
@@ -458,7 +597,7 @@ export default function CommercialRoutesScreen() {
         contentContainerStyle={styles.listContent}
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
-            <Text style={styles.emptyText}>No commercial routes for today</Text>
+            <Text style={styles.emptyText}>No commercial routes for this week</Text>
             <Text style={styles.emptySubtext}>Tap + to create a new route</Text>
           </View>
         }
@@ -575,38 +714,81 @@ export default function CommercialRoutesScreen() {
               {availableStops.length === 0 ? (
                 <Text style={styles.noStopsText}>No stops available for this day. Create stops with {DAYS_OF_WEEK.find(d => d.value === routeDayOfWeek)?.label} service day first.</Text>
               ) : (
-                availableStops.map((stop: CommercialStop) => (
-                  <TouchableOpacity
-                    key={stop.id}
-                    style={[
-                      styles.stopSelectionItem,
-                      selectedStops.includes(stop.id) && styles.stopSelectionItemSelected,
-                    ]}
-                    onPress={() => toggleStopSelection(stop.id)}
-                  >
-                    <View style={styles.stopSelectionContent}>
-                      <View style={styles.stopSelectionInfo}>
-                        <Text style={styles.stopSelectionCustomer}>{stop.jobName}</Text>
-                        {stop.customerName && (
-                          <Text style={styles.stopSelectionLinked}>Linked: {stop.customerName}</Text>
-                        )}
-                        <Text style={styles.stopSelectionAddress} numberOfLines={1}>{stop.address}</Text>
-                        <Text style={styles.stopSelectionDetail}>
-                          {stop.containerCount}x {stop.containerSize}yd • {getFrequencyLabel(stop.serviceFrequency)}
-                        </Text>
-                      </View>
-                      <TouchableOpacity 
-                        onPress={(e) => {
-                          e.stopPropagation();
-                          handleEditStop(stop);
-                        }}
-                        style={styles.editStopButton}
+                availableStops.map((stop: CommercialStop) => {
+                  const isAssignedToAnother = isStopAssignedToAnotherRoute(stop.id, routeDayOfWeek, selectedRoute?.id);
+                  const assignedRoute = isAssignedToAnother ? getAssignedRouteForStopDay(stop.id, routeDayOfWeek) : undefined;
+                  
+                  return (
+                    <View key={stop.id} style={styles.stopContainer}>
+                      <TouchableOpacity
+                        style={[
+                          styles.stopSelectionItem,
+                          selectedStops.includes(stop.id) && styles.stopSelectionItemSelected,
+                          isAssignedToAnother && styles.stopSelectionItemDisabled,
+                        ]}
+                        onPress={() => !isAssignedToAnother && toggleStopSelection(stop.id)}
                       >
-                        <Edit3 size={16} color={Colors.primary} />
+                        <View style={styles.stopSelectionContent}>
+                          <View style={styles.stopSelectionInfo}>
+                            <Text style={styles.stopSelectionCustomer}>{stop.jobName}</Text>
+                            {stop.customerName && (
+                              <Text style={styles.stopSelectionLinked}>Linked: {stop.customerName}</Text>
+                            )}
+                            <Text style={styles.stopSelectionAddress} numberOfLines={1}>{stop.address}</Text>
+                            <Text style={styles.stopSelectionDetail}>
+                              {stop.containerCount}x {stop.containerSize}yd • {getFrequencyLabel(stop.serviceFrequency)}
+                            </Text>
+                            {isAssignedToAnother && assignedRoute && (
+                              <Text style={styles.stopAssignedText}>
+                                ✗ Assigned to {assignedRoute.name}
+                              </Text>
+                            )}
+                          </View>
+                          <View style={styles.stopActions}>
+                            <TouchableOpacity 
+                              onPress={() => viewStopHistory(stop)}
+                              style={styles.iconButton}
+                            >
+                              <History size={16} color={Colors.primary} />
+                            </TouchableOpacity>
+                            <TouchableOpacity 
+                              onPress={() => handleEditStop(stop)}
+                              style={styles.iconButton}
+                            >
+                              <Edit3 size={16} color={Colors.primary} />
+                            </TouchableOpacity>
+                          </View>
+                        </View>
                       </TouchableOpacity>
+                      {isAssignedToAnother && assignedRoute && (
+                        <TouchableOpacity
+                          style={styles.moveButton}
+                          onPress={() => {
+                            Alert.alert(
+                              'Move Stop',
+                              `Move this stop from ${assignedRoute.name} to ${selectedRoute ? selectedRoute.name : 'this route'}?`,
+                              [
+                                { text: 'Cancel', style: 'cancel' },
+                                {
+                                  text: 'Move',
+                                  onPress: async () => {
+                                    if (selectedRoute) {
+                                      await moveStopToRoute(stop.id, assignedRoute.id, selectedRoute.id, routeDayOfWeek);
+                                      setSelectedStops(prev => [...prev, stop.id]);
+                                    }
+                                  },
+                                },
+                              ]
+                            );
+                          }}
+                        >
+                          <MoveRight size={16} color={Colors.background} />
+                          <Text style={styles.moveButtonText}>Move to This Route</Text>
+                        </TouchableOpacity>
+                      )}
                     </View>
-                  </TouchableOpacity>
-                ))
+                  );
+                })
               )}
 
               <View style={styles.buttonRow}>
@@ -791,7 +973,7 @@ export default function CommercialRoutesScreen() {
                 ))}
               </View>
               <Text style={styles.helpText}>
-                Select which days this stop should be serviced. You can assign this stop to routes for these specific days.
+                Select which days this stop should be serviced. You can then assign this stop to routes for these specific days.
               </Text>
 
               <Text style={[styles.label, { marginTop: 24 }]}>Special Instructions</Text>
@@ -848,9 +1030,6 @@ export default function CommercialRoutesScreen() {
                 placeholder="e.g., ABC Store Main St or ABC Corp"
                 placeholderTextColor={Colors.textSecondary}
               />
-              <Text style={styles.helpText}>
-                This name identifies the stop. If linked to a customer below, this becomes the recurring job name for reports.
-              </Text>
 
               <Text style={[styles.label, { marginTop: 24 }]}>Link to Customer (Optional)</Text>
               <TouchableOpacity
@@ -876,10 +1055,7 @@ export default function CommercialRoutesScreen() {
                     styles.selectionItem,
                     stopCustomerId === customer.id && styles.selectionItemSelected,
                   ]}
-                  onPress={() => {
-                    setStopCustomerId(customer.id);
-                    if (!stopAddress) setStopAddress(customer.address);
-                  }}
+                  onPress={() => setStopCustomerId(customer.id)}
                 >
                   <Text
                     style={[
@@ -984,9 +1160,6 @@ export default function CommercialRoutesScreen() {
                   </TouchableOpacity>
                 ))}
               </View>
-              <Text style={styles.helpText}>
-                Select which days this stop should be serviced. You can assign this stop to routes for these specific days.
-              </Text>
 
               <Text style={[styles.label, { marginTop: 24 }]}>Special Instructions</Text>
               <TextInput
@@ -1024,6 +1197,149 @@ export default function CommercialRoutesScreen() {
                   <Text style={styles.buttonPrimaryText}>Update</Text>
                 </TouchableOpacity>
               </View>
+            </ScrollView>
+          </View>
+        </View>
+      </Modal>
+
+      <Modal
+        visible={reorderModalVisible}
+        animationType="slide"
+        transparent
+        onRequestClose={() => setReorderModalVisible(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Reorder Stops</Text>
+              <TouchableOpacity onPress={() => setReorderModalVisible(false)}>
+                <X size={24} color={Colors.text} />
+              </TouchableOpacity>
+            </View>
+
+            <ScrollView style={styles.form}>
+              <Text style={styles.helpText}>
+                Arrange stops in the order the driver will service them. Use arrows to move stops up or down.
+              </Text>
+              
+              {reorderedStops.map((stopId, index) => {
+                const stop = commercialStops.find(s => s.id === stopId);
+                if (!stop) return null;
+                
+                return (
+                  <View key={stopId} style={styles.reorderStopItem}>
+                    <View style={styles.reorderStopNumber}>
+                      <Text style={styles.reorderStopNumberText}>{index + 1}</Text>
+                    </View>
+                    <View style={styles.reorderStopInfo}>
+                      <Text style={styles.reorderStopName}>{stop.jobName}</Text>
+                      <Text style={styles.reorderStopAddress} numberOfLines={1}>{stop.address}</Text>
+                    </View>
+                    <View style={styles.reorderStopActions}>
+                      <TouchableOpacity
+                        style={[styles.reorderArrow, index === 0 && styles.reorderArrowDisabled]}
+                        onPress={() => moveStopUp(index)}
+                        disabled={index === 0}
+                      >
+                        <Text style={styles.reorderArrowText}>▲</Text>
+                      </TouchableOpacity>
+                      <TouchableOpacity
+                        style={[styles.reorderArrow, index === reorderedStops.length - 1 && styles.reorderArrowDisabled]}
+                        onPress={() => moveStopDown(index)}
+                        disabled={index === reorderedStops.length - 1}
+                      >
+                        <Text style={styles.reorderArrowText}>▼</Text>
+                      </TouchableOpacity>
+                    </View>
+                  </View>
+                );
+              })}
+
+              <View style={styles.buttonRow}>
+                <TouchableOpacity
+                  style={[styles.button, styles.buttonSecondary]}
+                  onPress={() => setReorderModalVisible(false)}
+                >
+                  <Text style={styles.buttonSecondaryText}>Cancel</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[styles.button, styles.buttonPrimary]}
+                  onPress={saveStopOrder}
+                >
+                  <Text style={styles.buttonPrimaryText}>Save Order</Text>
+                </TouchableOpacity>
+              </View>
+            </ScrollView>
+          </View>
+        </View>
+      </Modal>
+
+      <Modal
+        visible={historyModalVisible}
+        animationType="slide"
+        transparent
+        onRequestClose={() => setHistoryModalVisible(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Stop History</Text>
+              <TouchableOpacity onPress={() => setHistoryModalVisible(false)}>
+                <X size={24} color={Colors.text} />
+              </TouchableOpacity>
+            </View>
+
+            <ScrollView style={styles.form}>
+              {selectedStop && (
+                <>
+                  <Text style={styles.historyStopName}>{selectedStop.jobName}</Text>
+                  <Text style={styles.historyStopAddress}>{selectedStop.address}</Text>
+
+                  <Text style={[styles.label, { marginTop: 24 }]}>Service History</Text>
+                  {(!selectedStop.history || selectedStop.history.length === 0) ? (
+                    <Text style={styles.noHistoryText}>No service history yet</Text>
+                  ) : (
+                    selectedStop.history.map((entry) => (
+                      <View key={entry.id} style={styles.historyEntry}>
+                        <View style={styles.historyEntryHeader}>
+                          <Text style={styles.historyEntryDate}>
+                            {new Date(entry.timestamp).toLocaleDateString('en-US', { 
+                              month: 'short', 
+                              day: 'numeric', 
+                              year: 'numeric',
+                              hour: 'numeric',
+                              minute: '2-digit'
+                            })}
+                          </Text>
+                          <View style={[styles.historyStatusBadge, { 
+                            backgroundColor: entry.status === 'COMPLETED' ? Colors.success : 
+                                           entry.status === 'NOT_OUT' ? Colors.warning : 
+                                           entry.status === 'BLOCKED' ? Colors.error : Colors.textSecondary 
+                          }]}>
+                            <Text style={styles.historyStatusText}>{entry.status}</Text>
+                          </View>
+                        </View>
+                        {entry.driverName && (
+                          <Text style={styles.historyEntryDriver}>Driver: {entry.driverName}</Text>
+                        )}
+                        {entry.notes && (
+                          <Text style={styles.historyEntryNotes}>{entry.notes}</Text>
+                        )}
+                        {entry.photos && entry.photos.length > 0 && (
+                          <Text style={styles.historyEntryPhotos}>{entry.photos.length} photo(s) attached</Text>
+                        )}
+                      </View>
+                    ))
+                  )}
+                </>
+              )}
+
+              <TouchableOpacity
+                style={[styles.button, styles.buttonPrimary, { marginTop: 24 }]}
+                onPress={() => setHistoryModalVisible(false)}
+              >
+                <Text style={styles.buttonPrimaryText}>Close</Text>
+              </TouchableOpacity>
             </ScrollView>
           </View>
         </View>
@@ -1120,7 +1436,6 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: '600' as const,
     color: Colors.text,
-    marginBottom: 8,
   },
   routeMeta: {
     flexDirection: 'row' as const,
@@ -1146,6 +1461,7 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   editButton: {
+    flex: 1,
     flexDirection: 'row' as const,
     alignItems: 'center' as const,
     justifyContent: 'center' as const,
@@ -1157,6 +1473,23 @@ const styles = StyleSheet.create({
     borderColor: Colors.primary,
   },
   editButtonText: {
+    fontSize: 14,
+    fontWeight: '600' as const,
+    color: Colors.primary,
+  },
+  reorderButton: {
+    flex: 1,
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    justifyContent: 'center' as const,
+    backgroundColor: Colors.backgroundSecondary,
+    paddingVertical: 12,
+    borderRadius: 8,
+    gap: 8,
+    borderWidth: 2,
+    borderColor: Colors.primary,
+  },
+  reorderButtonText: {
     fontSize: 14,
     fontWeight: '600' as const,
     color: Colors.primary,
@@ -1267,16 +1600,23 @@ const styles = StyleSheet.create({
     fontWeight: '600' as const,
     color: Colors.primary,
   },
+  stopContainer: {
+    marginBottom: 8,
+  },
   stopSelectionItem: {
     padding: 16,
     borderRadius: 12,
     borderWidth: 2,
     borderColor: Colors.border,
-    marginBottom: 8,
   },
   stopSelectionItemSelected: {
     borderColor: Colors.primary,
     backgroundColor: Colors.backgroundSecondary,
+  },
+  stopSelectionItemDisabled: {
+    borderColor: Colors.error,
+    backgroundColor: Colors.backgroundSecondary,
+    opacity: 0.6,
   },
   stopSelectionContent: {
     flexDirection: 'row' as const,
@@ -1302,7 +1642,11 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: Colors.textSecondary,
   },
-  editStopButton: {
+  stopActions: {
+    flexDirection: 'row' as const,
+    gap: 8,
+  },
+  iconButton: {
     padding: 8,
   },
   containerSizeGrid: {
@@ -1451,5 +1795,140 @@ const styles = StyleSheet.create({
     fontSize: 11,
     fontWeight: '600' as const,
     color: Colors.warning,
+  },
+  stopAssignedText: {
+    fontSize: 12,
+    color: Colors.error,
+    fontWeight: '600' as const,
+    marginTop: 4,
+  },
+  moveButton: {
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    justifyContent: 'center' as const,
+    backgroundColor: Colors.accent,
+    paddingVertical: 10,
+    borderRadius: 8,
+    gap: 8,
+    marginTop: 8,
+  },
+  moveButtonText: {
+    fontSize: 13,
+    fontWeight: '600' as const,
+    color: Colors.background,
+  },
+  reorderStopItem: {
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    backgroundColor: Colors.backgroundSecondary,
+    padding: 12,
+    borderRadius: 8,
+    marginBottom: 8,
+    gap: 12,
+  },
+  reorderStopNumber: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: Colors.primary,
+    justifyContent: 'center' as const,
+    alignItems: 'center' as const,
+  },
+  reorderStopNumberText: {
+    fontSize: 16,
+    fontWeight: '700' as const,
+    color: Colors.background,
+  },
+  reorderStopInfo: {
+    flex: 1,
+  },
+  reorderStopName: {
+    fontSize: 14,
+    fontWeight: '600' as const,
+    color: Colors.text,
+    marginBottom: 2,
+  },
+  reorderStopAddress: {
+    fontSize: 12,
+    color: Colors.textSecondary,
+  },
+  reorderStopActions: {
+    flexDirection: 'column' as const,
+    gap: 4,
+  },
+  reorderArrow: {
+    width: 32,
+    height: 32,
+    borderRadius: 6,
+    backgroundColor: Colors.primary,
+    justifyContent: 'center' as const,
+    alignItems: 'center' as const,
+  },
+  reorderArrowDisabled: {
+    backgroundColor: Colors.border,
+    opacity: 0.5,
+  },
+  reorderArrowText: {
+    fontSize: 16,
+    color: Colors.background,
+  },
+  historyStopName: {
+    fontSize: 18,
+    fontWeight: '600' as const,
+    color: Colors.text,
+    marginBottom: 4,
+  },
+  historyStopAddress: {
+    fontSize: 14,
+    color: Colors.textSecondary,
+  },
+  noHistoryText: {
+    fontSize: 14,
+    color: Colors.textSecondary,
+    fontStyle: 'italic' as const,
+    textAlign: 'center' as const,
+    paddingVertical: 24,
+  },
+  historyEntry: {
+    backgroundColor: Colors.backgroundSecondary,
+    padding: 12,
+    borderRadius: 8,
+    marginBottom: 8,
+  },
+  historyEntryHeader: {
+    flexDirection: 'row' as const,
+    justifyContent: 'space-between' as const,
+    alignItems: 'center' as const,
+    marginBottom: 8,
+  },
+  historyEntryDate: {
+    fontSize: 14,
+    fontWeight: '600' as const,
+    color: Colors.text,
+  },
+  historyStatusBadge: {
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 6,
+  },
+  historyStatusText: {
+    fontSize: 11,
+    fontWeight: '600' as const,
+    color: Colors.background,
+  },
+  historyEntryDriver: {
+    fontSize: 13,
+    color: Colors.textSecondary,
+    marginBottom: 4,
+  },
+  historyEntryNotes: {
+    fontSize: 13,
+    color: Colors.text,
+    marginBottom: 4,
+  },
+  historyEntryPhotos: {
+    fontSize: 12,
+    color: Colors.primary,
+    fontStyle: 'italic' as const,
   },
 });
