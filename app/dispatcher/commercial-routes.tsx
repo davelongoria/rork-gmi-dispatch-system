@@ -64,6 +64,7 @@ export default function CommercialRoutesScreen() {
   const [selectedDriver, setSelectedDriver] = useState<string>('');
   const [selectedTruck, setSelectedTruck] = useState<string>('');
   const [selectedStops, setSelectedStops] = useState<string[]>([]);
+  const [manageStopsRouteId, setManageStopsRouteId] = useState<string | null>(null);
   const [reorderedStops, setReorderedStops] = useState<string[]>([]);
   
   const [stopJobName, setStopJobName] = useState<string>('');
@@ -194,6 +195,7 @@ export default function CommercialRoutesScreen() {
     setSelectedTruck('');
     setSelectedStops([]);
     setSelectedRoute(null);
+    setManageStopsRouteId(null);
     setModalVisible(true);
   };
 
@@ -205,6 +207,7 @@ export default function CommercialRoutesScreen() {
     setSelectedDriver(route.driverId || '');
     setSelectedTruck(route.truckId || '');
     setSelectedStops([...route.stopIds]);
+    setManageStopsRouteId(null);
     setModalVisible(true);
   };
 
@@ -547,6 +550,16 @@ export default function CommercialRoutesScreen() {
           </View>
           <View style={styles.routeActionsRow}>
             <TouchableOpacity
+              style={styles.manageStopsButtonInRoute}
+              onPress={() => {
+                setSelectedRoute(item);
+                setManageStopsRouteId(item.id);
+              }}
+            >
+              <Package size={16} color={Colors.primary} />
+              <Text style={styles.manageStopsButtonInRouteText}>Stops</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
               style={styles.dispatchButton}
               onPress={() => handleDispatchRoute(item)}
             >
@@ -587,10 +600,7 @@ export default function CommercialRoutesScreen() {
         </View>
       </View>
 
-      <TouchableOpacity style={styles.manageStopsButton} onPress={handleCreateStop}>
-        <Package size={20} color={Colors.primary} />
-        <Text style={styles.manageStopsButtonText}>Manage Stops</Text>
-      </TouchableOpacity>
+
 
       <FlatList
         data={todayRoutes}
@@ -712,6 +722,19 @@ export default function CommercialRoutesScreen() {
                 </TouchableOpacity>
               ))}
 
+              {manageStopsRouteId && (
+                <>
+                  <Text style={[styles.label, { marginTop: 24 }]}>Manage Stops for {DAYS_OF_WEEK.find(d => d.value === routeDayOfWeek)?.label}</Text>
+                  <TouchableOpacity 
+                    style={styles.addStopButton}
+                    onPress={handleCreateStop}
+                  >
+                    <Plus size={20} color={Colors.primary} />
+                    <Text style={styles.addStopButtonText}>Add New Stop</Text>
+                  </TouchableOpacity>
+                </>
+              )}
+
               <Text style={[styles.label, { marginTop: 24 }]}>Select Stops for {DAYS_OF_WEEK.find(d => d.value === routeDayOfWeek)?.label}</Text>
               {availableStops.length === 0 ? (
                 <Text style={styles.noStopsText}>No stops available for this day. Create stops with {DAYS_OF_WEEK.find(d => d.value === routeDayOfWeek)?.label} service day first.</Text>
@@ -719,6 +742,11 @@ export default function CommercialRoutesScreen() {
                 availableStops.map((stop: CommercialStop) => {
                   const isAssignedToAnother = isStopAssignedToAnotherRoute(stop.id, routeDayOfWeek, selectedRoute?.id);
                   const assignedRoute = isAssignedToAnother ? getAssignedRouteForStopDay(stop.id, routeDayOfWeek) : undefined;
+                  
+                  const routeAssignmentDisplay = stop.serviceDays.map(day => {
+                    const assignment = stop.routeAssignments?.find(a => a.dayOfWeek === day);
+                    return `${day.substring(0, 3)}: ${assignment?.routeName || 'Unassigned'}`;
+                  }).join(' • ');
                   
                   return (
                     <View key={stop.id} style={styles.stopContainer}>
@@ -739,6 +767,9 @@ export default function CommercialRoutesScreen() {
                             <Text style={styles.stopSelectionAddress} numberOfLines={1}>{stop.address}</Text>
                             <Text style={styles.stopSelectionDetail}>
                               {stop.containerCount}x {stop.containerSize}yd • {getFrequencyLabel(stop.serviceFrequency)}
+                            </Text>
+                            <Text style={styles.routeAssignmentDaysText} numberOfLines={2}>
+                              {routeAssignmentDisplay}
                             </Text>
                             {isAssignedToAnother && assignedRoute && (
                               <Text style={styles.stopAssignedText}>
@@ -1397,23 +1428,45 @@ const styles = StyleSheet.create({
     justifyContent: 'center' as const,
     alignItems: 'center' as const,
   },
-  manageStopsButton: {
+  manageStopsButtonInRoute: {
+    flex: 1,
     flexDirection: 'row' as const,
     alignItems: 'center' as const,
     justifyContent: 'center' as const,
-    backgroundColor: Colors.background,
-    marginHorizontal: 16,
-    marginBottom: 16,
+    backgroundColor: Colors.backgroundSecondary,
+    paddingVertical: 12,
+    borderRadius: 8,
+    gap: 6,
+    borderWidth: 2,
+    borderColor: Colors.primary,
+  },
+  manageStopsButtonInRouteText: {
+    fontSize: 14,
+    fontWeight: '600' as const,
+    color: Colors.primary,
+  },
+  addStopButton: {
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    justifyContent: 'center' as const,
+    backgroundColor: Colors.backgroundSecondary,
     paddingVertical: 12,
     borderRadius: 8,
     gap: 8,
     borderWidth: 2,
     borderColor: Colors.primary,
+    marginBottom: 12,
   },
-  manageStopsButtonText: {
+  addStopButtonText: {
     fontSize: 14,
     fontWeight: '600' as const,
     color: Colors.primary,
+  },
+  routeAssignmentDaysText: {
+    fontSize: 11,
+    color: Colors.accent,
+    marginTop: 6,
+    fontWeight: '600' as const,
   },
   listContent: {
     padding: 16,
