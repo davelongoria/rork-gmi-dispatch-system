@@ -313,7 +313,8 @@ export type ContainerSize = '1' | '1.5' | '2' | '4' | '6' | '8' | 'COMPACTOR';
 
 export interface CommercialStop {
   id: string;
-  customerId: string;
+  jobName: string;
+  customerId?: string;
   customerName?: string;
   address: string;
   latitude?: number;

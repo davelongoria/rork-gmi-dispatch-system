@@ -51,6 +51,7 @@ export default function CommercialRoutesScreen() {
   const [selectedTruck, setSelectedTruck] = useState<string>('');
   const [selectedStops, setSelectedStops] = useState<string[]>([]);
   
+  const [stopJobName, setStopJobName] = useState<string>('');
   const [stopCustomerId, setStopCustomerId] = useState<string>('');
   const [stopAddress, setStopAddress] = useState<string>('');
   const [stopContainerSize, setStopContainerSize] = useState<ContainerSize>('2');
@@ -136,6 +137,7 @@ export default function CommercialRoutesScreen() {
   };
 
   const handleCreateStop = () => {
+    setStopJobName('');
     setStopCustomerId('');
     setStopAddress('');
     setStopContainerSize('2');
@@ -147,7 +149,8 @@ export default function CommercialRoutesScreen() {
 
   const handleEditStop = (stop: CommercialStop) => {
     setEditingStop(stop);
-    setStopCustomerId(stop.customerId);
+    setStopJobName(stop.jobName);
+    setStopCustomerId(stop.customerId || '');
     setStopAddress(stop.address);
     setStopContainerSize(stop.containerSize);
     setStopContainerCount(stop.containerCount.toString());
@@ -157,17 +160,18 @@ export default function CommercialRoutesScreen() {
   };
 
   const handleSaveStop = async () => {
-    if (!stopCustomerId || !stopAddress.trim()) {
-      Alert.alert('Error', 'Please select customer and enter address');
+    if (!stopJobName.trim() || !stopAddress.trim()) {
+      Alert.alert('Error', 'Please enter job name and address');
       return;
     }
 
-    const customer = customers.find(c => c.id === stopCustomerId);
+    const customer = stopCustomerId ? customers.find(c => c.id === stopCustomerId) : undefined;
     const count = parseInt(stopContainerCount) || 1;
 
     const newStop: CommercialStop = {
       id: `cs-${Date.now()}`,
-      customerId: stopCustomerId,
+      jobName: stopJobName,
+      customerId: stopCustomerId || undefined,
       customerName: customer?.name,
       address: stopAddress,
       containerSize: stopContainerSize,
@@ -185,16 +189,17 @@ export default function CommercialRoutesScreen() {
   };
 
   const handleUpdateStop = async () => {
-    if (!editingStop || !stopCustomerId || !stopAddress.trim()) {
-      Alert.alert('Error', 'Please select customer and enter address');
+    if (!editingStop || !stopJobName.trim() || !stopAddress.trim()) {
+      Alert.alert('Error', 'Please enter job name and address');
       return;
     }
 
-    const customer = customers.find(c => c.id === stopCustomerId);
+    const customer = stopCustomerId ? customers.find(c => c.id === stopCustomerId) : undefined;
     const count = parseInt(stopContainerCount) || 1;
 
     await updateCommercialStop(editingStop.id, {
-      customerId: stopCustomerId,
+      jobName: stopJobName,
+      customerId: stopCustomerId || undefined,
       customerName: customer?.name,
       address: stopAddress,
       containerSize: stopContainerSize,
@@ -469,7 +474,10 @@ export default function CommercialRoutesScreen() {
                   >
                     <View style={styles.stopSelectionContent}>
                       <View style={styles.stopSelectionInfo}>
-                        <Text style={styles.stopSelectionCustomer}>{stop.customerName}</Text>
+                        <Text style={styles.stopSelectionCustomer}>{stop.jobName}</Text>
+                        {stop.customerName && (
+                          <Text style={styles.stopSelectionLinked}>Linked: {stop.customerName}</Text>
+                        )}
                         <Text style={styles.stopSelectionAddress} numberOfLines={1}>{stop.address}</Text>
                         <Text style={styles.stopSelectionDetail}>
                           {stop.containerCount}x {stop.containerSize}yd • {getFrequencyLabel(stop.serviceFrequency)}
@@ -526,7 +534,35 @@ export default function CommercialRoutesScreen() {
             </View>
 
             <ScrollView style={styles.form}>
-              <Text style={styles.label}>Select Customer</Text>
+              <Text style={styles.label}>Job/Account Name *</Text>
+              <TextInput
+                style={styles.input}
+                value={stopJobName}
+                onChangeText={setStopJobName}
+                placeholder="e.g., ABC Store Main St or ABC Corp"
+                placeholderTextColor={Colors.textSecondary}
+              />
+              <Text style={styles.helpText}>
+                This name identifies the stop. If linked to a customer below, this becomes the recurring job name for reports.
+              </Text>
+
+              <Text style={[styles.label, { marginTop: 24 }]}>Link to Customer (Optional)</Text>
+              <TouchableOpacity
+                style={[
+                  styles.selectionItem,
+                  !stopCustomerId && styles.selectionItemSelected,
+                ]}
+                onPress={() => setStopCustomerId('')}
+              >
+                <Text
+                  style={[
+                    styles.selectionText,
+                    !stopCustomerId && styles.selectionTextSelected,
+                  ]}
+                >
+                  No linked customer
+                </Text>
+              </TouchableOpacity>
               {customers.filter(c => c.active).map(customer => (
                 <TouchableOpacity
                   key={customer.id}
@@ -536,7 +572,7 @@ export default function CommercialRoutesScreen() {
                   ]}
                   onPress={() => {
                     setStopCustomerId(customer.id);
-                    setStopAddress(customer.address);
+                    if (!stopAddress) setStopAddress(customer.address);
                   }}
                 >
                   <Text
@@ -550,7 +586,7 @@ export default function CommercialRoutesScreen() {
                 </TouchableOpacity>
               ))}
 
-              <Text style={[styles.label, { marginTop: 24 }]}>Address</Text>
+              <Text style={[styles.label, { marginTop: 24 }]}>Address *</Text>
               <TextInput
                 style={styles.input}
                 value={stopAddress}
@@ -660,7 +696,35 @@ export default function CommercialRoutesScreen() {
             </View>
 
             <ScrollView style={styles.form}>
-              <Text style={styles.label}>Select Customer</Text>
+              <Text style={styles.label}>Job/Account Name *</Text>
+              <TextInput
+                style={styles.input}
+                value={stopJobName}
+                onChangeText={setStopJobName}
+                placeholder="e.g., ABC Store Main St or ABC Corp"
+                placeholderTextColor={Colors.textSecondary}
+              />
+              <Text style={styles.helpText}>
+                This name identifies the stop. If linked to a customer below, this becomes the recurring job name for reports.
+              </Text>
+
+              <Text style={[styles.label, { marginTop: 24 }]}>Link to Customer (Optional)</Text>
+              <TouchableOpacity
+                style={[
+                  styles.selectionItem,
+                  !stopCustomerId && styles.selectionItemSelected,
+                ]}
+                onPress={() => setStopCustomerId('')}
+              >
+                <Text
+                  style={[
+                    styles.selectionText,
+                    !stopCustomerId && styles.selectionTextSelected,
+                  ]}
+                >
+                  No linked customer
+                </Text>
+              </TouchableOpacity>
               {customers.filter(c => c.active).map(customer => (
                 <TouchableOpacity
                   key={customer.id}
@@ -670,7 +734,7 @@ export default function CommercialRoutesScreen() {
                   ]}
                   onPress={() => {
                     setStopCustomerId(customer.id);
-                    setStopAddress(customer.address);
+                    if (!stopAddress) setStopAddress(customer.address);
                   }}
                 >
                   <Text
@@ -684,7 +748,7 @@ export default function CommercialRoutesScreen() {
                 </TouchableOpacity>
               ))}
 
-              <Text style={[styles.label, { marginTop: 24 }]}>Address</Text>
+              <Text style={[styles.label, { marginTop: 24 }]}>Address *</Text>
               <TextInput
                 style={styles.input}
                 value={stopAddress}
@@ -1141,5 +1205,16 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '600' as const,
     color: Colors.error,
+  },
+  helpText: {
+    fontSize: 13,
+    color: Colors.textSecondary,
+    marginTop: 8,
+    fontStyle: 'italic' as const,
+  },
+  stopSelectionLinked: {
+    fontSize: 12,
+    color: Colors.primary,
+    marginBottom: 2,
   },
 });
