@@ -13,7 +13,7 @@ import {
 import { useData } from '@/contexts/DataContext';
 import Colors from '@/constants/colors';
 import { Plus, Calendar, User, Truck as TruckIcon, MapPin, Send, X, Package, Trash2, Edit3 } from 'lucide-react-native';
-import type { CommercialRoute, CommercialStop, ContainerSize, ServiceFrequency } from '@/types';
+import type { CommercialRoute, CommercialStop, ContainerSize, ServiceFrequency, DayOfWeek } from '@/types';
 
 const CONTAINER_SIZES: ContainerSize[] = ['1', '1.5', '2', '4', '6', '8', 'COMPACTOR'];
 const SERVICE_FREQUENCIES: { value: ServiceFrequency; label: string }[] = [
@@ -25,6 +25,15 @@ const SERVICE_FREQUENCIES: { value: ServiceFrequency; label: string }[] = [
   { value: 'BIWEEKLY', label: 'Every other week' },
   { value: 'MONTHLY', label: 'Once a month' },
   { value: 'ON_CALL', label: 'On call' },
+];
+const DAYS_OF_WEEK: { value: DayOfWeek; label: string }[] = [
+  { value: 'MONDAY', label: 'Monday' },
+  { value: 'TUESDAY', label: 'Tuesday' },
+  { value: 'WEDNESDAY', label: 'Wednesday' },
+  { value: 'THURSDAY', label: 'Thursday' },
+  { value: 'FRIDAY', label: 'Friday' },
+  { value: 'SATURDAY', label: 'Saturday' },
+  { value: 'SUNDAY', label: 'Sunday' },
 ];
 
 export default function CommercialRoutesScreen() {
@@ -47,6 +56,8 @@ export default function CommercialRoutesScreen() {
   const [editStopModalVisible, setEditStopModalVisible] = useState<boolean>(false);
   const [selectedRoute, setSelectedRoute] = useState<CommercialRoute | null>(null);
   const [routeName, setRouteName] = useState<string>('');
+  const [routeDayOfWeek, setRouteDayOfWeek] = useState<DayOfWeek>('MONDAY');
+  const [routeScheduledFor, setRouteScheduledFor] = useState<string>('');
   const [selectedDriver, setSelectedDriver] = useState<string>('');
   const [selectedTruck, setSelectedTruck] = useState<string>('');
   const [selectedStops, setSelectedStops] = useState<string[]>([]);
@@ -57,24 +68,47 @@ export default function CommercialRoutesScreen() {
   const [stopContainerSize, setStopContainerSize] = useState<ContainerSize>('2');
   const [stopContainerCount, setStopContainerCount] = useState<string>('1');
   const [stopFrequency, setStopFrequency] = useState<ServiceFrequency>('ONCE_WEEK');
+  const [stopServiceDays, setStopServiceDays] = useState<DayOfWeek[]>([]);
   const [stopInstructions, setStopInstructions] = useState<string>('');
   const [editingStop, setEditingStop] = useState<CommercialStop | null>(null);
 
   const [showCompleted, setShowCompleted] = useState<boolean>(false);
 
-  const todayRoutes = commercialRoutes.filter((r: CommercialRoute) => {
-    const today = new Date().toISOString().split('T')[0];
-    if (showCompleted) {
-      return r.date === today;
-    }
-    return r.date === today && r.status !== 'COMPLETED';
-  }).sort((a: CommercialRoute, b: CommercialRoute) => {
-    const statusOrder: Record<string, number> = { PLANNED: 0, DISPATCHED: 1, IN_PROGRESS: 2, COMPLETED: 3 };
-    return statusOrder[a.status] - statusOrder[b.status];
-  });
+  const getDayOfWeek = (dateString: string): DayOfWeek => {
+    const date = new Date(dateString);
+    const dayIndex = date.getDay();
+    const days: DayOfWeek[] = ['SUNDAY', 'MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY'];
+    return days[dayIndex];
+  };
+
+  const getCurrentWeekRoutes = () => {
+    const today = new Date();
+    const startOfWeek = new Date(today);
+    startOfWeek.setDate(today.getDate() - today.getDay() + 1);
+    const endOfWeek = new Date(startOfWeek);
+    endOfWeek.setDate(startOfWeek.getDate() + 6);
+
+    return commercialRoutes.filter((r: CommercialRoute) => {
+      const routeDate = new Date(r.date);
+      const isInWeek = routeDate >= startOfWeek && routeDate <= endOfWeek;
+      
+      if (!isInWeek) return false;
+      
+      if (!showCompleted && r.status === 'COMPLETED') return false;
+      
+      return true;
+    }).sort((a: CommercialRoute, b: CommercialRoute) => {
+      const statusOrder: Record<string, number> = { PLANNED: 0, DISPATCHED: 1, IN_PROGRESS: 2, COMPLETED: 3 };
+      return statusOrder[a.status] - statusOrder[b.status];
+    });
+  };
+
+  const todayRoutes = getCurrentWeekRoutes();
 
   const handleCreateRoute = () => {
     setRouteName('');
+    setRouteDayOfWeek('MONDAY');
+    setRouteScheduledFor('');
     setSelectedDriver('');
     setSelectedTruck('');
     setSelectedStops([]);
@@ -85,6 +119,8 @@ export default function CommercialRoutesScreen() {
   const handleEditRoute = (route: CommercialRoute) => {
     setSelectedRoute(route);
     setRouteName(route.name);
+    setRouteDayOfWeek(route.dayOfWeek);
+    setRouteScheduledFor(route.scheduledFor || '');
     setSelectedDriver(route.driverId || '');
     setSelectedTruck(route.truckId || '');
     setSelectedStops([...route.stopIds]);
@@ -107,6 +143,8 @@ export default function CommercialRoutesScreen() {
     if (selectedRoute) {
       await updateCommercialRoute(selectedRoute.id, {
         name: routeName,
+        dayOfWeek: routeDayOfWeek,
+        scheduledFor: routeScheduledFor || undefined,
         driverId: selectedDriver,
         driverName: driver?.name,
         truckId: selectedTruck,
@@ -118,6 +156,8 @@ export default function CommercialRoutesScreen() {
       const newRoute: CommercialRoute = {
         id: `cr-${Date.now()}`,
         name: routeName,
+        dayOfWeek: routeDayOfWeek,
+        scheduledFor: routeScheduledFor || undefined,
         date: new Date().toISOString().split('T')[0],
         driverId: selectedDriver,
         driverName: driver?.name,
@@ -143,6 +183,7 @@ export default function CommercialRoutesScreen() {
     setStopContainerSize('2');
     setStopContainerCount('1');
     setStopFrequency('ONCE_WEEK');
+    setStopServiceDays([]);
     setStopInstructions('');
     setStopModalVisible(true);
   };
@@ -155,6 +196,7 @@ export default function CommercialRoutesScreen() {
     setStopContainerSize(stop.containerSize);
     setStopContainerCount(stop.containerCount.toString());
     setStopFrequency(stop.serviceFrequency);
+    setStopServiceDays(stop.serviceDays || []);
     setStopInstructions(stop.specialInstructions || '');
     setEditStopModalVisible(true);
   };
@@ -162,6 +204,10 @@ export default function CommercialRoutesScreen() {
   const handleSaveStop = async () => {
     if (!stopJobName.trim() || !stopAddress.trim()) {
       Alert.alert('Error', 'Please enter job name and address');
+      return;
+    }
+    if (stopServiceDays.length === 0) {
+      Alert.alert('Error', 'Please select at least one service day');
       return;
     }
 
@@ -177,6 +223,7 @@ export default function CommercialRoutesScreen() {
       containerSize: stopContainerSize,
       containerCount: count,
       serviceFrequency: stopFrequency,
+      serviceDays: stopServiceDays,
       specialInstructions: stopInstructions,
       status: 'PENDING',
       active: true,
@@ -193,6 +240,10 @@ export default function CommercialRoutesScreen() {
       Alert.alert('Error', 'Please enter job name and address');
       return;
     }
+    if (stopServiceDays.length === 0) {
+      Alert.alert('Error', 'Please select at least one service day');
+      return;
+    }
 
     const customer = stopCustomerId ? customers.find(c => c.id === stopCustomerId) : undefined;
     const count = parseInt(stopContainerCount) || 1;
@@ -205,6 +256,7 @@ export default function CommercialRoutesScreen() {
       containerSize: stopContainerSize,
       containerCount: count,
       serviceFrequency: stopFrequency,
+      serviceDays: stopServiceDays,
       specialInstructions: stopInstructions,
     });
 
@@ -239,7 +291,9 @@ export default function CommercialRoutesScreen() {
     );
   };
 
-  const availableStops = commercialStops.filter((s: CommercialStop) => s.active);
+  const availableStops = commercialStops.filter((s: CommercialStop) => 
+    s.active && s.serviceDays?.includes(routeDayOfWeek)
+  );
 
   const handleDispatchRoute = async (route: CommercialRoute) => {
     Alert.alert(
@@ -298,11 +352,31 @@ export default function CommercialRoutesScreen() {
     return SERVICE_FREQUENCIES.find(f => f.value === freq)?.label || freq;
   };
 
+  const getDayLabel = (day: DayOfWeek) => {
+    return DAYS_OF_WEEK.find(d => d.value === day)?.label || day;
+  };
+
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  };
+
   const renderRoute = ({ item }: { item: CommercialRoute }) => (
     <View style={styles.routeCard}>
       <View style={styles.routeHeader}>
         <View style={styles.routeInfo}>
-          <Text style={styles.routeTitle}>{item.name}</Text>
+          <View style={styles.routeTitleRow}>
+            <Text style={styles.routeTitle}>{item.name}</Text>
+            <View style={styles.dayBadge}>
+              <Text style={styles.dayBadgeText}>{getDayLabel(item.dayOfWeek)}</Text>
+            </View>
+          </View>
+          {item.scheduledFor && (
+            <View style={styles.rescheduledBadge}>
+              <Calendar size={12} color={Colors.warning} />
+              <Text style={styles.rescheduledText}>Rescheduled to {formatDate(item.scheduledFor)}</Text>
+            </View>
+          )}
           <View style={styles.routeMeta}>
             <User size={14} color={Colors.textSecondary} />
             <Text style={styles.routeMetaText}>{item.driverName || 'Unassigned'}</Text>
@@ -417,6 +491,44 @@ export default function CommercialRoutesScreen() {
                 placeholderTextColor={Colors.textSecondary}
               />
 
+              <Text style={[styles.label, { marginTop: 24 }]}>Recurring Day of Week</Text>
+              <View style={styles.dayButtonsGrid}>
+                {DAYS_OF_WEEK.map(day => (
+                  <TouchableOpacity
+                    key={day.value}
+                    style={[
+                      styles.dayButton,
+                      routeDayOfWeek === day.value && styles.dayButtonSelected,
+                    ]}
+                    onPress={() => setRouteDayOfWeek(day.value)}
+                  >
+                    <Text
+                      style={[
+                        styles.dayButtonText,
+                        routeDayOfWeek === day.value && styles.dayButtonTextSelected,
+                      ]}
+                    >
+                      {day.label}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+              <Text style={styles.helpText}>
+                This route will recur every week on this day. You can reschedule specific weeks below.
+              </Text>
+
+              <Text style={[styles.label, { marginTop: 24 }]}>Schedule For Different Day (Optional)</Text>
+              <TextInput
+                style={styles.input}
+                value={routeScheduledFor}
+                onChangeText={setRouteScheduledFor}
+                placeholder="YYYY-MM-DD (e.g., 2025-01-15 for holiday)"
+                placeholderTextColor={Colors.textSecondary}
+              />
+              <Text style={styles.helpText}>
+                Use this to reschedule a route for a different day (e.g., run Monday route on Tuesday due to holiday).
+              </Text>
+
               <Text style={[styles.label, { marginTop: 24 }]}>Select Driver</Text>
               {drivers.filter(d => d.active).map(driver => (
                 <TouchableOpacity
@@ -459,9 +571,9 @@ export default function CommercialRoutesScreen() {
                 </TouchableOpacity>
               ))}
 
-              <Text style={[styles.label, { marginTop: 24 }]}>Select Stops</Text>
+              <Text style={[styles.label, { marginTop: 24 }]}>Select Stops for {DAYS_OF_WEEK.find(d => d.value === routeDayOfWeek)?.label}</Text>
               {availableStops.length === 0 ? (
-                <Text style={styles.noStopsText}>No stops available. Create stops first.</Text>
+                <Text style={styles.noStopsText}>No stops available for this day. Create stops with {DAYS_OF_WEEK.find(d => d.value === routeDayOfWeek)?.label} service day first.</Text>
               ) : (
                 availableStops.map((stop: CommercialStop) => (
                   <TouchableOpacity
@@ -650,6 +762,38 @@ export default function CommercialRoutesScreen() {
                 </TouchableOpacity>
               ))}
 
+              <Text style={[styles.label, { marginTop: 24 }]}>Service Days *</Text>
+              <View style={styles.dayButtonsGrid}>
+                {DAYS_OF_WEEK.map(day => (
+                  <TouchableOpacity
+                    key={day.value}
+                    style={[
+                      styles.dayButton,
+                      stopServiceDays.includes(day.value) && styles.dayButtonSelected,
+                    ]}
+                    onPress={() => {
+                      setStopServiceDays(prev => 
+                        prev.includes(day.value)
+                          ? prev.filter(d => d !== day.value)
+                          : [...prev, day.value]
+                      );
+                    }}
+                  >
+                    <Text
+                      style={[
+                        styles.dayButtonText,
+                        stopServiceDays.includes(day.value) && styles.dayButtonTextSelected,
+                      ]}
+                    >
+                      {day.label.slice(0, 3)}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+              <Text style={styles.helpText}>
+                Select which days this stop should be serviced. You can assign this stop to routes for these specific days.
+              </Text>
+
               <Text style={[styles.label, { marginTop: 24 }]}>Special Instructions</Text>
               <TextInput
                 style={[styles.input, styles.textArea]}
@@ -811,6 +955,38 @@ export default function CommercialRoutesScreen() {
                   </Text>
                 </TouchableOpacity>
               ))}
+
+              <Text style={[styles.label, { marginTop: 24 }]}>Service Days *</Text>
+              <View style={styles.dayButtonsGrid}>
+                {DAYS_OF_WEEK.map(day => (
+                  <TouchableOpacity
+                    key={day.value}
+                    style={[
+                      styles.dayButton,
+                      stopServiceDays.includes(day.value) && styles.dayButtonSelected,
+                    ]}
+                    onPress={() => {
+                      setStopServiceDays(prev => 
+                        prev.includes(day.value)
+                          ? prev.filter(d => d !== day.value)
+                          : [...prev, day.value]
+                      );
+                    }}
+                  >
+                    <Text
+                      style={[
+                        styles.dayButtonText,
+                        stopServiceDays.includes(day.value) && styles.dayButtonTextSelected,
+                      ]}
+                    >
+                      {day.label.slice(0, 3)}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+              <Text style={styles.helpText}>
+                Select which days this stop should be serviced. You can assign this stop to routes for these specific days.
+              </Text>
 
               <Text style={[styles.label, { marginTop: 24 }]}>Special Instructions</Text>
               <TextInput
@@ -1216,5 +1392,64 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: Colors.primary,
     marginBottom: 2,
+  },
+  dayButtonsGrid: {
+    flexDirection: 'row' as const,
+    flexWrap: 'wrap' as const,
+    gap: 8,
+  },
+  dayButton: {
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 8,
+    borderWidth: 2,
+    borderColor: Colors.border,
+    minWidth: 80,
+    alignItems: 'center' as const,
+  },
+  dayButtonSelected: {
+    borderColor: Colors.primary,
+    backgroundColor: Colors.primary,
+  },
+  dayButtonText: {
+    fontSize: 14,
+    color: Colors.text,
+    fontWeight: '600' as const,
+  },
+  dayButtonTextSelected: {
+    color: Colors.background,
+  },
+  routeTitleRow: {
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    gap: 8,
+    marginBottom: 8,
+  },
+  dayBadge: {
+    backgroundColor: Colors.primary,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 6,
+  },
+  dayBadgeText: {
+    fontSize: 11,
+    fontWeight: '600' as const,
+    color: Colors.background,
+  },
+  rescheduledBadge: {
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    gap: 4,
+    backgroundColor: Colors.backgroundSecondary,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 6,
+    alignSelf: 'flex-start' as const,
+    marginBottom: 8,
+  },
+  rescheduledText: {
+    fontSize: 11,
+    fontWeight: '600' as const,
+    color: Colors.warning,
   },
 });

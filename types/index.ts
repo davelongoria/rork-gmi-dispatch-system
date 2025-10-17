@@ -310,6 +310,7 @@ export type RouteType = 'DUMP_TRUCK' | 'COMMERCIAL_FRONTLOAD';
 export type ServiceFrequency = 'ONCE_WEEK' | 'TWICE_WEEK' | 'THREE_WEEK' | 'FOUR_WEEK' | 'FIVE_WEEK' | 'BIWEEKLY' | 'MONTHLY' | 'ON_CALL';
 export type StopStatus = 'PENDING' | 'COMPLETED' | 'NOT_OUT' | 'BLOCKED' | 'SKIPPED';
 export type ContainerSize = '1' | '1.5' | '2' | '4' | '6' | '8' | 'COMPACTOR';
+export type DayOfWeek = 'MONDAY' | 'TUESDAY' | 'WEDNESDAY' | 'THURSDAY' | 'FRIDAY' | 'SATURDAY' | 'SUNDAY';
 
 export interface CommercialStop {
   id: string;
@@ -322,7 +323,7 @@ export interface CommercialStop {
   containerSize: ContainerSize;
   containerCount: number;
   serviceFrequency: ServiceFrequency;
-  serviceDay?: string;
+  serviceDays: DayOfWeek[];
   specialInstructions?: string;
   status: StopStatus;
   completedAt?: string;
@@ -339,6 +340,8 @@ export interface CommercialStop {
 export interface CommercialRoute {
   id: string;
   name: string;
+  dayOfWeek: DayOfWeek;
+  scheduledFor?: string;
   date: string;
   driverId?: string;
   driverName?: string;
