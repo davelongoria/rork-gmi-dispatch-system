@@ -12,7 +12,7 @@ import {
 } from 'react-native';
 import { useData } from '@/contexts/DataContext';
 import Colors from '@/constants/colors';
-import { Plus, Calendar, User, Truck as TruckIcon, MapPin, Send, X, Package, Trash2, Edit3, ArrowUpDown, History, MoveRight } from 'lucide-react-native';
+import { Plus, Calendar, User, Truck as TruckIcon, MapPin, Send, X, Package, Trash2, Edit3, ArrowUpDown, History, MoveRight, List, Search } from 'lucide-react-native';
 import type { CommercialRoute, CommercialStop, ContainerSize, ServiceFrequency, DayOfWeek, StopRouteAssignment } from '@/types';
 
 const CONTAINER_SIZES: ContainerSize[] = ['1', '1.5', '2', '4', '6', '8', 'COMPACTOR'];
@@ -77,6 +77,8 @@ export default function CommercialRoutesScreen() {
   const [editingStop, setEditingStop] = useState<CommercialStop | null>(null);
 
   const [showCompleted, setShowCompleted] = useState<boolean>(false);
+  const [viewMode, setViewMode] = useState<'routes' | 'jobs'>('routes');
+  const [searchQuery, setSearchQuery] = useState<string>('');
 
   const getStopAssignmentForDay = (stop: CommercialStop, day: DayOfWeek): StopRouteAssignment | undefined => {
     return stop.routeAssignments?.find(a => a.dayOfWeek === day);

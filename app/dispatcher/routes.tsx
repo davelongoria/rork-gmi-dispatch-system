@@ -10,6 +10,7 @@ import {
   ScrollView,
 } from 'react-native';
 import { useData } from '@/contexts/DataContext';
+import { useRouter } from 'expo-router';
 import Colors from '@/constants/colors';
 import { Plus, Calendar, User, Truck as TruckIcon, MapPin, Send, X, Package, ChevronRight, Trash2, RotateCcw } from 'lucide-react-native';
 import type { Route, Job } from '@/types';
@@ -26,6 +27,7 @@ export default function RoutesScreen() {
   const [selectedDumpSite, setSelectedDumpSite] = useState<string>('');
 
   const [showCompleted, setShowCompleted] = useState<boolean>(false);
+  const [activeTab, setActiveTab] = useState<'rolloff' | 'commercial'>('rolloff');
 
   const todayRoutes = routes.filter(r => {
     const today = new Date().toISOString().split('T')[0];
@@ -305,7 +307,7 @@ export default function RoutesScreen() {
       <View style={styles.header}>
         <View style={styles.headerInfo}>
           <Calendar size={20} color={Colors.primary} />
-          <Text style={styles.headerText}>Today&apos;s Routes</Text>
+          <Text style={styles.headerText}>Routes</Text>
         </View>
         <View style={styles.headerActions}>
           <TouchableOpacity
@@ -322,18 +324,41 @@ export default function RoutesScreen() {
         </View>
       </View>
 
-      <FlatList
-        data={todayRoutes}
-        renderItem={renderRoute}
-        keyExtractor={item => item.id}
-        contentContainerStyle={styles.listContent}
-        ListEmptyComponent={
-          <View style={styles.emptyContainer}>
-            <Text style={styles.emptyText}>No routes for today</Text>
-            <Text style={styles.emptySubtext}>Tap + to create a new route</Text>
-          </View>
-        }
-      />
+      <View style={styles.tabContainer}>
+        <TouchableOpacity
+          style={[styles.tab, activeTab === 'rolloff' && styles.tabActive]}
+          onPress={() => setActiveTab('rolloff')}
+        >
+          <Text style={[styles.tabText, activeTab === 'rolloff' && styles.tabTextActive]}>
+            Roll-Off Routes
+          </Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[styles.tab, activeTab === 'commercial' && styles.tabActive]}
+          onPress={() => setActiveTab('commercial')}
+        >
+          <Text style={[styles.tabText, activeTab === 'commercial' && styles.tabTextActive]}>
+            Commercial Routes
+          </Text>
+        </TouchableOpacity>
+      </View>
+
+      {activeTab === 'rolloff' ? (
+        <FlatList
+          data={todayRoutes}
+          renderItem={renderRoute}
+          keyExtractor={item => item.id}
+          contentContainerStyle={styles.listContent}
+          ListEmptyComponent={
+            <View style={styles.emptyContainer}>
+              <Text style={styles.emptyText}>No routes for today</Text>
+              <Text style={styles.emptySubtext}>Tap + to create a new route</Text>
+            </View>
+          }
+        />
+      ) : (
+        <CommercialRoutesContent />
+      )}
 
       <Modal
         visible={modalVisible}
@@ -902,4 +927,81 @@ const styles = StyleSheet.create({
     fontStyle: 'italic' as const,
     marginTop: 4,
   },
+  tabContainer: {
+    flexDirection: 'row' as const,
+    backgroundColor: Colors.background,
+    marginHorizontal: 16,
+    marginBottom: 16,
+    borderRadius: 12,
+    padding: 4,
+  },
+  tab: {
+    flex: 1,
+    paddingVertical: 12,
+    alignItems: 'center' as const,
+    justifyContent: 'center' as const,
+    borderRadius: 8,
+  },
+  tabActive: {
+    backgroundColor: Colors.primary,
+  },
+  tabText: {
+    fontSize: 14,
+    fontWeight: '600' as const,
+    color: Colors.textSecondary,
+  },
+  tabTextActive: {
+    color: Colors.background,
+  },
+  commercialContainer: {
+    flex: 1,
+    padding: 16,
+    paddingTop: 32,
+    alignItems: 'center' as const,
+    justifyContent: 'center' as const,
+  },
+  commercialButton: {
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    justifyContent: 'center' as const,
+    backgroundColor: Colors.background,
+    paddingVertical: 16,
+    paddingHorizontal: 24,
+    borderRadius: 12,
+    gap: 8,
+    borderWidth: 2,
+    borderColor: Colors.primary,
+  },
+  commercialButtonText: {
+    fontSize: 16,
+    fontWeight: '600' as const,
+    color: Colors.primary,
+  },
+  commercialDescription: {
+    fontSize: 14,
+    color: Colors.textSecondary,
+    textAlign: 'center' as const,
+    marginTop: 12,
+    paddingHorizontal: 32,
+  },
 });
+
+function CommercialRoutesContent() {
+  const router = useRouter();
+  
+  return (
+    <View style={styles.commercialContainer}>
+      <TouchableOpacity
+        style={styles.commercialButton}
+        onPress={() => router.push('/dispatcher/commercial-routes')}
+      >
+        <Package size={20} color={Colors.primary} />
+        <Text style={styles.commercialButtonText}>Manage Commercial Routes</Text>
+        <ChevronRight size={20} color={Colors.primary} />
+      </TouchableOpacity>
+      <Text style={styles.commercialDescription}>
+        View and manage commercial frontload routes, stops, and schedules
+      </Text>
+    </View>
+  );
+}

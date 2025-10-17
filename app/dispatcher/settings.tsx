@@ -11,17 +11,17 @@ import {
   Platform,
 } from 'react-native';
 import { useData } from '@/contexts/DataContext';
+import { useRouter } from 'expo-router';
 import Colors from '@/constants/colors';
-import { Settings as SettingsIcon, Mail, Save, QrCode, Download, Send, RefreshCw } from 'lucide-react-native';
+import { Settings as SettingsIcon, Mail, Save, QrCode, Download, Send, RefreshCw, Database } from 'lucide-react-native';
 import QRCode from 'react-native-qrcode-svg';
 import * as FileSystem from 'expo-file-system';
-import { useRouter } from 'expo-router';
 
 export default function SettingsScreen() {
-  const router = useRouter();
   const { dispatcherSettings, updateDispatcherSettings } = useData();
   const [reportEmail, setReportEmail] = useState<string>('');
   const [qrToken, setQrToken] = useState<string>('');
+  const [activeTab, setActiveTab] = useState<'settings' | 'sync'>('settings');
   const qrRef = useRef<any>(null);
 
   useEffect(() => {
@@ -110,33 +110,56 @@ export default function SettingsScreen() {
   };
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+    <View style={styles.container}>
       <View style={styles.header}>
         <SettingsIcon size={24} color={Colors.primary} />
-        <Text style={styles.headerTitle}>Dispatcher Settings</Text>
+        <Text style={styles.headerTitle}>Settings</Text>
       </View>
 
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Report Email</Text>
-        <Text style={styles.sectionDescription}>
-          Email address where reports will be sent
-        </Text>
-        <View style={styles.inputContainer}>
-          <Mail size={20} color={Colors.textSecondary} />
-          <TextInput
-            style={styles.input}
-            placeholder="dispatcher@company.com"
-            placeholderTextColor={Colors.textSecondary}
-            value={reportEmail}
-            onChangeText={setReportEmail}
-            keyboardType="email-address"
-            autoCapitalize="none"
-          />
-        </View>
+      <View style={styles.tabContainer}>
+        <TouchableOpacity
+          style={[styles.tab, activeTab === 'settings' && styles.tabActive]}
+          onPress={() => setActiveTab('settings')}
+        >
+          <Text style={[styles.tabText, activeTab === 'settings' && styles.tabTextActive]}>
+            App Settings
+          </Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[styles.tab, activeTab === 'sync' && styles.tabActive]}
+          onPress={() => setActiveTab('sync')}
+        >
+          <Text style={[styles.tabText, activeTab === 'sync' && styles.tabTextActive]}>
+            Data Sync
+          </Text>
+        </TouchableOpacity>
       </View>
 
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Dispatcher QR Code Login</Text>
+      {activeTab === 'settings' ? (
+        <ScrollView style={styles.scrollContainer} contentContainerStyle={styles.content}>
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Report Email</Text>
+            <Text style={styles.sectionDescription}>
+              Email address where reports will be sent
+            </Text>
+            <View style={styles.inputContainer}>
+              <Mail size={20} color={Colors.textSecondary} />
+              <TextInput
+                style={styles.input}
+                placeholder="dispatcher@company.com"
+                placeholderTextColor={Colors.textSecondary}
+                value={reportEmail}
+                onChangeText={setReportEmail}
+                keyboardType="email-address"
+                autoCapitalize="none"
+              />
+            </View>
+          </View>
+
+
+
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Dispatcher QR Code Login</Text>
         <Text style={styles.sectionDescription}>
           Generate a QR code for quick dispatcher login. Scan this code on the login screen to access your dispatcher account.
         </Text>
@@ -185,35 +208,25 @@ export default function SettingsScreen() {
             <Text style={styles.generateButtonText}>Generate QR Code</Text>
           </TouchableOpacity>
         )}
-      </View>
+          </View>
 
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Data Synchronization</Text>
-        <Text style={styles.sectionDescription}>
-          Sync data between your phone and PC to ensure all devices see the same information.
-        </Text>
-        <TouchableOpacity
-          style={styles.syncButton}
-          onPress={() => router.push('/dispatcher/sync-data')}
-        >
-          <RefreshCw size={20} color={Colors.primary} />
-          <Text style={styles.syncButtonText}>Sync Data Between Devices</Text>
-        </TouchableOpacity>
-      </View>
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>User Management</Text>
+            <Text style={styles.sectionDescription}>
+              Manage driver and dispatcher login credentials in the Drivers screen.
+              Set username and password for each user.
+            </Text>
+          </View>
 
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>User Management</Text>
-        <Text style={styles.sectionDescription}>
-          Manage driver and dispatcher login credentials in the Drivers screen.
-          Set username and password for each user.
-        </Text>
-      </View>
-
-      <TouchableOpacity style={styles.saveButton} onPress={handleSave}>
-        <Save size={20} color={Colors.background} />
-        <Text style={styles.saveButtonText}>Save Settings</Text>
-      </TouchableOpacity>
-    </ScrollView>
+          <TouchableOpacity style={styles.saveButton} onPress={handleSave}>
+            <Save size={20} color={Colors.background} />
+            <Text style={styles.saveButtonText}>Save Settings</Text>
+          </TouchableOpacity>
+        </ScrollView>
+      ) : (
+        <SyncDataContent />
+      )}
+    </View>
   );
 }
 
@@ -222,13 +235,16 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: Colors.backgroundSecondary,
   },
+  scrollContainer: {
+    flex: 1,
+  },
   content: {
     padding: 16,
   },
   header: {
     flexDirection: 'row' as const,
     alignItems: 'center' as const,
-    marginBottom: 24,
+    padding: 16,
     gap: 12,
   },
   headerTitle: {
@@ -347,4 +363,81 @@ const styles = StyleSheet.create({
     fontWeight: '600' as const,
     color: Colors.primary,
   },
+  tabContainer: {
+    flexDirection: 'row' as const,
+    backgroundColor: Colors.background,
+    marginHorizontal: 16,
+    marginBottom: 16,
+    borderRadius: 12,
+    padding: 4,
+  },
+  tab: {
+    flex: 1,
+    paddingVertical: 12,
+    alignItems: 'center' as const,
+    justifyContent: 'center' as const,
+    borderRadius: 8,
+  },
+  tabActive: {
+    backgroundColor: Colors.primary,
+  },
+  tabText: {
+    fontSize: 14,
+    fontWeight: '600' as const,
+    color: Colors.textSecondary,
+  },
+  tabTextActive: {
+    color: Colors.background,
+  },
+  syncContainer: {
+    flex: 1,
+    padding: 16,
+    paddingTop: 32,
+    alignItems: 'center' as const,
+    justifyContent: 'center' as const,
+  },
+  syncNavButton: {
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    justifyContent: 'center' as const,
+    backgroundColor: Colors.background,
+    paddingVertical: 16,
+    paddingHorizontal: 24,
+    borderRadius: 12,
+    gap: 8,
+    borderWidth: 2,
+    borderColor: Colors.primary,
+  },
+  syncNavButtonText: {
+    fontSize: 16,
+    fontWeight: '600' as const,
+    color: Colors.primary,
+  },
+  syncDescription: {
+    fontSize: 14,
+    color: Colors.textSecondary,
+    textAlign: 'center' as const,
+    marginTop: 12,
+    paddingHorizontal: 32,
+  },
 });
+
+function SyncDataContent() {
+  const router = useRouter();
+  
+  return (
+    <View style={styles.syncContainer}>
+      <TouchableOpacity
+        style={styles.syncNavButton}
+        onPress={() => router.push('/dispatcher/sync-data')}
+      >
+        <Database size={20} color={Colors.primary} />
+        <Text style={styles.syncNavButtonText}>Open Data Sync</Text>
+        <RefreshCw size={20} color={Colors.primary} />
+      </TouchableOpacity>
+      <Text style={styles.syncDescription}>
+        Upload and download data between devices to keep everything in sync
+      </Text>
+    </View>
+  );
+}

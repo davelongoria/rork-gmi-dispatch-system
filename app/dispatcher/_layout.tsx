@@ -93,7 +93,7 @@ export default function DispatcherLayout() {
         name="reports"
         options={{
           title: 'Reports',
-          tabBarIcon: ({ color, size }) => <FileText size={size} color={color} />,
+          tabBarIcon: ({ color, size}) => <FileText size={size} color={color} />,
         }}
       />
       <Tabs.Screen
@@ -101,6 +101,18 @@ export default function DispatcherLayout() {
         options={{
           title: 'Settings',
           tabBarIcon: ({ color, size }) => <Settings size={size} color={color} />,
+        }}
+      />
+      <Tabs.Screen
+        name="sync-data"
+        options={{
+          href: null,
+        }}
+      />
+      <Tabs.Screen
+        name="commercial-routes"
+        options={{
+          href: null,
         }}
       />
     </Tabs>
