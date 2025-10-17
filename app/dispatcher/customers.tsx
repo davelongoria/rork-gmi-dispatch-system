@@ -9,19 +9,23 @@ import {
   Modal,
   Alert,
   ScrollView,
+  Switch,
 } from 'react-native';
 import { useData } from '@/contexts/DataContext';
 import Colors from '@/constants/colors';
-import { Plus, Search, Building2, MapPin, Phone, Mail, X, FileText, Calendar } from 'lucide-react-native';
-import type { Customer, Report } from '@/types';
+import { Plus, Search, Building2, MapPin, Phone, Mail, X, FileText, Calendar, Package, Edit2 } from 'lucide-react-native';
+import type { Customer, Report, CommercialStop, ContainerSize, ServiceFrequency, DayOfWeek } from '@/types';
 import * as MailComposer from 'expo-mail-composer';
 import { Platform } from 'react-native';
 import * as FileSystem from 'expo-file-system';
 
 export default function CustomersScreen() {
-  const { customers, addCustomer, jobs, dumpTickets, dumpSites, mileageLogs, addReport, dispatcherSettings } = useData();
+  const { customers, addCustomer, jobs, dumpTickets, dumpSites, mileageLogs, addReport, dispatcherSettings, commercialStops, addCommercialStop, updateCommercialStop } = useData();
   const [searchQuery, setSearchQuery] = useState<string>('');
+  const [showCommercial, setShowCommercial] = useState<boolean>(false);
   const [modalVisible, setModalVisible] = useState<boolean>(false);
+  const [commercialModalVisible, setCommercialModalVisible] = useState<boolean>(false);
+  const [selectedCommercialStop, setSelectedCommercialStop] = useState<CommercialStop | null>(null);
   const [reportModalVisible, setReportModalVisible] = useState<boolean>(false);
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
   const [reportStartDate, setReportStartDate] = useState<string>(new Date().toISOString().split('T')[0]);
@@ -36,9 +40,26 @@ export default function CustomersScreen() {
     notes: '',
   });
 
+  const [commercialFormData, setCommercialFormData] = useState({
+    jobName: '',
+    customerId: '',
+    address: '',
+    containerSize: '2' as ContainerSize,
+    containerCount: 1,
+    serviceFrequency: 'ONCE_WEEK' as ServiceFrequency,
+    serviceDays: [] as DayOfWeek[],
+    specialInstructions: '',
+  });
+
   const filteredCustomers = customers.filter(c =>
     c.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
     c.address.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  const filteredCommercialStops = commercialStops.filter(s =>
+    s.jobName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    (s.customerName && s.customerName.toLowerCase().includes(searchQuery.toLowerCase())) ||
+    s.address.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   const handleAddCustomer = () => {
@@ -253,6 +274,100 @@ ${Platform.OS === 'web' ? '\n\nCSV Data:\n' + report.csvData : ''}
     return jobs.filter(j => j.customerId === customerId).length;
   };
 
+  const handleAddCommercialStop = () => {
+    setSelectedCommercialStop(null);
+    setCommercialFormData({
+      jobName: '',
+      customerId: '',
+      address: '',
+      containerSize: '2',
+      containerCount: 1,
+      serviceFrequency: 'ONCE_WEEK',
+      serviceDays: [],
+      specialInstructions: '',
+    });
+    setCommercialModalVisible(true);
+  };
+
+  const handleEditCommercialStop = (stop: CommercialStop) => {
+    setSelectedCommercialStop(stop);
+    setCommercialFormData({
+      jobName: stop.jobName,
+      customerId: stop.customerId || '',
+      address: stop.address,
+      containerSize: stop.containerSize,
+      containerCount: stop.containerCount,
+      serviceFrequency: stop.serviceFrequency,
+      serviceDays: stop.serviceDays,
+      specialInstructions: stop.specialInstructions || '',
+    });
+    setCommercialModalVisible(true);
+  };
+
+  const handleSaveCommercialStop = async () => {
+    if (!commercialFormData.jobName || !commercialFormData.address || commercialFormData.serviceDays.length === 0) {
+      Alert.alert('Error', 'Please fill in job name, address, and select at least one service day');
+      return;
+    }
+
+    const customer = commercialFormData.customerId ? customers.find(c => c.id === commercialFormData.customerId) : null;
+
+    if (selectedCommercialStop) {
+      await updateCommercialStop(selectedCommercialStop.id, {
+        jobName: commercialFormData.jobName,
+        customerId: commercialFormData.customerId || undefined,
+        customerName: customer?.name,
+        address: commercialFormData.address,
+        containerSize: commercialFormData.containerSize,
+        containerCount: commercialFormData.containerCount,
+        serviceFrequency: commercialFormData.serviceFrequency,
+        serviceDays: commercialFormData.serviceDays,
+        specialInstructions: commercialFormData.specialInstructions || undefined,
+      });
+      Alert.alert('Success', 'Commercial stop updated successfully');
+    } else {
+      const newStop: CommercialStop = {
+        id: `commercial-stop-${Date.now()}`,
+        jobName: commercialFormData.jobName,
+        customerId: commercialFormData.customerId || undefined,
+        customerName: customer?.name,
+        address: commercialFormData.address,
+        containerSize: commercialFormData.containerSize,
+        containerCount: commercialFormData.containerCount,
+        serviceFrequency: commercialFormData.serviceFrequency,
+        serviceDays: commercialFormData.serviceDays,
+        specialInstructions: commercialFormData.specialInstructions || undefined,
+        status: 'PENDING',
+        active: true,
+        createdAt: new Date().toISOString(),
+      };
+
+      await addCommercialStop(newStop);
+      Alert.alert('Success', 'Commercial stop added successfully');
+    }
+    setCommercialModalVisible(false);
+  };
+
+  const toggleServiceDay = (day: DayOfWeek) => {
+    const current = commercialFormData.serviceDays;
+    if (current.includes(day)) {
+      setCommercialFormData({ ...commercialFormData, serviceDays: current.filter(d => d !== day) });
+    } else {
+      setCommercialFormData({ ...commercialFormData, serviceDays: [...current, day] });
+    }
+  };
+
+  const getStopRouteAssignments = (stop: CommercialStop) => {
+    const assignments: string[] = [];
+    stop.serviceDays.forEach(day => {
+      const assignment = stop.routeAssignments?.find(a => a.dayOfWeek === day);
+      if (assignment) {
+        assignments.push(`${day.substring(0, 3)}: ${assignment.routeName}`);
+      }
+    });
+    return assignments.length > 0 ? assignments.join(', ') : 'Not assigned to routes';
+  };
+
   const renderCustomer = ({ item }: { item: Customer }) => (
     <View style={styles.customerCard}>
       <View style={styles.customerHeader}>
@@ -292,8 +407,63 @@ ${Platform.OS === 'web' ? '\n\nCSV Data:\n' + report.csvData : ''}
     </View>
   );
 
+  const renderCommercialStop = ({ item }: { item: CommercialStop }) => (
+    <View style={styles.customerCard}>
+      <View style={styles.customerHeader}>
+        <View style={[styles.customerIcon, { backgroundColor: Colors.success }]}>
+          <Package size={24} color={Colors.background} />
+        </View>
+        <View style={styles.customerInfo}>
+          <Text style={styles.customerName}>{item.jobName}</Text>
+          {item.customerName && (
+            <View style={styles.customerMeta}>
+              <Building2 size={14} color={Colors.textSecondary} />
+              <Text style={styles.customerMetaText}>{item.customerName}</Text>
+            </View>
+          )}
+          <View style={styles.customerMeta}>
+            <MapPin size={14} color={Colors.textSecondary} />
+            <Text style={styles.customerMetaText}>{item.address}</Text>
+          </View>
+          <View style={styles.commercialStopDetails}>
+            <Text style={styles.commercialStopDetailText}>
+              {item.containerCount}x {item.containerSize}yd • {item.serviceFrequency.replace(/_/g, ' ')}
+            </Text>
+          </View>
+          <View style={styles.commercialStopDays}>
+            {item.serviceDays.map(day => (
+              <View key={day} style={styles.dayBadge}>
+                <Text style={styles.dayBadgeText}>{day.substring(0, 3)}</Text>
+              </View>
+            ))}
+          </View>
+          <Text style={styles.routeAssignmentText} numberOfLines={2}>
+            {getStopRouteAssignments(item)}
+          </Text>
+        </View>
+      </View>
+      <TouchableOpacity 
+        style={styles.editButton} 
+        onPress={() => handleEditCommercialStop(item)}
+      >
+        <Edit2 size={16} color={Colors.primary} />
+        <Text style={styles.editButtonText}>Edit Stop</Text>
+      </TouchableOpacity>
+    </View>
+  );
+
   return (
     <View style={styles.container}>
+      <View style={styles.toggleContainer}>
+        <Text style={styles.toggleLabel}>Show Commercial Customers</Text>
+        <Switch
+          value={showCommercial}
+          onValueChange={setShowCommercial}
+          trackColor={{ false: Colors.border, true: Colors.primary }}
+          thumbColor={Colors.background}
+        />
+      </View>
+
       <View style={styles.searchContainer}>
         <View style={styles.searchInputContainer}>
           <Search size={20} color={Colors.textSecondary} />
@@ -305,23 +475,42 @@ ${Platform.OS === 'web' ? '\n\nCSV Data:\n' + report.csvData : ''}
             onChangeText={setSearchQuery}
           />
         </View>
-        <TouchableOpacity style={styles.addButton} onPress={handleAddCustomer}>
+        <TouchableOpacity 
+          style={styles.addButton} 
+          onPress={showCommercial ? handleAddCommercialStop : handleAddCustomer}
+        >
           <Plus size={24} color={Colors.background} />
         </TouchableOpacity>
       </View>
 
-      <FlatList
-        data={filteredCustomers}
-        renderItem={renderCustomer}
-        keyExtractor={item => item.id}
-        contentContainerStyle={styles.listContent}
-        ListEmptyComponent={
-          <View style={styles.emptyContainer}>
-            <Text style={styles.emptyText}>No customers found</Text>
-            <Text style={styles.emptySubtext}>Tap + to add your first customer</Text>
-          </View>
-        }
-      />
+      {showCommercial ? (
+        <FlatList
+          data={filteredCommercialStops}
+          renderItem={renderCommercialStop}
+          keyExtractor={item => item.id}
+          contentContainerStyle={styles.listContent}
+          ListEmptyComponent={
+            <View style={styles.emptyContainer}>
+              <Text style={styles.emptyText}>No commercial stops found</Text>
+              <Text style={styles.emptySubtext}>Tap + to add your first commercial stop</Text>
+            </View>
+          }
+        />
+      ) : (
+        <FlatList
+          data={filteredCustomers}
+          renderItem={renderCustomer}
+          keyExtractor={item => item.id}
+          contentContainerStyle={styles.listContent}
+          ListEmptyComponent={
+            <View style={styles.emptyContainer}>
+              <Text style={styles.emptyText}>No customers found</Text>
+              <Text style={styles.emptySubtext}>Tap + to add your first customer</Text>
+            </View>
+          }
+        />
+      )}
+
 
       <Modal
         visible={modalVisible}
@@ -483,6 +672,162 @@ ${Platform.OS === 'web' ? '\n\nCSV Data:\n' + report.csvData : ''}
                   </TouchableOpacity>
                 </>
               )}
+            </ScrollView>
+          </View>
+        </View>
+      </Modal>
+
+      <Modal
+        visible={commercialModalVisible}
+        animationType="slide"
+        transparent
+        onRequestClose={() => setCommercialModalVisible(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>
+                {selectedCommercialStop ? 'Edit Commercial Stop' : 'Add Commercial Stop'}
+              </Text>
+              <TouchableOpacity onPress={() => setCommercialModalVisible(false)}>
+                <X size={24} color={Colors.text} />
+              </TouchableOpacity>
+            </View>
+
+            <ScrollView style={styles.form}>
+              <Text style={styles.label}>Job Name *</Text>
+              <TextInput
+                style={styles.input}
+                value={commercialFormData.jobName}
+                onChangeText={text => setCommercialFormData({ ...commercialFormData, jobName: text })}
+                placeholder="Main Street Office"
+                placeholderTextColor={Colors.textSecondary}
+              />
+
+              <Text style={styles.label}>Customer (Optional)</Text>
+              <View style={styles.pickerContainer}>
+                <TouchableOpacity 
+                  style={styles.pickerButton}
+                  onPress={() => {
+                    Alert.alert('Select Customer', 'Choose a customer or leave blank', [
+                      { text: 'None', onPress: () => setCommercialFormData({ ...commercialFormData, customerId: '' }) },
+                      ...customers.map(c => ({
+                        text: c.name,
+                        onPress: () => setCommercialFormData({ ...commercialFormData, customerId: c.id })
+                      }))
+                    ]);
+                  }}
+                >
+                  <Text style={styles.pickerButtonText}>
+                    {commercialFormData.customerId ? customers.find(c => c.id === commercialFormData.customerId)?.name : 'Select Customer'}
+                  </Text>
+                </TouchableOpacity>
+              </View>
+
+              <Text style={styles.label}>Address *</Text>
+              <TextInput
+                style={styles.input}
+                value={commercialFormData.address}
+                onChangeText={text => setCommercialFormData({ ...commercialFormData, address: text })}
+                placeholder="123 Main St, City, State"
+                placeholderTextColor={Colors.textSecondary}
+              />
+
+              <Text style={styles.label}>Container Size</Text>
+              <View style={styles.containerSizeGrid}>
+                {(['1', '1.5', '2', '4', '6', '8', 'COMPACTOR'] as ContainerSize[]).map(size => (
+                  <TouchableOpacity
+                    key={size}
+                    style={[
+                      styles.containerSizeButton,
+                      commercialFormData.containerSize === size && styles.containerSizeButtonActive
+                    ]}
+                    onPress={() => setCommercialFormData({ ...commercialFormData, containerSize: size })}
+                  >
+                    <Text style={[
+                      styles.containerSizeButtonText,
+                      commercialFormData.containerSize === size && styles.containerSizeButtonTextActive
+                    ]}>
+                      {size === 'COMPACTOR' ? 'Comp' : `${size}yd`}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+
+              <Text style={styles.label}>Container Count</Text>
+              <TextInput
+                style={styles.input}
+                value={String(commercialFormData.containerCount)}
+                onChangeText={text => setCommercialFormData({ ...commercialFormData, containerCount: parseInt(text) || 1 })}
+                placeholder="1"
+                placeholderTextColor={Colors.textSecondary}
+                keyboardType="number-pad"
+              />
+
+              <Text style={styles.label}>Service Frequency</Text>
+              <View style={styles.pickerContainer}>
+                <TouchableOpacity 
+                  style={styles.pickerButton}
+                  onPress={() => {
+                    const frequencies: ServiceFrequency[] = ['ONCE_WEEK', 'TWICE_WEEK', 'THREE_WEEK', 'FOUR_WEEK', 'FIVE_WEEK', 'BIWEEKLY', 'MONTHLY', 'ON_CALL'];
+                    Alert.alert('Select Frequency', 'Choose service frequency', frequencies.map(freq => ({
+                      text: freq.replace(/_/g, ' '),
+                      onPress: () => setCommercialFormData({ ...commercialFormData, serviceFrequency: freq })
+                    })));
+                  }}
+                >
+                  <Text style={styles.pickerButtonText}>
+                    {commercialFormData.serviceFrequency.replace(/_/g, ' ')}
+                  </Text>
+                </TouchableOpacity>
+              </View>
+
+              <Text style={styles.label}>Service Days *</Text>
+              <View style={styles.daysGrid}>
+                {(['MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY', 'SUNDAY'] as DayOfWeek[]).map(day => (
+                  <TouchableOpacity
+                    key={day}
+                    style={[
+                      styles.dayButton,
+                      commercialFormData.serviceDays.includes(day) && styles.dayButtonActive
+                    ]}
+                    onPress={() => toggleServiceDay(day)}
+                  >
+                    <Text style={[
+                      styles.dayButtonText,
+                      commercialFormData.serviceDays.includes(day) && styles.dayButtonTextActive
+                    ]}>
+                      {day.substring(0, 3)}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+
+              <Text style={styles.label}>Special Instructions</Text>
+              <TextInput
+                style={[styles.input, styles.textArea]}
+                value={commercialFormData.specialInstructions}
+                onChangeText={text => setCommercialFormData({ ...commercialFormData, specialInstructions: text })}
+                placeholder="Gate code, access instructions, etc."
+                placeholderTextColor={Colors.textSecondary}
+                multiline
+                numberOfLines={3}
+              />
+
+              <View style={styles.buttonRow}>
+                <TouchableOpacity
+                  style={[styles.button, styles.buttonSecondary]}
+                  onPress={() => setCommercialModalVisible(false)}
+                >
+                  <Text style={styles.buttonSecondaryText}>Cancel</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[styles.button, styles.buttonPrimary]}
+                  onPress={handleSaveCommercialStop}
+                >
+                  <Text style={styles.buttonPrimaryText}>Save</Text>
+                </TouchableOpacity>
+              </View>
             </ScrollView>
           </View>
         </View>
@@ -759,5 +1104,137 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600' as const,
     color: Colors.background,
+  },
+  toggleContainer: {
+    flexDirection: 'row' as const,
+    justifyContent: 'space-between' as const,
+    alignItems: 'center' as const,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    backgroundColor: Colors.background,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.border,
+  },
+  toggleLabel: {
+    fontSize: 16,
+    fontWeight: '600' as const,
+    color: Colors.text,
+  },
+  commercialStopDetails: {
+    marginTop: 6,
+  },
+  commercialStopDetailText: {
+    fontSize: 13,
+    color: Colors.textSecondary,
+    fontWeight: '500' as const,
+  },
+  commercialStopDays: {
+    flexDirection: 'row' as const,
+    flexWrap: 'wrap' as const,
+    gap: 6,
+    marginTop: 8,
+  },
+  dayBadge: {
+    backgroundColor: Colors.primary,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 6,
+  },
+  dayBadgeText: {
+    fontSize: 11,
+    fontWeight: '600' as const,
+    color: Colors.background,
+  },
+  routeAssignmentText: {
+    fontSize: 12,
+    color: Colors.textSecondary,
+    marginTop: 6,
+    fontStyle: 'italic' as const,
+  },
+  editButton: {
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    justifyContent: 'center' as const,
+    backgroundColor: Colors.backgroundSecondary,
+    padding: 12,
+    borderRadius: 8,
+    gap: 8,
+    borderWidth: 1,
+    borderColor: Colors.primary,
+  },
+  editButtonText: {
+    fontSize: 14,
+    fontWeight: '600' as const,
+    color: Colors.primary,
+  },
+  containerSizeGrid: {
+    flexDirection: 'row' as const,
+    flexWrap: 'wrap' as const,
+    gap: 8,
+    marginTop: 8,
+  },
+  containerSizeButton: {
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: 8,
+    backgroundColor: Colors.backgroundSecondary,
+    borderWidth: 1,
+    borderColor: Colors.border,
+  },
+  containerSizeButtonActive: {
+    backgroundColor: Colors.primary,
+    borderColor: Colors.primary,
+  },
+  containerSizeButtonText: {
+    fontSize: 14,
+    fontWeight: '600' as const,
+    color: Colors.text,
+  },
+  containerSizeButtonTextActive: {
+    color: Colors.background,
+  },
+  daysGrid: {
+    flexDirection: 'row' as const,
+    flexWrap: 'wrap' as const,
+    gap: 8,
+    marginTop: 8,
+  },
+  dayButton: {
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: 8,
+    backgroundColor: Colors.backgroundSecondary,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    minWidth: 60,
+    alignItems: 'center' as const,
+  },
+  dayButtonActive: {
+    backgroundColor: Colors.primary,
+    borderColor: Colors.primary,
+  },
+  dayButtonText: {
+    fontSize: 14,
+    fontWeight: '600' as const,
+    color: Colors.text,
+  },
+  dayButtonTextActive: {
+    color: Colors.background,
+  },
+  pickerContainer: {
+    marginTop: 8,
+  },
+  pickerButton: {
+    height: 48,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    justifyContent: 'center' as const,
+    backgroundColor: Colors.background,
+  },
+  pickerButtonText: {
+    fontSize: 16,
+    color: Colors.text,
   },
 });
