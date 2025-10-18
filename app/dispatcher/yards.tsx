@@ -109,7 +109,7 @@ export default function YardsScreen() {
           <Text style={styles.actionButtonText}>Edit</Text>
         </TouchableOpacity>
         <TouchableOpacity style={styles.actionButtonDelete} onPress={() => handleDeleteYard(item)}>
-          <Trash2 size={18} color={Colors.error} />
+          <Trash2 size={18} color={Colors.primary} />
           <Text style={styles.actionButtonTextDelete}>Delete</Text>
         </TouchableOpacity>
       </View>
@@ -396,11 +396,11 @@ const createStyles = (Colors: any) => StyleSheet.create({
     borderRadius: 8,
     gap: 6,
     borderWidth: 1,
-    borderColor: Colors.error,
+    borderColor: Colors.primary,
   },
   actionButtonTextDelete: {
     fontSize: 14,
     fontWeight: '600' as const,
-    color: Colors.error,
+    color: Colors.primary,
   },
 });

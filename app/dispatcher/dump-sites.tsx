@@ -172,7 +172,7 @@ export default function DumpSitesScreen() {
           style={[styles.actionButton, styles.deleteButton]}
           onPress={() => handleDeleteSite(item)}
         >
-          <Trash2 size={18} color={Colors.danger} />
+          <Trash2 size={18} color={Colors.primary} />
         </TouchableOpacity>
       </View>
     </View>

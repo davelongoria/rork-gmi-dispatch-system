@@ -15,13 +15,17 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useData } from '@/contexts/DataContext';
 import { useAuth } from '@/contexts/AuthContext';
-import Colors from '@/constants/colors';
+import { useTheme } from '@/contexts/ThemeContext';
 import { MessageCircle, Send, Phone, X } from 'lucide-react-native';
 import type { Message, Driver } from '@/types';
 
 export default function DispatcherMessagesScreen() {
   const { messages, addMessage, drivers } = useData();
   const { user } = useAuth();
+  const { theme } = useTheme();
+  const Colors = theme.colors;
+  const styles = React.useMemo(() => createStyles(Colors), [Colors]);
+  
   const [selectedDriverId, setSelectedDriverId] = useState<string | null>(null);
   const [messageText, setMessageText] = useState<string>('');
   const [searchQuery, setSearchQuery] = useState<string>('');
@@ -309,7 +313,7 @@ export default function DispatcherMessagesScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (Colors: any) => StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: Colors.background,
@@ -377,7 +381,7 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   badge: {
-    backgroundColor: Colors.error,
+    backgroundColor: Colors.primary,
     borderRadius: 10,
     minWidth: 20,
     height: 20,

@@ -318,7 +318,7 @@ export default function JobsScreen() {
           <Text style={styles.actionButtonText}>Edit</Text>
         </TouchableOpacity>
         <TouchableOpacity style={styles.actionButtonDelete} onPress={() => handleDeleteJob(item)}>
-          <Trash2 size={18} color={Colors.error} />
+          <Trash2 size={18} color={Colors.primary} />
           <Text style={styles.actionButtonTextDelete}>Delete</Text>
         </TouchableOpacity>
       </View>
@@ -354,7 +354,7 @@ export default function JobsScreen() {
       </View>
       {item.suspendedByDriverName && (
         <View style={styles.suspendedInfo}>
-          <User size={14} color={Colors.error} />
+          <User size={14} color={Colors.primary} />
           <Text style={styles.suspendedInfoText}>
             Suspended by {item.suspendedByDriverName}
             {item.suspendedDate && ` on ${new Date(item.suspendedDate).toLocaleDateString()}`}
@@ -363,7 +363,7 @@ export default function JobsScreen() {
       )}
       {item.suspendedLocation && (
         <View style={styles.suspendedInfo}>
-          <MapPin size={14} color={Colors.error} />
+          <MapPin size={14} color={Colors.primary} />
           <Text style={styles.suspendedInfoText}>Location: {item.suspendedLocation}</Text>
         </View>
       )}
@@ -379,7 +379,7 @@ export default function JobsScreen() {
           <Text style={styles.actionButtonText}>Edit</Text>
         </TouchableOpacity>
         <TouchableOpacity style={styles.actionButtonDelete} onPress={() => handleDeleteJob(item)}>
-          <Trash2 size={18} color={Colors.error} />
+          <Trash2 size={18} color={Colors.primary} />
           <Text style={styles.actionButtonTextDelete}>Delete</Text>
         </TouchableOpacity>
       </View>
@@ -432,7 +432,7 @@ export default function JobsScreen() {
           style={styles.actionButtonDelete} 
           onPress={() => handleDeleteRecurringJob(item)}
         >
-          <Trash2 size={18} color={Colors.error} />
+          <Trash2 size={18} color={Colors.primary} />
         </TouchableOpacity>
       </View>
     </View>
@@ -1191,12 +1191,12 @@ const createStyles = (Colors: any) => StyleSheet.create({
     borderRadius: 8,
     gap: 6,
     borderWidth: 1,
-    borderColor: Colors.error,
+    borderColor: Colors.primary,
   },
   actionButtonTextDelete: {
     fontSize: 14,
     fontWeight: '600' as const,
-    color: Colors.error,
+    color: Colors.primary,
   },
   actionButtonCreate: {
     flex: 2,
@@ -1247,10 +1247,10 @@ const createStyles = (Colors: any) => StyleSheet.create({
     padding: 16,
     marginBottom: 12,
     borderWidth: 2,
-    borderColor: Colors.error,
+    borderColor: Colors.primary,
   },
   suspendedBadge: {
-    backgroundColor: Colors.error,
+    backgroundColor: Colors.primary,
     paddingHorizontal: 12,
     paddingVertical: 4,
     borderRadius: 8,
@@ -1272,7 +1272,7 @@ const createStyles = (Colors: any) => StyleSheet.create({
   },
   suspendedInfoText: {
     fontSize: 13,
-    color: Colors.error,
+    color: Colors.primary,
     flex: 1,
   },
   suspendedNotesBox: {
@@ -1281,12 +1281,12 @@ const createStyles = (Colors: any) => StyleSheet.create({
     borderRadius: 8,
     marginTop: 8,
     borderLeftWidth: 3,
-    borderLeftColor: Colors.error,
+    borderLeftColor: Colors.primary,
   },
   suspendedNotesLabel: {
     fontSize: 12,
     fontWeight: '700' as const,
-    color: Colors.error,
+    color: Colors.primary,
     marginBottom: 4,
   },
   suspendedNotesText: {
