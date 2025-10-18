@@ -200,7 +200,7 @@ export default function DispatcherMessagesScreen() {
               style={styles.closeButton}
               onPress={() => setSelectedDriverId(null)}
             >
-              <X size={24} color={Colors.background} />
+              <X size={24} color={Colors.text} />
             </TouchableOpacity>
             <View style={styles.modalHeaderInfo}>
               <Text style={styles.modalTitle}>{selectedDriver?.name}</Text>
