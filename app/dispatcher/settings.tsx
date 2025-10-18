@@ -12,6 +12,7 @@ import {
   Image,
   Modal,
 } from 'react-native';
+import * as ImagePicker from 'expo-image-picker';
 import { useData } from '@/contexts/DataContext';
 import { useRouter } from 'expo-router';
 import { useTheme } from '@/contexts/ThemeContext';
@@ -38,6 +39,26 @@ export default function SettingsScreen() {
     secondaryColor: '#2C2C2E',
     accentColor: '#FFA500',
   });
+  
+  const [showColorPicker, setShowColorPicker] = useState<{ field: 'primaryColor' | 'secondaryColor' | 'accentColor' } | null>(null);
+  
+  const predefinedColors = [
+    { name: 'Crimson Red', value: '#B00000' },
+    { name: 'Navy Blue', value: '#2E3B82' },
+    { name: 'Forest Green', value: '#228B22' },
+    { name: 'Orange', value: '#FFA500' },
+    { name: 'Purple', value: '#6B46C1' },
+    { name: 'Teal', value: '#008080' },
+    { name: 'Maroon', value: '#800000' },
+    { name: 'Royal Blue', value: '#4169E1' },
+    { name: 'Dark Green', value: '#006400' },
+    { name: 'Amber', value: '#FFBF00' },
+    { name: 'Indigo', value: '#4B0082' },
+    { name: 'Dark Cyan', value: '#008B8B' },
+    { name: 'Dark Gray', value: '#2C2C2E' },
+    { name: 'Charcoal', value: '#36454F' },
+    { name: 'Black', value: '#000000' },
+  ];
 
   useEffect(() => {
     if (dispatcherSettings) {
@@ -191,6 +212,39 @@ export default function SettingsScreen() {
         },
       ]
     );
+  };
+  
+  const handleSelectImage = async () => {
+    try {
+      const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      
+      if (!permissionResult.granted) {
+        Alert.alert('Permission Required', 'Please allow access to your photo library to select a logo.');
+        return;
+      }
+      
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: true,
+        aspect: [4, 2],
+        quality: 0.8,
+        base64: false,
+      });
+      
+      if (!result.canceled && result.assets && result.assets[0]) {
+        setCompanyForm({ ...companyForm, logo: result.assets[0].uri });
+      }
+    } catch (error) {
+      console.error('Error picking image:', error);
+      Alert.alert('Error', 'Failed to select image');
+    }
+  };
+  
+  const handleSelectColor = (colorValue: string) => {
+    if (showColorPicker) {
+      setCompanyForm({ ...companyForm, [showColorPicker.field]: colorValue });
+      setShowColorPicker(null);
+    }
   };
 
   return (
@@ -374,6 +428,34 @@ export default function SettingsScreen() {
             )}
           </ScrollView>
 
+          <Modal visible={showColorPicker !== null} animationType="slide" transparent>
+            <View style={styles.modalContainer}>
+              <View style={[styles.modalContent, { backgroundColor: colors.card }]}>
+                <View style={styles.modalHeader}>
+                  <Text style={[styles.modalTitle, { color: colors.text }]}>Select Color</Text>
+                  <TouchableOpacity onPress={() => setShowColorPicker(null)}>
+                    <X size={24} color={colors.text} />
+                  </TouchableOpacity>
+                </View>
+                
+                <ScrollView style={styles.colorPickerScroll}>
+                  <View style={styles.colorGrid}>
+                    {predefinedColors.map((color) => (
+                      <TouchableOpacity
+                        key={color.value}
+                        style={[styles.colorOption, { backgroundColor: color.value }]}
+                        onPress={() => handleSelectColor(color.value)}
+                      >
+                        <Text style={styles.colorName}>{color.name}</Text>
+                        <Text style={styles.colorValue}>{color.value}</Text>
+                      </TouchableOpacity>
+                    ))}
+                  </View>
+                </ScrollView>
+              </View>
+            </View>
+          </Modal>
+
           <Modal visible={showCompanyModal} animationType="slide" transparent>
             <View style={styles.modalContainer}>
               <View style={[styles.modalContent, { backgroundColor: colors.card }]}>
@@ -398,15 +480,13 @@ export default function SettingsScreen() {
                   </View>
 
                   <View style={styles.formGroup}>
-                    <Text style={[styles.formLabel, { color: colors.text }]}>Logo URL *</Text>
-                    <TextInput
-                      style={[styles.formInput, { backgroundColor: colors.backgroundSecondary, color: colors.text, borderColor: colors.border }]}
-                      placeholder="https://example.com/logo.png"
-                      placeholderTextColor={colors.textSecondary}
-                      value={companyForm.logo}
-                      onChangeText={(text) => setCompanyForm({ ...companyForm, logo: text })}
-                      autoCapitalize="none"
-                    />
+                    <Text style={[styles.formLabel, { color: colors.text }]}>Logo *</Text>
+                    <TouchableOpacity
+                      style={[styles.imagePickerButton, { backgroundColor: colors.backgroundSecondary, borderColor: colors.border }]}
+                      onPress={handleSelectImage}
+                    >
+                      <Text style={[styles.imagePickerButtonText, { color: colors.primary }]}>Select Logo from Device</Text>
+                    </TouchableOpacity>
                     {companyForm.logo && (
                       <Image source={{ uri: companyForm.logo }} style={styles.logoPreview} resizeMode="contain" />
                     )}
@@ -414,47 +494,35 @@ export default function SettingsScreen() {
 
                   <View style={styles.formGroup}>
                     <Text style={[styles.formLabel, { color: colors.text }]}>Primary Color *</Text>
-                    <View style={styles.colorInputRow}>
+                    <TouchableOpacity
+                      style={[styles.colorSelectButton, { backgroundColor: colors.backgroundSecondary, borderColor: colors.border }]}
+                      onPress={() => setShowColorPicker({ field: 'primaryColor' })}
+                    >
                       <View style={[styles.colorPreview, { backgroundColor: companyForm.primaryColor }]} />
-                      <TextInput
-                        style={[styles.formInput, { flex: 1, backgroundColor: colors.backgroundSecondary, color: colors.text, borderColor: colors.border }]}
-                        placeholder="#B00000"
-                        placeholderTextColor={colors.textSecondary}
-                        value={companyForm.primaryColor}
-                        onChangeText={(text) => setCompanyForm({ ...companyForm, primaryColor: text })}
-                        autoCapitalize="none"
-                      />
-                    </View>
+                      <Text style={[styles.colorSelectText, { color: colors.text }]}>{companyForm.primaryColor}</Text>
+                    </TouchableOpacity>
                   </View>
 
                   <View style={styles.formGroup}>
                     <Text style={[styles.formLabel, { color: colors.text }]}>Secondary Color</Text>
-                    <View style={styles.colorInputRow}>
+                    <TouchableOpacity
+                      style={[styles.colorSelectButton, { backgroundColor: colors.backgroundSecondary, borderColor: colors.border }]}
+                      onPress={() => setShowColorPicker({ field: 'secondaryColor' })}
+                    >
                       <View style={[styles.colorPreview, { backgroundColor: companyForm.secondaryColor }]} />
-                      <TextInput
-                        style={[styles.formInput, { flex: 1, backgroundColor: colors.backgroundSecondary, color: colors.text, borderColor: colors.border }]}
-                        placeholder="#2C2C2E"
-                        placeholderTextColor={colors.textSecondary}
-                        value={companyForm.secondaryColor}
-                        onChangeText={(text) => setCompanyForm({ ...companyForm, secondaryColor: text })}
-                        autoCapitalize="none"
-                      />
-                    </View>
+                      <Text style={[styles.colorSelectText, { color: colors.text }]}>{companyForm.secondaryColor}</Text>
+                    </TouchableOpacity>
                   </View>
 
                   <View style={styles.formGroup}>
                     <Text style={[styles.formLabel, { color: colors.text }]}>Accent Color</Text>
-                    <View style={styles.colorInputRow}>
+                    <TouchableOpacity
+                      style={[styles.colorSelectButton, { backgroundColor: colors.backgroundSecondary, borderColor: colors.border }]}
+                      onPress={() => setShowColorPicker({ field: 'accentColor' })}
+                    >
                       <View style={[styles.colorPreview, { backgroundColor: companyForm.accentColor }]} />
-                      <TextInput
-                        style={[styles.formInput, { flex: 1, backgroundColor: colors.backgroundSecondary, color: colors.text, borderColor: colors.border }]}
-                        placeholder="#FFA500"
-                        placeholderTextColor={colors.textSecondary}
-                        value={companyForm.accentColor}
-                        onChangeText={(text) => setCompanyForm({ ...companyForm, accentColor: text })}
-                        autoCapitalize="none"
-                      />
-                    </View>
+                      <Text style={[styles.colorSelectText, { color: colors.text }]}>{companyForm.accentColor}</Text>
+                    </TouchableOpacity>
                   </View>
                 </ScrollView>
 
@@ -763,15 +831,71 @@ const styles = StyleSheet.create({
     marginTop: 12,
     borderRadius: 8,
   },
-  colorInputRow: {
-    flexDirection: 'row' as const,
-    alignItems: 'center' as const,
-    gap: 12,
-  },
-  colorPreview: {
-    width: 48,
+  imagePickerButton: {
     height: 48,
     borderRadius: 8,
+    paddingHorizontal: 16,
+    justifyContent: 'center' as const,
+    alignItems: 'center' as const,
+    borderWidth: 1,
+  },
+  imagePickerButtonText: {
+    fontSize: 16,
+    fontWeight: '600' as const,
+  },
+  colorSelectButton: {
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    height: 56,
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    borderWidth: 1,
+    gap: 12,
+  },
+  colorSelectText: {
+    fontSize: 16,
+    flex: 1,
+  },
+  colorPreview: {
+    width: 40,
+    height: 40,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: 'rgba(0, 0, 0, 0.1)',
+  },
+  colorPickerScroll: {
+    maxHeight: 500,
+  },
+  colorGrid: {
+    gap: 12,
+    padding: 4,
+  },
+  colorOption: {
+    padding: 20,
+    borderRadius: 12,
+    marginBottom: 8,
+    shadowColor: 'rgba(0, 0, 0, 0.2)',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  colorName: {
+    fontSize: 16,
+    fontWeight: '700' as const,
+    color: '#FFFFFF',
+    textShadowColor: 'rgba(0, 0, 0, 0.75)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 3,
+    marginBottom: 4,
+  },
+  colorValue: {
+    fontSize: 14,
+    color: '#FFFFFF',
+    fontWeight: '600' as const,
+    textShadowColor: 'rgba(0, 0, 0, 0.75)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 3,
   },
   modalButton: {
     flexDirection: 'row' as const,
