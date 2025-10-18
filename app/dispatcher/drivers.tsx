@@ -129,46 +129,98 @@ export default function DriversScreen() {
               {
                 text: 'Email',
                 onPress: async () => {
-                  qrRef.current?.toDataURL(async (dataURL: string) => {
-                    try {
-                      const filename = `${FileSystem.cacheDirectory}driver-qr-${selectedDriverForQR.id}.png`;
-                      await FileSystem.writeAsStringAsync(filename, dataURL, {
-                        encoding: FileSystem.EncodingType.Base64,
-                      });
-                      
-                      await MailComposer.composeAsync({
-                        recipients: [selectedDriverForQR.email],
-                        subject: 'Your GMI Driver Login QR Code',
-                        body: message,
-                        attachments: [filename],
-                      });
-                    } catch (error) {
-                      console.error('Error composing email:', error);
-                      Alert.alert('Error', 'Failed to compose email with QR code');
+                  try {
+                    if (!qrRef.current) {
+                      Alert.alert('Error', 'QR code not ready. Please try again.');
+                      return;
                     }
-                  });
+
+                    qrRef.current.toDataURL(async (dataURL: string) => {
+                      try {
+                        if (!dataURL) {
+                          Alert.alert('Error', 'Failed to generate QR code image');
+                          return;
+                        }
+
+                        console.log('QR Data URL length:', dataURL.length);
+                        
+                        const filename = `${FileSystem.cacheDirectory}driver-qr-${selectedDriverForQR.id}.png`;
+                        const base64Data = dataURL.replace(/^data:image\/png;base64,/, '');
+                        
+                        await FileSystem.writeAsStringAsync(filename, base64Data, {
+                          encoding: FileSystem.EncodingType.Base64,
+                        });
+
+                        const fileInfo = await FileSystem.getInfoAsync(filename);
+                        console.log('File saved:', fileInfo);
+                        
+                        if (!fileInfo.exists) {
+                          Alert.alert('Error', 'Failed to save QR code image');
+                          return;
+                        }
+
+                        await MailComposer.composeAsync({
+                          recipients: [selectedDriverForQR.email],
+                          subject: 'Your GMI Driver Login QR Code',
+                          body: message,
+                          attachments: [filename],
+                        });
+                      } catch (error) {
+                        console.error('Error in toDataURL callback:', error);
+                        Alert.alert('Error', 'Failed to compose email with QR code');
+                      }
+                    });
+                  } catch (error) {
+                    console.error('Error composing email:', error);
+                    Alert.alert('Error', 'Failed to compose email with QR code');
+                  }
                 },
               },
               {
                 text: 'Share',
                 onPress: async () => {
-                  qrRef.current?.toDataURL(async (dataURL: string) => {
-                    try {
-                      const filename = `${FileSystem.cacheDirectory}driver-qr-${selectedDriverForQR.id}.png`;
-                      await FileSystem.writeAsStringAsync(filename, dataURL, {
-                        encoding: FileSystem.EncodingType.Base64,
-                      });
-                      
-                      await Share.share({
-                        message: message,
-                        url: filename,
-                        title: 'Driver QR Code',
-                      });
-                    } catch (error) {
-                      console.error('Error sharing QR code:', error);
-                      Alert.alert('Error', 'Failed to share QR code');
+                  try {
+                    if (!qrRef.current) {
+                      Alert.alert('Error', 'QR code not ready. Please try again.');
+                      return;
                     }
-                  });
+
+                    qrRef.current.toDataURL(async (dataURL: string) => {
+                      try {
+                        if (!dataURL) {
+                          Alert.alert('Error', 'Failed to generate QR code image');
+                          return;
+                        }
+
+                        const filename = `${FileSystem.cacheDirectory}driver-qr-${selectedDriverForQR.id}.png`;
+                        const base64Data = dataURL.replace(/^data:image\/png;base64,/, '');
+                        
+                        await FileSystem.writeAsStringAsync(filename, base64Data, {
+                          encoding: FileSystem.EncodingType.Base64,
+                        });
+
+                        const fileInfo = await FileSystem.getInfoAsync(filename);
+                        console.log('File saved for sharing:', fileInfo);
+                        
+                        if (!fileInfo.exists) {
+                          Alert.alert('Error', 'Failed to save QR code image');
+                          return;
+                        }
+                        
+                        await Share.share({
+                          message: message,
+                          url: filename,
+                          title: 'Driver QR Code',
+                        });
+                      } catch (error) {
+                        console.error('Error in share callback:', error);
+                        Alert.alert('Error', 'Failed to share QR code');
+                      }
+                    });
+                  } catch (error) {
+                    console.error('Error sharing QR code:', error);
+                    Alert.alert('Error', 'Failed to share QR code');
+                  }
                 },
               },
               { text: 'Cancel', style: 'cancel' },
@@ -182,23 +234,48 @@ export default function DriversScreen() {
               {
                 text: 'Share',
                 onPress: async () => {
-                  qrRef.current?.toDataURL(async (dataURL: string) => {
-                    try {
-                      const filename = `${FileSystem.cacheDirectory}driver-qr-${selectedDriverForQR.id}.png`;
-                      await FileSystem.writeAsStringAsync(filename, dataURL, {
-                        encoding: FileSystem.EncodingType.Base64,
-                      });
-                      
-                      await Share.share({
-                        message: message,
-                        url: filename,
-                        title: 'Driver QR Code',
-                      });
-                    } catch (error) {
-                      console.error('Error sharing QR code:', error);
-                      Alert.alert('Error', 'Failed to share QR code');
+                  try {
+                    if (!qrRef.current) {
+                      Alert.alert('Error', 'QR code not ready. Please try again.');
+                      return;
                     }
-                  });
+
+                    qrRef.current.toDataURL(async (dataURL: string) => {
+                      try {
+                        if (!dataURL) {
+                          Alert.alert('Error', 'Failed to generate QR code image');
+                          return;
+                        }
+
+                        const filename = `${FileSystem.cacheDirectory}driver-qr-${selectedDriverForQR.id}.png`;
+                        const base64Data = dataURL.replace(/^data:image\/png;base64,/, '');
+                        
+                        await FileSystem.writeAsStringAsync(filename, base64Data, {
+                          encoding: FileSystem.EncodingType.Base64,
+                        });
+
+                        const fileInfo = await FileSystem.getInfoAsync(filename);
+                        console.log('File saved for sharing:', fileInfo);
+                        
+                        if (!fileInfo.exists) {
+                          Alert.alert('Error', 'Failed to save QR code image');
+                          return;
+                        }
+                        
+                        await Share.share({
+                          message: message,
+                          url: filename,
+                          title: 'Driver QR Code',
+                        });
+                      } catch (error) {
+                        console.error('Error in share callback:', error);
+                        Alert.alert('Error', 'Failed to share QR code');
+                      }
+                    });
+                  } catch (error) {
+                    console.error('Error sharing QR code:', error);
+                    Alert.alert('Error', 'Failed to share QR code');
+                  }
                 },
               },
               { text: 'Cancel', style: 'cancel' },
