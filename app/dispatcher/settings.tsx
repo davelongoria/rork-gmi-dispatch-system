@@ -24,7 +24,22 @@ import type { Company } from '@/types';
 export default function SettingsScreen() {
   const { dispatcherSettings, updateDispatcherSettings, companies, addCompany, updateCompany, deleteCompany } = useData();
   const { theme } = useTheme();
-  const colors = theme.colors;
+  const colors = theme?.colors || {
+    primary: '#B00000',
+    secondary: '#2C2C2E',
+    accent: '#FFA500',
+    success: '#34C759',
+    error: '#FF3B30',
+    danger: '#FF3B30',
+    warning: '#FFA500',
+    background: '#FFFFFF',
+    backgroundSecondary: '#F2F2F7',
+    text: '#000000',
+    textSecondary: '#8E8E93',
+    border: '#E5E5EA',
+    card: '#FFFFFF',
+    shadow: 'rgba(0, 0, 0, 0.1)',
+  };
   const [reportEmail, setReportEmail] = useState<string>('');
   const [qrToken, setQrToken] = useState<string>('');
   const [activeTab, setActiveTab] = useState<'settings' | 'sync' | 'companies'>('settings');
@@ -905,7 +920,22 @@ const styles = StyleSheet.create({
 function SyncDataContent() {
   const router = useRouter();
   const { theme } = useTheme();
-  const colors = theme.colors;
+  const colors = theme?.colors || {
+    primary: '#B00000',
+    secondary: '#2C2C2E',
+    accent: '#FFA500',
+    success: '#34C759',
+    error: '#FF3B30',
+    danger: '#FF3B30',
+    warning: '#FFA500',
+    background: '#FFFFFF',
+    backgroundSecondary: '#F2F2F7',
+    text: '#000000',
+    textSecondary: '#8E8E93',
+    border: '#E5E5EA',
+    card: '#FFFFFF',
+    shadow: 'rgba(0, 0, 0, 0.1)',
+  };
   
   return (
     <View style={styles.syncContainer}>
