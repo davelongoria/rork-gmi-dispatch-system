@@ -13,7 +13,7 @@ import {
   Platform,
 } from 'react-native';
 import { useData } from '@/contexts/DataContext';
-import Colors from '@/constants/colors';
+import { useTheme } from '@/contexts/ThemeContext';
 import { Plus, Search, Phone, Mail, Truck as TruckIcon, X, Building2, QrCode, Share2 } from 'lucide-react-native';
 import type { Driver } from '@/types';
 import { HAULING_COMPANIES } from '@/constants/haulingCompanies';
@@ -23,6 +23,8 @@ import * as FileSystem from 'expo-file-system';
 
 export default function DriversScreen() {
   const { drivers, trucks, addDriver, updateDriver, deleteDriver } = useData();
+  const { theme } = useTheme();
+  const colors = theme.colors;
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [modalVisible, setModalVisible] = useState<boolean>(false);
   const [qrModalVisible, setQrModalVisible] = useState<boolean>(false);
