@@ -1,15 +1,18 @@
 import { Stack } from 'expo-router';
 import React from 'react';
-import Colors from '@/constants/colors';
+import { useTheme } from '@/contexts/ThemeContext';
 
 export default function DriverLayout() {
+  const { theme } = useTheme();
+  const colors = theme.colors;
+
   return (
     <Stack
       screenOptions={{
         headerStyle: {
-          backgroundColor: Colors.primary,
+          backgroundColor: colors.primary,
         },
-        headerTintColor: Colors.background,
+        headerTintColor: colors.background,
         headerTitleStyle: {
           fontWeight: '600' as const,
         },

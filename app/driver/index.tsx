@@ -10,7 +10,7 @@ import {
 import { useRouter } from 'expo-router';
 import { useAuth } from '@/contexts/AuthContext';
 import { useData } from '@/contexts/DataContext';
-import Colors from '@/constants/colors';
+import { useTheme } from '@/contexts/ThemeContext';
 import {
   Clock,
   FileCheck,
@@ -28,6 +28,8 @@ import type { TimeLog } from '@/types';
 export default function DriverDashboard() {
   const { user, logout } = useAuth();
   const { timeLogs, routes, commercialRoutes, addTimeLog, dvirs, fuelLogs, dumpTickets, jobs } = useData();
+  const { theme } = useTheme();
+  const colors = theme.colors;
   const router = useRouter();
   const [isClockedIn, setIsClockedIn] = useState<boolean>(false);
   const [isOnLunch, setIsOnLunch] = useState<boolean>(false);
@@ -239,6 +241,8 @@ export default function DriverDashboard() {
     return `${hours}h ${minutes}m`;
   };
 
+  const styles = createStyles(colors);
+
   return (
     <View style={styles.container}>
       <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent}>
@@ -248,13 +252,13 @@ export default function DriverDashboard() {
             <Text style={styles.userName}>{user?.name}</Text>
           </View>
           <TouchableOpacity onPress={handleLogout} style={styles.logoutButton}>
-            <LogOut size={24} color={Colors.primary} />
+            <LogOut size={24} color={colors.primary} />
           </TouchableOpacity>
         </View>
 
         <View style={[styles.statusCard, isClockedIn ? styles.statusCardActive : styles.statusCardInactive]}>
           <View style={styles.statusHeader}>
-            <Clock size={24} color={Colors.background} />
+            <Clock size={24} color={colors.background} />
             <Text style={styles.statusTitle}>
               {isClockedIn ? (isOnLunch ? 'On Lunch Break' : 'Clocked In') : 'Not Clocked In'}
             </Text>
@@ -265,7 +269,7 @@ export default function DriverDashboard() {
           <View style={styles.statusButtons}>
             {!isClockedIn ? (
               <TouchableOpacity style={styles.clockButton} onPress={handleClockIn}>
-                <Play size={20} color={Colors.background} />
+                <Play size={20} color={colors.background} />
                 <Text style={styles.clockButtonText}>Clock In</Text>
               </TouchableOpacity>
             ) : (
@@ -276,12 +280,13 @@ export default function DriverDashboard() {
                       <Text style={styles.lunchButtonText}>Start Lunch</Text>
                     </TouchableOpacity>
                     <TouchableOpacity style={styles.clockOutButton} onPress={handleClockOut}>
-                      <Square size={20} color={Colors.background} />
+                      <Square size={20} color={colors.background} />
                       <Text style={styles.clockButtonText}>Clock Out</Text>
                     </TouchableOpacity>
                   </>
                 ) : (
                   <TouchableOpacity style={styles.clockButton} onPress={handleLunchEnd}>
+                    <Play size={20} color={colors.background} />
                     <Text style={styles.clockButtonText}>End Lunch</Text>
                   </TouchableOpacity>
                 )}
@@ -316,7 +321,7 @@ export default function DriverDashboard() {
           onPress={() => router.push('/driver/dvir' as any)}
         >
           <View style={styles.actionIcon}>
-            <FileCheck size={24} color={Colors.primary} />
+            <FileCheck size={24} color={colors.primary} />
           </View>
           <View style={styles.actionContent}>
             <Text style={styles.actionTitle}>Vehicle Inspection (DVIR)</Text>
@@ -330,7 +335,7 @@ export default function DriverDashboard() {
           disabled={!isClockedIn}
         >
           <View style={styles.actionIcon}>
-            <Fuel size={24} color={Colors.primary} />
+            <Fuel size={24} color={colors.primary} />
           </View>
           <View style={styles.actionContent}>
             <Text style={styles.actionTitle}>Log Fuel</Text>
@@ -344,7 +349,7 @@ export default function DriverDashboard() {
           disabled={!isClockedIn}
         >
           <View style={styles.actionIcon}>
-            <FileText size={24} color={Colors.primary} />
+            <FileText size={24} color={colors.primary} />
           </View>
           <View style={styles.actionContent}>
             <Text style={styles.actionTitle}>Dump Ticket</Text>
@@ -357,7 +362,7 @@ export default function DriverDashboard() {
           onPress={() => router.push('/driver/messages' as any)}
         >
           <View style={styles.actionIcon}>
-            <MessageCircle size={24} color={Colors.primary} />
+            <MessageCircle size={24} color={colors.primary} />
           </View>
           <View style={styles.actionContent}>
             <Text style={styles.actionTitle}>Message Dispatcher</Text>
@@ -397,7 +402,7 @@ export default function DriverDashboard() {
                 >
                   <View style={styles.routeHeader}>
                     <Text style={styles.routeTitle}>Route #{route.id.slice(-6)}</Text>
-                    <View style={[styles.routeBadge, { backgroundColor: Colors.primary }]}>
+                    <View style={[styles.routeBadge, { backgroundColor: colors.primary }]}>
                       <Text style={styles.routeBadgeText}>{route.status}</Text>
                     </View>
                   </View>
@@ -409,7 +414,7 @@ export default function DriverDashboard() {
                   )}
                   <View style={styles.routeFooter}>
                     <Text style={styles.routeFooterText}>Tap to view details</Text>
-                    <ArrowRight size={16} color={Colors.primary} />
+                    <ArrowRight size={16} color={colors.primary} />
                   </View>
                 </TouchableOpacity>
               );
@@ -449,7 +454,7 @@ export default function DriverDashboard() {
                 >
                   <View style={styles.routeHeader}>
                     <Text style={styles.routeTitle}>{route.name}</Text>
-                    <View style={[styles.routeBadge, { backgroundColor: Colors.primary }]}>
+                    <View style={[styles.routeBadge, { backgroundColor: colors.primary }]}>
                       <Text style={styles.routeBadgeText}>{route.status}</Text>
                     </View>
                   </View>
@@ -461,7 +466,7 @@ export default function DriverDashboard() {
                   )}
                   <View style={styles.routeFooter}>
                     <Text style={styles.routeFooterText}>Tap to view details</Text>
-                    <ArrowRight size={16} color={Colors.primary} />
+                    <ArrowRight size={16} color={colors.primary} />
                   </View>
                 </TouchableOpacity>
               );
@@ -480,7 +485,7 @@ export default function DriverDashboard() {
               >
                 <View style={styles.routeHeader}>
                   <Text style={styles.routeTitle}>Route #{route.id.slice(-6)}</Text>
-                  <View style={[styles.routeBadge, { backgroundColor: Colors.success }]}>
+                  <View style={[styles.routeBadge, { backgroundColor: colors.success }]}>
                     <Text style={styles.routeBadgeText}>COMPLETED</Text>
                   </View>
                 </View>
@@ -506,7 +511,7 @@ export default function DriverDashboard() {
               >
                 <View style={styles.routeHeader}>
                   <Text style={styles.routeTitle}>{route.name}</Text>
-                  <View style={[styles.routeBadge, { backgroundColor: Colors.success }]}>
+                  <View style={[styles.routeBadge, { backgroundColor: colors.success }]}>
                     <Text style={styles.routeBadgeText}>COMPLETED</Text>
                   </View>
                 </View>
@@ -525,10 +530,10 @@ export default function DriverDashboard() {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (colors: any) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.backgroundSecondary,
+    backgroundColor: colors.backgroundSecondary,
   },
   scrollView: {
     flex: 1,
@@ -544,12 +549,12 @@ const styles = StyleSheet.create({
   },
   greeting: {
     fontSize: 16,
-    color: Colors.textSecondary,
+    color: colors.textSecondary,
   },
   userName: {
     fontSize: 24,
     fontWeight: '700' as const,
-    color: Colors.text,
+    color: colors.text,
     marginTop: 4,
   },
   logoutButton: {
@@ -561,10 +566,10 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
   statusCardActive: {
-    backgroundColor: Colors.success,
+    backgroundColor: colors.success,
   },
   statusCardInactive: {
-    backgroundColor: Colors.textSecondary,
+    backgroundColor: colors.textSecondary,
   },
   statusHeader: {
     flexDirection: 'row' as const,
@@ -575,11 +580,11 @@ const styles = StyleSheet.create({
   statusTitle: {
     fontSize: 20,
     fontWeight: '700' as const,
-    color: Colors.background,
+    color: colors.background,
   },
   statusTime: {
     fontSize: 16,
-    color: Colors.background,
+    color: colors.background,
     opacity: 0.9,
     marginBottom: 16,
   },
@@ -592,7 +597,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row' as const,
     alignItems: 'center' as const,
     justifyContent: 'center' as const,
-    backgroundColor: Colors.primary,
+    backgroundColor: colors.primary,
     paddingVertical: 14,
     borderRadius: 12,
     gap: 8,
@@ -602,7 +607,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row' as const,
     alignItems: 'center' as const,
     justifyContent: 'center' as const,
-    backgroundColor: Colors.error,
+    backgroundColor: colors.error,
     paddingVertical: 14,
     borderRadius: 12,
     gap: 8,
@@ -611,19 +616,19 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center' as const,
     justifyContent: 'center' as const,
-    backgroundColor: Colors.accent,
+    backgroundColor: colors.accent,
     paddingVertical: 14,
     borderRadius: 12,
   },
   clockButtonText: {
     fontSize: 16,
     fontWeight: '600' as const,
-    color: Colors.background,
+    color: colors.background,
   },
   lunchButtonText: {
     fontSize: 16,
     fontWeight: '600' as const,
-    color: Colors.background,
+    color: colors.background,
   },
   statsGrid: {
     flexDirection: 'row' as const,
@@ -634,7 +639,7 @@ const styles = StyleSheet.create({
   statCard: {
     width: '48%',
     margin: '1%',
-    backgroundColor: Colors.background,
+    backgroundColor: colors.background,
     padding: 16,
     borderRadius: 12,
     alignItems: 'center' as const,
@@ -642,23 +647,23 @@ const styles = StyleSheet.create({
   statValue: {
     fontSize: 28,
     fontWeight: '700' as const,
-    color: Colors.primary,
+    color: colors.primary,
     marginBottom: 4,
   },
   statLabel: {
     fontSize: 13,
-    color: Colors.textSecondary,
+    color: colors.textSecondary,
     textAlign: 'center' as const,
   },
   sectionTitle: {
     fontSize: 18,
     fontWeight: '600' as const,
-    color: Colors.text,
+    color: colors.text,
     marginBottom: 12,
   },
   actionButton: {
     flexDirection: 'row' as const,
-    backgroundColor: Colors.background,
+    backgroundColor: colors.background,
     padding: 16,
     borderRadius: 12,
     marginBottom: 12,
@@ -671,7 +676,7 @@ const styles = StyleSheet.create({
     width: 48,
     height: 48,
     borderRadius: 12,
-    backgroundColor: Colors.backgroundSecondary,
+    backgroundColor: colors.backgroundSecondary,
     justifyContent: 'center' as const,
     alignItems: 'center' as const,
     marginRight: 12,
@@ -682,18 +687,18 @@ const styles = StyleSheet.create({
   actionTitle: {
     fontSize: 16,
     fontWeight: '600' as const,
-    color: Colors.text,
+    color: colors.text,
     marginBottom: 4,
   },
   actionSubtitle: {
     fontSize: 13,
-    color: Colors.textSecondary,
+    color: colors.textSecondary,
   },
   routesSection: {
     marginTop: 24,
   },
   routeCard: {
-    backgroundColor: Colors.background,
+    backgroundColor: colors.background,
     padding: 16,
     borderRadius: 12,
     marginBottom: 12,
@@ -707,7 +712,7 @@ const styles = StyleSheet.create({
   routeTitle: {
     fontSize: 16,
     fontWeight: '600' as const,
-    color: Colors.text,
+    color: colors.text,
   },
   routeBadge: {
     paddingHorizontal: 12,
@@ -717,11 +722,11 @@ const styles = StyleSheet.create({
   routeBadgeText: {
     fontSize: 12,
     fontWeight: '600' as const,
-    color: Colors.background,
+    color: colors.background,
   },
   routeInfo: {
     fontSize: 14,
-    color: Colors.textSecondary,
+    color: colors.textSecondary,
   },
   routeFooter: {
     flexDirection: 'row' as const,
@@ -730,11 +735,11 @@ const styles = StyleSheet.create({
     marginTop: 8,
     paddingTop: 8,
     borderTopWidth: 1,
-    borderTopColor: Colors.backgroundSecondary,
+    borderTopColor: colors.backgroundSecondary,
   },
   routeFooterText: {
     fontSize: 13,
-    color: Colors.primary,
+    color: colors.primary,
     fontWeight: '600' as const,
   },
   routeCardDisabled: {
@@ -742,7 +747,7 @@ const styles = StyleSheet.create({
   },
   routeWarning: {
     fontSize: 13,
-    color: Colors.error,
+    color: colors.error,
     fontWeight: '600' as const,
     marginTop: 4,
   },

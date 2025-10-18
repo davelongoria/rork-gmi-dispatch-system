@@ -13,24 +13,27 @@ import {
   Settings,
   MessageCircle,
 } from 'lucide-react-native';
-import Colors from '@/constants/colors';
+import { useTheme } from '@/contexts/ThemeContext';
 
 export default function DispatcherLayout() {
+  const { theme } = useTheme();
+  const colors = theme.colors;
+
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: Colors.primary,
-        tabBarInactiveTintColor: Colors.textSecondary,
+        tabBarActiveTintColor: colors.primary,
+        tabBarInactiveTintColor: colors.textSecondary,
         headerStyle: {
-          backgroundColor: Colors.primary,
+          backgroundColor: colors.primary,
         },
-        headerTintColor: Colors.background,
+        headerTintColor: colors.background,
         headerTitleStyle: {
           fontWeight: '600' as const,
         },
         tabBarStyle: {
-          backgroundColor: Colors.background,
-          borderTopColor: Colors.border,
+          backgroundColor: colors.background,
+          borderTopColor: colors.border,
         },
       }}
     >
