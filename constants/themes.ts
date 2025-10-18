@@ -23,7 +23,7 @@ export type CompanyTheme = {
 export const GMI_THEME: CompanyTheme = {
   id: 'gmi',
   name: 'GMI Services',
-  logo: 'https://images.unsplash.com/photo-1618172193622-ae2d025f4032?w=400&h=200&fit=crop',
+  logo: 'https://pub-e001eb4506b145aa938b5d3badbff6a5.r2.dev/attachments/dzanccm5jehctoikd1sdg',
   colors: {
     primary: '#B00000',
     secondary: '#2C2C2E',

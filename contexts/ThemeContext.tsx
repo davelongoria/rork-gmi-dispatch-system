@@ -35,6 +35,15 @@ export const [ThemeProvider, useTheme] = createContextHook(() => {
     }
   }, []);
 
+  const clearCompanySelection = useCallback(async () => {
+    try {
+      await AsyncStorage.removeItem(THEME_STORAGE_KEY);
+      setSelectedCompany(null);
+    } catch (error) {
+      console.error('Failed to clear company selection:', error);
+    }
+  }, []);
+
   const theme: CompanyTheme = selectedCompany ? THEMES[selectedCompany] : THEMES.gmi;
 
   return useMemo(() => ({
@@ -42,5 +51,6 @@ export const [ThemeProvider, useTheme] = createContextHook(() => {
     theme,
     isLoading,
     selectCompany,
-  }), [selectedCompany, theme, isLoading, selectCompany]);
+    clearCompanySelection,
+  }), [selectedCompany, theme, isLoading, selectCompany, clearCompanySelection]);
 });

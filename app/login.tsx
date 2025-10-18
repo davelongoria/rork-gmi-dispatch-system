@@ -17,7 +17,7 @@ import { useRouter } from 'expo-router';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTheme } from '@/contexts/ThemeContext';
 import { CameraView, useCameraPermissions } from 'expo-camera';
-import { QrCode, KeyRound } from 'lucide-react-native';
+import { QrCode, KeyRound, ArrowLeft } from 'lucide-react-native';
 
 export default function LoginScreen() {
   const [usernameOrEmail, setUsernameOrEmail] = useState<string>('');
@@ -27,12 +27,21 @@ export default function LoginScreen() {
   const [logoLoaded, setLogoLoaded] = useState<boolean>(false);
   const [permission, requestPermission] = useCameraPermissions();
   const auth = useAuth();
-  const { theme } = useTheme();
+  const { theme, selectedCompany, isLoading: themeLoading, clearCompanySelection } = useTheme();
   const router = useRouter();
 
   const colors = theme.colors;
 
   useEffect(() => {
+    if (themeLoading) {
+      return;
+    }
+
+    if (!selectedCompany) {
+      router.replace('/company-selection' as any);
+      return;
+    }
+
     if (auth && auth.isAuthenticated && !auth.isLoading) {
       if (auth.isDispatcher) {
         router.replace('/dispatcher' as any);
@@ -40,7 +49,7 @@ export default function LoginScreen() {
         router.replace('/driver' as any);
       }
     }
-  }, [auth, router]);
+  }, [auth, router, selectedCompany, themeLoading]);
 
   const handleLogin = async () => {
     if (!auth || !usernameOrEmail || !password) {
@@ -90,6 +99,17 @@ export default function LoginScreen() {
       >
       <View style={styles.content}>
         <View style={styles.header}>
+          <TouchableOpacity 
+            style={styles.backButton}
+            onPress={async () => {
+              await clearCompanySelection();
+              router.replace('/company-selection' as any);
+            }}
+          >
+            <ArrowLeft size={24} color={colors.text} />
+            <Text style={[styles.backButtonText, { color: colors.text }]}>Change Company</Text>
+          </TouchableOpacity>
+          
           <View style={styles.logoContainer}>
             <Image
               source={{ uri: theme.logo }}
@@ -270,6 +290,22 @@ const styles = StyleSheet.create({
   header: {
     alignItems: 'center',
     marginBottom: 32,
+    position: 'relative',
+  },
+  backButton: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    zIndex: 10,
+  },
+  backButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
   },
   logoContainer: {
     width: 200,

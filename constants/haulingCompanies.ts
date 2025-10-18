@@ -8,12 +8,12 @@ export const HAULING_COMPANIES: HaulingCompany[] = [
   {
     id: 'gmi',
     name: 'GMI Services',
-    logo: 'https://pub-e001eb4506b145aa938b5d3badbff6a5.r2.dev/attachments/oyj3m5u65zt7k8zmjblq2',
+    logo: 'https://pub-e001eb4506b145aa938b5d3badbff6a5.r2.dev/attachments/dzanccm5jehctoikd1sdg',
   },
   {
     id: 'region',
     name: 'Region Services',
-    logo: 'https://pub-e001eb4506b145aa938b5d3badbff6a5.r2.dev/attachments/g9zr65a3y8hkw4y6vla5u',
+    logo: 'https://pub-e001eb4506b145aa938b5d3badbff6a5.r2.dev/attachments/sji9cdn2idmxjy87ciqsk',
   },
 ];
 
