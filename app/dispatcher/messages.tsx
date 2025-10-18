@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useCallback } from 'react';
+import React, { useState, useMemo, useCallback, useRef } from 'react';
 import {
   View,
   Text,
@@ -9,6 +9,8 @@ import {
   Modal,
   Platform,
   Linking,
+  PanResponder,
+  Animated,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useData } from '@/contexts/DataContext';
@@ -23,6 +25,39 @@ export default function DispatcherMessagesScreen() {
   const [selectedDriverId, setSelectedDriverId] = useState<string | null>(null);
   const [messageText, setMessageText] = useState<string>('');
   const [searchQuery, setSearchQuery] = useState<string>('');
+  const modalTranslateY = useRef(new Animated.Value(0)).current;
+  const panResponder = useRef(
+    PanResponder.create({
+      onStartShouldSetPanResponder: () => true,
+      onMoveShouldSetPanResponder: (_, gestureState) => {
+        return Math.abs(gestureState.dy) > 5;
+      },
+      onPanResponderMove: (_, gestureState) => {
+        if (gestureState.dy > 0) {
+          modalTranslateY.setValue(gestureState.dy);
+        }
+      },
+      onPanResponderRelease: (_, gestureState) => {
+        if (gestureState.dy > 150) {
+          Animated.timing(modalTranslateY, {
+            toValue: 800,
+            duration: 250,
+            useNativeDriver: true,
+          }).start(() => {
+            setSelectedDriverId(null);
+            modalTranslateY.setValue(0);
+          });
+        } else {
+          Animated.spring(modalTranslateY, {
+            toValue: 0,
+            useNativeDriver: true,
+            tension: 50,
+            friction: 8,
+          }).start();
+        }
+      },
+    })
+  ).current;
 
   const activeDrivers = useMemo(() => 
     drivers.filter(d => d.active),
@@ -194,14 +229,23 @@ export default function DispatcherMessagesScreen() {
         animationType="slide"
         onRequestClose={() => setSelectedDriverId(null)}
       >
-        <SafeAreaView style={styles.modalContainer} edges={['bottom']}>
-          <View style={styles.modalHeader}>
-            <TouchableOpacity
-              style={styles.closeButton}
-              onPress={() => setSelectedDriverId(null)}
-            >
-              <X size={24} color={Colors.text} />
-            </TouchableOpacity>
+        <Animated.View 
+          style={[
+            styles.modalWrapper, 
+            { transform: [{ translateY: modalTranslateY }] }
+          ]}
+        >
+          <SafeAreaView style={styles.modalContainer} edges={['bottom']}>
+            <View style={styles.modalHeader} {...panResponder.panHandlers}>
+              <View style={styles.dragIndicatorContainer}>
+                <View style={styles.dragIndicator} />
+              </View>
+              <TouchableOpacity
+                style={styles.closeButton}
+                onPress={() => setSelectedDriverId(null)}
+              >
+                <X size={24} color={Colors.text} />
+              </TouchableOpacity>
             <View style={styles.modalHeaderInfo}>
               <Text style={styles.modalTitle}>{selectedDriver?.name}</Text>
               <Text style={styles.modalPhone}>{selectedDriver?.phone}</Text>
@@ -258,7 +302,8 @@ export default function DispatcherMessagesScreen() {
               <Send size={20} color={Colors.background} />
             </TouchableOpacity>
           </View>
-        </SafeAreaView>
+          </SafeAreaView>
+        </Animated.View>
       </Modal>
     </View>
   );
@@ -355,15 +400,29 @@ const styles = StyleSheet.create({
     color: Colors.textSecondary,
     marginTop: 12,
   },
+  modalWrapper: {
+    flex: 1,
+  },
   modalContainer: {
     flex: 1,
     backgroundColor: Colors.background,
   },
   modalHeader: {
     backgroundColor: Colors.primary,
-    padding: 16,
+    paddingHorizontal: 16,
+    paddingBottom: 16,
     borderBottomWidth: 1,
     borderBottomColor: Colors.border,
+  },
+  dragIndicatorContainer: {
+    alignItems: 'center',
+    paddingVertical: 12,
+  },
+  dragIndicator: {
+    width: 40,
+    height: 4,
+    backgroundColor: 'rgba(255, 255, 255, 0.3)',
+    borderRadius: 2,
   },
   closeButton: {
     marginBottom: 12,
