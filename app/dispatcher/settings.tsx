@@ -555,14 +555,14 @@ const styles = StyleSheet.create({
     padding: 16,
   },
   header: {
-    flexDirection: 'row' as const,
-    alignItems: 'center' as const,
+    flexDirection: 'row',
+    alignItems: 'center',
     padding: 16,
     gap: 12,
   },
   headerTitle: {
     fontSize: 24,
-    fontWeight: '700' as const,
+    fontWeight: '700',
   },
   section: {
     padding: 16,
@@ -571,7 +571,7 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontSize: 18,
-    fontWeight: '600' as const,
+    fontWeight: '600',
     marginBottom: 8,
   },
   sectionDescription: {
@@ -580,8 +580,8 @@ const styles = StyleSheet.create({
     lineHeight: 20,
   },
   inputContainer: {
-    flexDirection: 'row' as const,
-    alignItems: 'center' as const,
+    flexDirection: 'row',
+    alignItems: 'center',
     borderRadius: 8,
     paddingHorizontal: 12,
     height: 48,
@@ -592,9 +592,9 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
   saveButton: {
-    flexDirection: 'row' as const,
-    alignItems: 'center' as const,
-    justifyContent: 'center' as const,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
     padding: 16,
     borderRadius: 12,
     marginTop: 8,
@@ -602,10 +602,10 @@ const styles = StyleSheet.create({
   },
   saveButtonText: {
     fontSize: 16,
-    fontWeight: '600' as const,
+    fontWeight: '600',
   },
   qrContainer: {
-    alignItems: 'center' as const,
+    alignItems: 'center',
     marginTop: 12,
   },
   qrCodeWrapper: {
@@ -614,15 +614,15 @@ const styles = StyleSheet.create({
     borderWidth: 2,
   },
   qrActions: {
-    flexDirection: 'row' as const,
+    flexDirection: 'row',
     gap: 12,
     marginTop: 16,
-    flexWrap: 'wrap' as const,
-    justifyContent: 'center' as const,
+    flexWrap: 'wrap',
+    justifyContent: 'center',
   },
   qrActionButton: {
-    flexDirection: 'row' as const,
-    alignItems: 'center' as const,
+    flexDirection: 'row',
+    alignItems: 'center',
     paddingVertical: 8,
     paddingHorizontal: 16,
     borderRadius: 8,
@@ -630,12 +630,12 @@ const styles = StyleSheet.create({
   },
   qrActionText: {
     fontSize: 14,
-    fontWeight: '600' as const,
+    fontWeight: '600',
   },
   generateButton: {
-    flexDirection: 'row' as const,
-    alignItems: 'center' as const,
-    justifyContent: 'center' as const,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
     padding: 14,
     borderRadius: 8,
     gap: 8,
@@ -643,11 +643,10 @@ const styles = StyleSheet.create({
   },
   generateButtonText: {
     fontSize: 15,
-    fontWeight: '600' as const,
+    fontWeight: '600',
   },
-
   tabContainer: {
-    flexDirection: 'row' as const,
+    flexDirection: 'row',
     marginHorizontal: 16,
     marginBottom: 16,
     borderRadius: 12,
@@ -656,25 +655,25 @@ const styles = StyleSheet.create({
   tab: {
     flex: 1,
     paddingVertical: 12,
-    alignItems: 'center' as const,
-    justifyContent: 'center' as const,
+    alignItems: 'center',
+    justifyContent: 'center',
     borderRadius: 8,
   },
   tabText: {
     fontSize: 14,
-    fontWeight: '600' as const,
+    fontWeight: '600',
   },
   syncContainer: {
     flex: 1,
     padding: 16,
     paddingTop: 32,
-    alignItems: 'center' as const,
-    justifyContent: 'center' as const,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   syncNavButton: {
-    flexDirection: 'row' as const,
-    alignItems: 'center' as const,
-    justifyContent: 'center' as const,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
     paddingVertical: 16,
     paddingHorizontal: 24,
     borderRadius: 12,
@@ -683,11 +682,11 @@ const styles = StyleSheet.create({
   },
   syncNavButtonText: {
     fontSize: 16,
-    fontWeight: '600' as const,
+    fontWeight: '600',
   },
   syncDescription: {
     fontSize: 14,
-    textAlign: 'center' as const,
+    textAlign: 'center',
     marginTop: 12,
     paddingHorizontal: 32,
   },
@@ -695,18 +694,18 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   companiesHeader: {
-    flexDirection: 'row' as const,
-    justifyContent: 'space-between' as const,
-    alignItems: 'center' as const,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
     padding: 16,
   },
   companiesTitle: {
     fontSize: 20,
-    fontWeight: '700' as const,
+    fontWeight: '700',
   },
   addButton: {
-    flexDirection: 'row' as const,
-    alignItems: 'center' as const,
+    flexDirection: 'row',
+    alignItems: 'center',
     paddingVertical: 8,
     paddingHorizontal: 16,
     borderRadius: 8,
@@ -714,7 +713,7 @@ const styles = StyleSheet.create({
   },
   addButtonText: {
     fontSize: 14,
-    fontWeight: '600' as const,
+    fontWeight: '600',
   },
   companyCard: {
     padding: 16,
@@ -723,8 +722,8 @@ const styles = StyleSheet.create({
     borderWidth: 1,
   },
   companyHeader: {
-    flexDirection: 'row' as const,
-    alignItems: 'center' as const,
+    flexDirection: 'row',
+    alignItems: 'center',
     marginBottom: 12,
   },
   companyLogo: {
@@ -737,12 +736,12 @@ const styles = StyleSheet.create({
   },
   companyName: {
     fontSize: 18,
-    fontWeight: '600' as const,
+    fontWeight: '600',
     marginBottom: 8,
   },
   colorRow: {
-    flexDirection: 'row' as const,
-    alignItems: 'center' as const,
+    flexDirection: 'row',
+    alignItems: 'center',
     gap: 8,
   },
   colorBox: {
@@ -754,12 +753,12 @@ const styles = StyleSheet.create({
     fontSize: 12,
   },
   companyActions: {
-    flexDirection: 'row' as const,
+    flexDirection: 'row',
     gap: 8,
   },
   actionButton: {
-    flexDirection: 'row' as const,
-    alignItems: 'center' as const,
+    flexDirection: 'row',
+    alignItems: 'center',
     paddingVertical: 8,
     paddingHorizontal: 12,
     borderRadius: 8,
@@ -767,16 +766,16 @@ const styles = StyleSheet.create({
   },
   actionButtonText: {
     fontSize: 13,
-    fontWeight: '600' as const,
+    fontWeight: '600',
   },
   emptyState: {
     padding: 48,
     borderRadius: 12,
-    alignItems: 'center' as const,
+    alignItems: 'center',
   },
   emptyStateText: {
     fontSize: 18,
-    fontWeight: '600' as const,
+    fontWeight: '600',
     marginTop: 16,
   },
   emptyStateSubtext: {
@@ -785,8 +784,8 @@ const styles = StyleSheet.create({
   },
   modalContainer: {
     flex: 1,
-    justifyContent: 'center' as const,
-    alignItems: 'center' as const,
+    justifyContent: 'center',
+    alignItems: 'center',
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
     padding: 16,
   },
@@ -798,14 +797,14 @@ const styles = StyleSheet.create({
     padding: 24,
   },
   modalHeader: {
-    flexDirection: 'row' as const,
-    justifyContent: 'space-between' as const,
-    alignItems: 'center' as const,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
     marginBottom: 24,
   },
   modalTitle: {
     fontSize: 22,
-    fontWeight: '700' as const,
+    fontWeight: '700',
   },
   modalScroll: {
     maxHeight: 400,
@@ -815,7 +814,7 @@ const styles = StyleSheet.create({
   },
   formLabel: {
     fontSize: 14,
-    fontWeight: '600' as const,
+    fontWeight: '600',
     marginBottom: 8,
   },
   formInput: {
@@ -835,17 +834,17 @@ const styles = StyleSheet.create({
     height: 48,
     borderRadius: 8,
     paddingHorizontal: 16,
-    justifyContent: 'center' as const,
-    alignItems: 'center' as const,
+    justifyContent: 'center',
+    alignItems: 'center',
     borderWidth: 1,
   },
   imagePickerButtonText: {
     fontSize: 16,
-    fontWeight: '600' as const,
+    fontWeight: '600',
   },
   colorSelectButton: {
-    flexDirection: 'row' as const,
-    alignItems: 'center' as const,
+    flexDirection: 'row',
+    alignItems: 'center',
     height: 56,
     borderRadius: 8,
     paddingHorizontal: 12,
@@ -879,19 +878,19 @@ const styles = StyleSheet.create({
   },
   colorName: {
     fontSize: 16,
-    fontWeight: '700' as const,
+    fontWeight: '700',
     color: '#FFFFFF',
     marginBottom: 4,
   },
   colorValue: {
     fontSize: 14,
     color: '#FFFFFF',
-    fontWeight: '600' as const,
+    fontWeight: '600',
   },
   modalButton: {
-    flexDirection: 'row' as const,
-    alignItems: 'center' as const,
-    justifyContent: 'center' as const,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
     paddingVertical: 16,
     borderRadius: 12,
     marginTop: 24,
@@ -899,7 +898,7 @@ const styles = StyleSheet.create({
   },
   modalButtonText: {
     fontSize: 16,
-    fontWeight: '600' as const,
+    fontWeight: '600',
   },
 });
 
