@@ -1269,7 +1269,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   suspendedNotesBox: {
-    backgroundColor: '#FFEBEE',
+    backgroundColor: Colors.backgroundSecondary,
     padding: 12,
     borderRadius: 8,
     marginTop: 8,

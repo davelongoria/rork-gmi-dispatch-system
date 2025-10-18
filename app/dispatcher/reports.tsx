@@ -13,7 +13,7 @@ import {
 import * as FileSystem from 'expo-file-system';
 import * as MailComposer from 'expo-mail-composer';
 import { useData } from '@/contexts/DataContext';
-import Colors from '@/constants/colors';
+import { useTheme } from '@/contexts/ThemeContext';
 import {
   FileText,
   Download,
@@ -32,6 +32,9 @@ import {
 import type { Report } from '@/types';
 
 export default function ReportsScreen() {
+  const { theme } = useTheme();
+  const colors = theme.colors;
+  const styles = createStyles(colors);
   const {
     fuelLogs,
     dumpTickets,
@@ -564,7 +567,7 @@ ${Platform.OS === 'web' ? '\n\nCSV Data:\n' + report.csvData : ''}
         const endTime = new Date(endDate).getTime() + 86400000;
         return jobTime >= startTime && jobTime < endTime;
       }).length,
-      color: '#FF6B35',
+      color: colors.warning,
       onGenerate: generateDailyReport,
     },
     {
@@ -573,7 +576,7 @@ ${Platform.OS === 'web' ? '\n\nCSV Data:\n' + report.csvData : ''}
       description: 'Fuel consumption, costs, and mileage tracking',
       icon: Fuel,
       count: filterByDateRange(fuelLogs, startDate, endDate).length,
-      color: Colors.primary,
+      color: colors.primary,
       onGenerate: generateFuelReport,
     },
     {
@@ -582,7 +585,7 @@ ${Platform.OS === 'web' ? '\n\nCSV Data:\n' + report.csvData : ''}
       description: 'Dump site visits and weight tickets',
       icon: Truck,
       count: filterByDateRange(dumpTickets, startDate, endDate).length,
-      color: Colors.secondary,
+      color: colors.secondary,
       onGenerate: generateDumpTicketReport,
     },
     {
@@ -591,7 +594,7 @@ ${Platform.OS === 'web' ? '\n\nCSV Data:\n' + report.csvData : ''}
       description: 'Vehicle inspection reports and defects',
       icon: FileCheck,
       count: filterByDateRange(dvirs, startDate, endDate).length,
-      color: Colors.accent,
+      color: colors.accent,
       onGenerate: generateDVIRReport,
     },
     {
@@ -600,7 +603,7 @@ ${Platform.OS === 'web' ? '\n\nCSV Data:\n' + report.csvData : ''}
       description: 'Driver clock in/out and hours worked',
       icon: Clock,
       count: filterByDateRange(timeLogs, startDate, endDate).length,
-      color: Colors.success,
+      color: colors.success,
       onGenerate: generateTimeReport,
     },
     {
@@ -609,7 +612,7 @@ ${Platform.OS === 'web' ? '\n\nCSV Data:\n' + report.csvData : ''}
       description: 'Detailed mileage tracking logs',
       icon: Gauge,
       count: filterByDateRange(mileageLogs, startDate, endDate).length,
-      color: '#9C27B0',
+      color: colors.primary,
       onGenerate: generateMileageReport,
     },
   ];
@@ -617,7 +620,7 @@ ${Platform.OS === 'web' ? '\n\nCSV Data:\n' + report.csvData : ''}
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
       <View style={styles.header}>
-        <FileText size={24} color={Colors.primary} />
+        <FileText size={24} color={colors.primary} />
         <Text style={styles.headerTitle}>Reports & Analytics</Text>
       </View>
 
@@ -631,7 +634,7 @@ ${Platform.OS === 'web' ? '\n\nCSV Data:\n' + report.csvData : ''}
               value={startDate}
               onChangeText={setStartDate}
               placeholder="YYYY-MM-DD"
-              placeholderTextColor={Colors.textSecondary}
+              placeholderTextColor={colors.textSecondary}
             />
           </View>
           <View style={styles.dateInputContainer}>
@@ -641,7 +644,7 @@ ${Platform.OS === 'web' ? '\n\nCSV Data:\n' + report.csvData : ''}
               value={endDate}
               onChangeText={setEndDate}
               placeholder="YYYY-MM-DD"
-              placeholderTextColor={Colors.textSecondary}
+              placeholderTextColor={colors.textSecondary}
             />
           </View>
         </View>
@@ -671,7 +674,7 @@ ${Platform.OS === 'web' ? '\n\nCSV Data:\n' + report.csvData : ''}
         return (
           <View key={card.id} style={styles.reportCard}>
             <View style={[styles.reportIcon, { backgroundColor: card.color }]}>
-              <Icon size={28} color={Colors.background} />
+              <Icon size={28} color={colors.background} />
             </View>
             <View style={styles.reportInfo}>
               <Text style={styles.reportTitle}>{card.title}</Text>
@@ -683,7 +686,7 @@ ${Platform.OS === 'web' ? '\n\nCSV Data:\n' + report.csvData : ''}
               onPress={card.onGenerate}
               disabled={isGenerating}
             >
-              <Download size={20} color={Colors.background} />
+              <Download size={20} color={colors.background} />
             </TouchableOpacity>
           </View>
         );
@@ -715,25 +718,25 @@ ${Platform.OS === 'web' ? '\n\nCSV Data:\n' + report.csvData : ''}
                   style={styles.actionButton}
                   onPress={() => handleViewReport(report)}
                 >
-                  <Eye size={18} color={Colors.primary} />
+                  <Eye size={18} color={colors.primary} />
                 </TouchableOpacity>
                 <TouchableOpacity
                   style={styles.actionButton}
                   onPress={() => handleEditReport(report)}
                 >
-                  <Edit2 size={18} color={Colors.primary} />
+                  <Edit2 size={18} color={colors.primary} />
                 </TouchableOpacity>
                 <TouchableOpacity
                   style={styles.actionButton}
                   onPress={() => emailReport(report)}
                 >
-                  <Mail size={18} color={Colors.success} />
+                  <Mail size={18} color={colors.success} />
                 </TouchableOpacity>
                 <TouchableOpacity
                   style={styles.actionButton}
                   onPress={() => handleDeleteReport(report)}
                 >
-                  <Trash2 size={18} color={Colors.error} />
+                  <Trash2 size={18} color={colors.error} />
                 </TouchableOpacity>
               </View>
             </View>
@@ -756,7 +759,7 @@ ${Platform.OS === 'web' ? '\n\nCSV Data:\n' + report.csvData : ''}
             <View style={styles.modalHeader}>
               <Text style={styles.modalTitle}>{viewingReport?.name}</Text>
               <TouchableOpacity onPress={() => setViewingReport(null)}>
-                <X size={24} color={Colors.text} />
+                <X size={24} color={colors.text} />
               </TouchableOpacity>
             </View>
             <ScrollView style={styles.modalBody}>
@@ -806,7 +809,7 @@ ${Platform.OS === 'web' ? '\n\nCSV Data:\n' + report.csvData : ''}
             <View style={styles.modalHeader}>
               <Text style={styles.modalTitle}>Edit Report</Text>
               <TouchableOpacity onPress={() => setEditingReport(null)}>
-                <X size={24} color={Colors.text} />
+                <X size={24} color={colors.text} />
               </TouchableOpacity>
             </View>
             <ScrollView style={styles.modalBody}>
@@ -816,7 +819,7 @@ ${Platform.OS === 'web' ? '\n\nCSV Data:\n' + report.csvData : ''}
                 value={editName}
                 onChangeText={setEditName}
                 placeholder="Report name"
-                placeholderTextColor={Colors.textSecondary}
+                placeholderTextColor={colors.textSecondary}
               />
 
               <Text style={styles.modalLabel}>Description</Text>
@@ -825,7 +828,7 @@ ${Platform.OS === 'web' ? '\n\nCSV Data:\n' + report.csvData : ''}
                 value={editDescription}
                 onChangeText={setEditDescription}
                 placeholder="Report description"
-                placeholderTextColor={Colors.textSecondary}
+                placeholderTextColor={colors.textSecondary}
                 multiline
                 numberOfLines={4}
               />
@@ -841,10 +844,10 @@ ${Platform.OS === 'web' ? '\n\nCSV Data:\n' + report.csvData : ''}
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (colors: any) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.backgroundSecondary,
+    backgroundColor: colors.backgroundSecondary,
   },
   content: {
     padding: 16,
@@ -858,10 +861,10 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 24,
     fontWeight: '700' as const,
-    color: Colors.text,
+    color: colors.text,
   },
   dateRangeCard: {
-    backgroundColor: Colors.background,
+    backgroundColor: colors.background,
     borderRadius: 12,
     padding: 16,
     marginBottom: 16,
@@ -869,7 +872,7 @@ const styles = StyleSheet.create({
   dateRangeTitle: {
     fontSize: 16,
     fontWeight: '600' as const,
-    color: Colors.text,
+    color: colors.text,
     marginBottom: 12,
   },
   dateRangeRow: {
@@ -882,17 +885,17 @@ const styles = StyleSheet.create({
   dateLabel: {
     fontSize: 12,
     fontWeight: '600' as const,
-    color: Colors.textSecondary,
+    color: colors.textSecondary,
     marginBottom: 6,
   },
   dateInput: {
-    backgroundColor: Colors.backgroundSecondary,
+    backgroundColor: colors.backgroundSecondary,
     borderRadius: 8,
     padding: 12,
     fontSize: 14,
-    color: Colors.text,
+    color: colors.text,
     borderWidth: 1,
-    borderColor: Colors.border,
+    borderColor: colors.border,
   },
   statsRow: {
     flexDirection: 'row' as const,
@@ -901,7 +904,7 @@ const styles = StyleSheet.create({
   },
   statCard: {
     flex: 1,
-    backgroundColor: Colors.background,
+    backgroundColor: colors.background,
     padding: 16,
     borderRadius: 12,
     alignItems: 'center' as const,
@@ -909,22 +912,22 @@ const styles = StyleSheet.create({
   statValue: {
     fontSize: 28,
     fontWeight: '700' as const,
-    color: Colors.primary,
+    color: colors.primary,
     marginBottom: 4,
   },
   statLabel: {
     fontSize: 13,
-    color: Colors.textSecondary,
+    color: colors.textSecondary,
   },
   sectionTitle: {
     fontSize: 18,
     fontWeight: '600' as const,
-    color: Colors.text,
+    color: colors.text,
     marginBottom: 16,
   },
   reportCard: {
     flexDirection: 'row' as const,
-    backgroundColor: Colors.background,
+    backgroundColor: colors.background,
     borderRadius: 12,
     padding: 16,
     marginBottom: 12,
@@ -944,23 +947,23 @@ const styles = StyleSheet.create({
   reportTitle: {
     fontSize: 16,
     fontWeight: '600' as const,
-    color: Colors.text,
+    color: colors.text,
     marginBottom: 4,
   },
   reportDescription: {
     fontSize: 13,
-    color: Colors.textSecondary,
+    color: colors.textSecondary,
     marginBottom: 4,
   },
   reportCount: {
     fontSize: 12,
-    color: Colors.primary,
+    color: colors.primary,
     fontWeight: '600' as const,
   },
   generateButton: {
     width: 48,
     height: 48,
-    backgroundColor: Colors.primary,
+    backgroundColor: colors.primary,
     borderRadius: 12,
     justifyContent: 'center' as const,
     alignItems: 'center' as const,
@@ -969,7 +972,7 @@ const styles = StyleSheet.create({
     opacity: 0.5,
   },
   savedReportCard: {
-    backgroundColor: Colors.background,
+    backgroundColor: colors.background,
     borderRadius: 12,
     padding: 16,
     marginBottom: 12,
@@ -986,23 +989,23 @@ const styles = StyleSheet.create({
   savedReportTitle: {
     fontSize: 16,
     fontWeight: '600' as const,
-    color: Colors.text,
+    color: colors.text,
     marginBottom: 4,
   },
   savedReportDate: {
     fontSize: 13,
-    color: Colors.textSecondary,
+    color: colors.textSecondary,
     marginBottom: 2,
   },
   savedReportDateRange: {
     fontSize: 12,
-    color: Colors.accent,
+    color: colors.accent,
     marginBottom: 2,
     fontWeight: '500' as const,
   },
   savedReportCount: {
     fontSize: 12,
-    color: Colors.primary,
+    color: colors.primary,
     fontWeight: '600' as const,
   },
   savedReportActions: {
@@ -1013,13 +1016,13 @@ const styles = StyleSheet.create({
   actionButton: {
     width: 40,
     height: 40,
-    backgroundColor: Colors.backgroundSecondary,
+    backgroundColor: colors.backgroundSecondary,
     borderRadius: 8,
     justifyContent: 'center' as const,
     alignItems: 'center' as const,
   },
   infoBox: {
-    backgroundColor: Colors.background,
+    backgroundColor: colors.background,
     borderRadius: 12,
     padding: 16,
     marginTop: 12,
@@ -1027,12 +1030,12 @@ const styles = StyleSheet.create({
   infoTitle: {
     fontSize: 16,
     fontWeight: '600' as const,
-    color: Colors.text,
+    color: colors.text,
     marginBottom: 8,
   },
   infoText: {
     fontSize: 14,
-    color: Colors.textSecondary,
+    color: colors.textSecondary,
     lineHeight: 20,
   },
   modalOverlay: {
@@ -1044,7 +1047,7 @@ const styles = StyleSheet.create({
   modalContent: {
     width: '90%',
     maxHeight: '80%',
-    backgroundColor: Colors.background,
+    backgroundColor: colors.background,
     borderRadius: 16,
     overflow: 'hidden',
   },
@@ -1054,12 +1057,12 @@ const styles = StyleSheet.create({
     alignItems: 'center' as const,
     padding: 16,
     borderBottomWidth: 1,
-    borderBottomColor: Colors.backgroundSecondary,
+    borderBottomColor: colors.backgroundSecondary,
   },
   modalTitle: {
     fontSize: 18,
     fontWeight: '600' as const,
-    color: Colors.text,
+    color: colors.text,
   },
   modalBody: {
     padding: 16,
@@ -1067,17 +1070,17 @@ const styles = StyleSheet.create({
   modalLabel: {
     fontSize: 14,
     fontWeight: '600' as const,
-    color: Colors.text,
+    color: colors.text,
     marginTop: 16,
     marginBottom: 8,
   },
   modalValue: {
     fontSize: 14,
-    color: Colors.textSecondary,
+    color: colors.textSecondary,
     lineHeight: 20,
   },
   csvPreview: {
-    backgroundColor: Colors.backgroundSecondary,
+    backgroundColor: colors.backgroundSecondary,
     borderRadius: 8,
     padding: 12,
     maxHeight: 200,
@@ -1085,21 +1088,21 @@ const styles = StyleSheet.create({
   csvText: {
     fontSize: 12,
     fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace',
-    color: Colors.text,
+    color: colors.text,
   },
   modalInput: {
-    backgroundColor: Colors.backgroundSecondary,
+    backgroundColor: colors.backgroundSecondary,
     borderRadius: 8,
     padding: 12,
     fontSize: 16,
-    color: Colors.text,
+    color: colors.text,
   },
   modalTextArea: {
     minHeight: 100,
     textAlignVertical: 'top' as const,
   },
   saveButton: {
-    backgroundColor: Colors.primary,
+    backgroundColor: colors.primary,
     borderRadius: 12,
     padding: 16,
     alignItems: 'center' as const,
@@ -1108,6 +1111,6 @@ const styles = StyleSheet.create({
   saveButtonText: {
     fontSize: 16,
     fontWeight: '600' as const,
-    color: Colors.background,
+    color: colors.background,
   },
 });
