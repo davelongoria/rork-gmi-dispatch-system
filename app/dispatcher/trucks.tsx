@@ -10,12 +10,15 @@ import {
   Alert,
 } from 'react-native';
 import { useData } from '@/contexts/DataContext';
-import Colors from '@/constants/colors';
+import { useTheme } from '@/contexts/ThemeContext';
 import { Plus, Search, Gauge, X } from 'lucide-react-native';
 import type { Truck } from '@/types';
 
 export default function TrucksScreen() {
   const { trucks, addTruck, updateTruck } = useData();
+  const { theme } = useTheme();
+  const colors = theme.colors;
+  const styles = createStyles(colors);
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [modalVisible, setModalVisible] = useState<boolean>(false);
   const [editingTruck, setEditingTruck] = useState<Truck | null>(null);
@@ -94,7 +97,7 @@ export default function TrucksScreen() {
           <Text style={styles.truckMeta}>Plate: {item.licensePlate}</Text>
         )}
         <View style={styles.odometerRow}>
-          <Gauge size={14} color={Colors.textSecondary} />
+          <Gauge size={14} color={colors.textSecondary} />
           <Text style={styles.truckMeta}>
             {item.odometer.toLocaleString()} mi
           </Text>
@@ -110,17 +113,17 @@ export default function TrucksScreen() {
     <View style={styles.container}>
       <View style={styles.searchContainer}>
         <View style={styles.searchInputContainer}>
-          <Search size={20} color={Colors.textSecondary} />
+          <Search size={20} color={colors.textSecondary} />
           <TextInput
             style={styles.searchInput}
             placeholder="Search trucks..."
-            placeholderTextColor={Colors.textSecondary}
+            placeholderTextColor={colors.textSecondary}
             value={searchQuery}
             onChangeText={setSearchQuery}
           />
         </View>
         <TouchableOpacity style={styles.addButton} onPress={handleAddTruck}>
-          <Plus size={24} color={Colors.background} />
+          <Plus size={24} color={colors.background} />
         </TouchableOpacity>
       </View>
 
@@ -150,7 +153,7 @@ export default function TrucksScreen() {
                 {editingTruck ? 'Edit Truck' : 'Add Truck'}
               </Text>
               <TouchableOpacity onPress={() => setModalVisible(false)}>
-                <X size={24} color={Colors.text} />
+                <X size={24} color={colors.text} />
               </TouchableOpacity>
             </View>
 
@@ -161,7 +164,7 @@ export default function TrucksScreen() {
                 value={formData.unitNumber}
                 onChangeText={text => setFormData({ ...formData, unitNumber: text })}
                 placeholder="T-101"
-                placeholderTextColor={Colors.textSecondary}
+                placeholderTextColor={colors.textSecondary}
               />
 
               <Text style={styles.label}>VIN</Text>
@@ -170,7 +173,7 @@ export default function TrucksScreen() {
                 value={formData.vin}
                 onChangeText={text => setFormData({ ...formData, vin: text })}
                 placeholder="1HGBH41JXMN109186"
-                placeholderTextColor={Colors.textSecondary}
+                placeholderTextColor={colors.textSecondary}
                 autoCapitalize="characters"
               />
 
@@ -180,7 +183,7 @@ export default function TrucksScreen() {
                 value={formData.licensePlate}
                 onChangeText={text => setFormData({ ...formData, licensePlate: text })}
                 placeholder="ABC-1234"
-                placeholderTextColor={Colors.textSecondary}
+                placeholderTextColor={colors.textSecondary}
                 autoCapitalize="characters"
               />
 
@@ -190,7 +193,7 @@ export default function TrucksScreen() {
                 value={formData.odometer}
                 onChangeText={text => setFormData({ ...formData, odometer: text })}
                 placeholder="0"
-                placeholderTextColor={Colors.textSecondary}
+                placeholderTextColor={colors.textSecondary}
                 keyboardType="numeric"
               />
 
@@ -216,10 +219,10 @@ export default function TrucksScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (colors: any) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.backgroundSecondary,
+    backgroundColor: colors.backgroundSecondary,
   },
   searchContainer: {
     flexDirection: 'row' as const,
@@ -230,7 +233,7 @@ const styles = StyleSheet.create({
     flex: 1,
     flexDirection: 'row' as const,
     alignItems: 'center' as const,
-    backgroundColor: Colors.background,
+    backgroundColor: colors.background,
     borderRadius: 12,
     paddingHorizontal: 12,
     height: 48,
@@ -239,12 +242,12 @@ const styles = StyleSheet.create({
     flex: 1,
     marginLeft: 8,
     fontSize: 16,
-    color: Colors.text,
+    color: colors.text,
   },
   addButton: {
     width: 48,
     height: 48,
-    backgroundColor: Colors.primary,
+    backgroundColor: colors.primary,
     borderRadius: 12,
     justifyContent: 'center' as const,
     alignItems: 'center' as const,
@@ -254,7 +257,7 @@ const styles = StyleSheet.create({
     paddingTop: 0,
   },
   truckCard: {
-    backgroundColor: Colors.background,
+    backgroundColor: colors.background,
     borderRadius: 12,
     padding: 16,
     marginBottom: 12,
@@ -265,7 +268,7 @@ const styles = StyleSheet.create({
     width: 56,
     height: 56,
     borderRadius: 12,
-    backgroundColor: Colors.primary,
+    backgroundColor: colors.primary,
     justifyContent: 'center' as const,
     alignItems: 'center' as const,
     marginRight: 12,
@@ -273,7 +276,7 @@ const styles = StyleSheet.create({
   truckNumber: {
     fontSize: 16,
     fontWeight: '700' as const,
-    color: Colors.background,
+    color: colors.background,
   },
   truckInfo: {
     flex: 1,
@@ -281,12 +284,12 @@ const styles = StyleSheet.create({
   truckUnit: {
     fontSize: 18,
     fontWeight: '600' as const,
-    color: Colors.text,
+    color: colors.text,
     marginBottom: 4,
   },
   truckMeta: {
     fontSize: 14,
-    color: Colors.textSecondary,
+    color: colors.textSecondary,
     marginLeft: 4,
   },
   odometerRow: {
@@ -300,15 +303,15 @@ const styles = StyleSheet.create({
     borderRadius: 12,
   },
   statusActive: {
-    backgroundColor: Colors.success,
+    backgroundColor: colors.success,
   },
   statusInactive: {
-    backgroundColor: Colors.textSecondary,
+    backgroundColor: colors.textSecondary,
   },
   statusText: {
     fontSize: 12,
     fontWeight: '600' as const,
-    color: Colors.background,
+    color: colors.background,
   },
   emptyContainer: {
     alignItems: 'center' as const,
@@ -318,12 +321,12 @@ const styles = StyleSheet.create({
   emptyText: {
     fontSize: 18,
     fontWeight: '600' as const,
-    color: Colors.text,
+    color: colors.text,
     marginBottom: 8,
   },
   emptySubtext: {
     fontSize: 14,
-    color: Colors.textSecondary,
+    color: colors.textSecondary,
   },
   modalOverlay: {
     flex: 1,
@@ -331,7 +334,7 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end' as const,
   },
   modalContent: {
-    backgroundColor: Colors.background,
+    backgroundColor: colors.background,
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     paddingTop: 24,
@@ -347,7 +350,7 @@ const styles = StyleSheet.create({
   modalTitle: {
     fontSize: 24,
     fontWeight: '700' as const,
-    color: Colors.text,
+    color: colors.text,
   },
   form: {
     paddingHorizontal: 24,
@@ -356,19 +359,19 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 14,
     fontWeight: '600' as const,
-    color: Colors.text,
+    color: colors.text,
     marginBottom: 8,
     marginTop: 12,
   },
   input: {
     height: 48,
     borderWidth: 1,
-    borderColor: Colors.border,
+    borderColor: colors.border,
     borderRadius: 12,
     paddingHorizontal: 16,
     fontSize: 16,
-    color: Colors.text,
-    backgroundColor: Colors.background,
+    color: colors.text,
+    backgroundColor: colors.background,
   },
   buttonRow: {
     flexDirection: 'row' as const,
@@ -383,19 +386,19 @@ const styles = StyleSheet.create({
     alignItems: 'center' as const,
   },
   buttonPrimary: {
-    backgroundColor: Colors.primary,
+    backgroundColor: colors.primary,
   },
   buttonPrimaryText: {
     fontSize: 16,
     fontWeight: '600' as const,
-    color: Colors.background,
+    color: colors.background,
   },
   buttonSecondary: {
-    backgroundColor: Colors.backgroundSecondary,
+    backgroundColor: colors.backgroundSecondary,
   },
   buttonSecondaryText: {
     fontSize: 16,
     fontWeight: '600' as const,
-    color: Colors.text,
+    color: colors.text,
   },
 });

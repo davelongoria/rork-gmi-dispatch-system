@@ -25,6 +25,7 @@ export default function DriversScreen() {
   const { drivers, trucks, addDriver, updateDriver, deleteDriver } = useData();
   const { theme } = useTheme();
   const colors = theme.colors;
+  const styles = createStyles(colors);
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [modalVisible, setModalVisible] = useState<boolean>(false);
   const [qrModalVisible, setQrModalVisible] = useState<boolean>(false);
@@ -318,16 +319,16 @@ export default function DriversScreen() {
             <View style={styles.driverInfo}>
               <Text style={styles.driverName}>{item.name}</Text>
               <View style={styles.driverMeta}>
-                <Phone size={14} color={Colors.textSecondary} />
+                <Phone size={14} color={colors.textSecondary} />
                 <Text style={styles.driverMetaText}>{item.phone}</Text>
               </View>
               <View style={styles.driverMeta}>
-                <Mail size={14} color={Colors.textSecondary} />
+                <Mail size={14} color={colors.textSecondary} />
                 <Text style={styles.driverMetaText}>{item.email}</Text>
               </View>
               {assignedTruck && (
                 <View style={styles.driverMeta}>
-                  <TruckIcon size={14} color={Colors.primary} />
+                  <TruckIcon size={14} color={colors.primary} />
                   <Text style={[styles.driverMetaText, styles.truckText]}>
                     {assignedTruck.unitNumber}
                   </Text>
@@ -335,7 +336,7 @@ export default function DriversScreen() {
               )}
               {haulingCompany && (
                 <View style={styles.driverMeta}>
-                  <Building2 size={14} color={Colors.primary} />
+                  <Building2 size={14} color={colors.primary} />
                   <Text style={[styles.driverMetaText, styles.truckText]}>
                     {haulingCompany.name}
                   </Text>
@@ -351,7 +352,7 @@ export default function DriversScreen() {
           style={styles.qrButton}
           onPress={() => handleGenerateQR(item)}
         >
-          <QrCode size={20} color={Colors.primary} />
+          <QrCode size={20} color={colors.primary} />
           <Text style={styles.qrButtonText}>
             {item.qrToken ? 'View QR' : 'Generate QR'}
           </Text>
@@ -364,17 +365,17 @@ export default function DriversScreen() {
     <View style={styles.container}>
       <View style={styles.searchContainer}>
         <View style={styles.searchInputContainer}>
-          <Search size={20} color={Colors.textSecondary} />
+          <Search size={20} color={colors.textSecondary} />
           <TextInput
             style={styles.searchInput}
             placeholder="Search drivers..."
-            placeholderTextColor={Colors.textSecondary}
+            placeholderTextColor={colors.textSecondary}
             value={searchQuery}
             onChangeText={setSearchQuery}
           />
         </View>
         <TouchableOpacity style={styles.addButton} onPress={handleAddDriver}>
-          <Plus size={24} color={Colors.background} />
+          <Plus size={24} color={colors.background} />
         </TouchableOpacity>
       </View>
 
@@ -404,7 +405,7 @@ export default function DriversScreen() {
                 {editingDriver ? 'Edit Driver' : 'Add Driver'}
               </Text>
               <TouchableOpacity onPress={() => setModalVisible(false)}>
-                <X size={24} color={Colors.text} />
+                <X size={24} color={colors.text} />
               </TouchableOpacity>
             </View>
 
@@ -420,7 +421,7 @@ export default function DriversScreen() {
                 value={formData.name}
                 onChangeText={text => setFormData({ ...formData, name: text })}
                 placeholder="John Doe"
-                placeholderTextColor={Colors.textSecondary}
+                placeholderTextColor={colors.textSecondary}
               />
 
               <Text style={styles.label}>Phone *</Text>
@@ -429,7 +430,7 @@ export default function DriversScreen() {
                 value={formData.phone}
                 onChangeText={text => setFormData({ ...formData, phone: text })}
                 placeholder="555-0100"
-                placeholderTextColor={Colors.textSecondary}
+                placeholderTextColor={colors.textSecondary}
                 keyboardType="phone-pad"
               />
 
@@ -439,7 +440,7 @@ export default function DriversScreen() {
                 value={formData.email}
                 onChangeText={text => setFormData({ ...formData, email: text })}
                 placeholder="john@gmi.com"
-                placeholderTextColor={Colors.textSecondary}
+                placeholderTextColor={colors.textSecondary}
                 keyboardType="email-address"
                 autoCapitalize="none"
               />
@@ -450,7 +451,7 @@ export default function DriversScreen() {
                 value={formData.username}
                 onChangeText={text => setFormData({ ...formData, username: text })}
                 placeholder="john_driver"
-                placeholderTextColor={Colors.textSecondary}
+                placeholderTextColor={colors.textSecondary}
                 autoCapitalize="none"
               />
 
@@ -460,7 +461,7 @@ export default function DriversScreen() {
                 value={formData.password}
                 onChangeText={text => setFormData({ ...formData, password: text })}
                 placeholder="Enter password"
-                placeholderTextColor={Colors.textSecondary}
+                placeholderTextColor={colors.textSecondary}
                 secureTextEntry
                 autoCapitalize="none"
               />
@@ -471,7 +472,7 @@ export default function DriversScreen() {
                 value={formData.licenseNumber}
                 onChangeText={text => setFormData({ ...formData, licenseNumber: text })}
                 placeholder="DL123456"
-                placeholderTextColor={Colors.textSecondary}
+                placeholderTextColor={colors.textSecondary}
               />
 
               <Text style={styles.label}>Hauling Company</Text>
@@ -579,7 +580,7 @@ export default function DriversScreen() {
             <View style={styles.modalHeader}>
               <Text style={styles.modalTitle}>Driver QR Code</Text>
               <TouchableOpacity onPress={() => setQrModalVisible(false)}>
-                <X size={24} color={Colors.text} />
+                <X size={24} color={colors.text} />
               </TouchableOpacity>
             </View>
 
@@ -593,8 +594,8 @@ export default function DriversScreen() {
                     <QRCode
                       value={selectedDriverForQR.qrToken}
                       size={250}
-                      backgroundColor={Colors.background}
-                      color={Colors.text}
+                      backgroundColor={colors.background}
+                      color={colors.text}
                       getRef={(ref) => (qrRef.current = ref)}
                     />
                   )}
@@ -619,7 +620,7 @@ export default function DriversScreen() {
                   style={[styles.button, styles.buttonPrimary]}
                   onPress={handleSendQR}
                 >
-                  <Share2 size={20} color={Colors.background} style={{ marginRight: 8 }} />
+                  <Share2 size={20} color={colors.background} style={{ marginRight: 8 }} />
                   <Text style={styles.buttonPrimaryText}>Send to Driver</Text>
                 </TouchableOpacity>
 
@@ -638,10 +639,10 @@ export default function DriversScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (colors: any) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.backgroundSecondary,
+    backgroundColor: colors.backgroundSecondary,
   },
   searchContainer: {
     flexDirection: 'row' as const,
@@ -652,7 +653,7 @@ const styles = StyleSheet.create({
     flex: 1,
     flexDirection: 'row' as const,
     alignItems: 'center' as const,
-    backgroundColor: Colors.background,
+    backgroundColor: colors.background,
     borderRadius: 12,
     paddingHorizontal: 12,
     height: 48,
@@ -661,12 +662,12 @@ const styles = StyleSheet.create({
     flex: 1,
     marginLeft: 8,
     fontSize: 16,
-    color: Colors.text,
+    color: colors.text,
   },
   addButton: {
     width: 48,
     height: 48,
-    backgroundColor: Colors.primary,
+    backgroundColor: colors.primary,
     borderRadius: 12,
     justifyContent: 'center' as const,
     alignItems: 'center' as const,
@@ -676,7 +677,7 @@ const styles = StyleSheet.create({
     paddingTop: 0,
   },
   driverCard: {
-    backgroundColor: Colors.background,
+    backgroundColor: colors.background,
     borderRadius: 12,
     padding: 16,
     marginBottom: 12,
@@ -689,7 +690,7 @@ const styles = StyleSheet.create({
     width: 56,
     height: 56,
     borderRadius: 28,
-    backgroundColor: Colors.primary,
+    backgroundColor: colors.primary,
     justifyContent: 'center' as const,
     alignItems: 'center' as const,
     marginRight: 12,
@@ -697,7 +698,7 @@ const styles = StyleSheet.create({
   driverInitials: {
     fontSize: 20,
     fontWeight: '700' as const,
-    color: Colors.background,
+    color: colors.background,
   },
   driverInfo: {
     flex: 1,
@@ -705,7 +706,7 @@ const styles = StyleSheet.create({
   driverName: {
     fontSize: 18,
     fontWeight: '600' as const,
-    color: Colors.text,
+    color: colors.text,
     marginBottom: 6,
   },
   driverMeta: {
@@ -715,11 +716,11 @@ const styles = StyleSheet.create({
   },
   driverMetaText: {
     fontSize: 14,
-    color: Colors.textSecondary,
+    color: colors.textSecondary,
     marginLeft: 6,
   },
   truckText: {
-    color: Colors.primary,
+    color: colors.primary,
     fontWeight: '600' as const,
   },
   statusBadge: {
@@ -728,15 +729,15 @@ const styles = StyleSheet.create({
     borderRadius: 12,
   },
   statusActive: {
-    backgroundColor: Colors.success,
+    backgroundColor: colors.success,
   },
   statusInactive: {
-    backgroundColor: Colors.textSecondary,
+    backgroundColor: colors.textSecondary,
   },
   statusText: {
     fontSize: 12,
     fontWeight: '600' as const,
-    color: Colors.background,
+    color: colors.background,
   },
   emptyContainer: {
     alignItems: 'center' as const,
@@ -746,12 +747,12 @@ const styles = StyleSheet.create({
   emptyText: {
     fontSize: 18,
     fontWeight: '600' as const,
-    color: Colors.text,
+    color: colors.text,
     marginBottom: 8,
   },
   emptySubtext: {
     fontSize: 14,
-    color: Colors.textSecondary,
+    color: colors.textSecondary,
   },
   modalOverlay: {
     flex: 1,
@@ -759,7 +760,7 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end' as const,
   },
   modalContent: {
-    backgroundColor: Colors.background,
+    backgroundColor: colors.background,
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     paddingTop: 24,
@@ -775,7 +776,7 @@ const styles = StyleSheet.create({
   modalTitle: {
     fontSize: 24,
     fontWeight: '700' as const,
-    color: Colors.text,
+    color: colors.text,
   },
   form: {
     flex: 1,
@@ -787,19 +788,19 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 14,
     fontWeight: '600' as const,
-    color: Colors.text,
+    color: colors.text,
     marginBottom: 8,
     marginTop: 12,
   },
   input: {
     height: 48,
     borderWidth: 1,
-    borderColor: Colors.border,
+    borderColor: colors.border,
     borderRadius: 12,
     paddingHorizontal: 16,
     fontSize: 16,
-    color: Colors.text,
-    backgroundColor: Colors.background,
+    color: colors.text,
+    backgroundColor: colors.background,
   },
   buttonRow: {
     flexDirection: 'row' as const,
@@ -814,29 +815,29 @@ const styles = StyleSheet.create({
     alignItems: 'center' as const,
   },
   buttonPrimary: {
-    backgroundColor: Colors.primary,
+    backgroundColor: colors.primary,
     flexDirection: 'row' as const,
   },
   buttonPrimaryText: {
     fontSize: 16,
     fontWeight: '600' as const,
-    color: Colors.background,
+    color: colors.background,
   },
   buttonSecondary: {
-    backgroundColor: Colors.backgroundSecondary,
+    backgroundColor: colors.backgroundSecondary,
   },
   buttonSecondaryText: {
     fontSize: 16,
     fontWeight: '600' as const,
-    color: Colors.text,
+    color: colors.text,
   },
   buttonDelete: {
-    backgroundColor: Colors.error,
+    backgroundColor: colors.error,
   },
   buttonDeleteText: {
     fontSize: 16,
     fontWeight: '600' as const,
-    color: Colors.background,
+    color: colors.background,
   },
   truckSelector: {
     gap: 8,
@@ -846,16 +847,16 @@ const styles = StyleSheet.create({
     padding: 12,
     borderRadius: 8,
     borderWidth: 2,
-    borderColor: Colors.border,
-    backgroundColor: Colors.background,
+    borderColor: colors.border,
+    backgroundColor: colors.background,
   },
   truckOptionSelected: {
-    borderColor: Colors.primary,
-    backgroundColor: Colors.backgroundSecondary,
+    borderColor: colors.primary,
+    backgroundColor: colors.backgroundSecondary,
   },
   truckOptionText: {
     fontSize: 14,
-    color: Colors.text,
+    color: colors.text,
   },
   driverCardContent: {
     flexDirection: 'row' as const,
@@ -867,7 +868,7 @@ const styles = StyleSheet.create({
     alignItems: 'center' as const,
     paddingHorizontal: 12,
     paddingVertical: 8,
-    backgroundColor: Colors.backgroundSecondary,
+    backgroundColor: colors.backgroundSecondary,
     borderRadius: 8,
     marginTop: 12,
     gap: 6,
@@ -875,10 +876,10 @@ const styles = StyleSheet.create({
   qrButtonText: {
     fontSize: 14,
     fontWeight: '600' as const,
-    color: Colors.primary,
+    color: colors.primary,
   },
   qrModalContent: {
-    backgroundColor: Colors.background,
+    backgroundColor: colors.background,
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     paddingTop: 24,
@@ -895,14 +896,14 @@ const styles = StyleSheet.create({
     alignItems: 'center' as const,
     justifyContent: 'center' as const,
     padding: 24,
-    backgroundColor: Colors.background,
+    backgroundColor: colors.background,
     borderRadius: 16,
     marginBottom: 24,
     borderWidth: 2,
-    borderColor: Colors.border,
+    borderColor: colors.border,
   },
   driverDetailsCard: {
-    backgroundColor: Colors.backgroundSecondary,
+    backgroundColor: colors.backgroundSecondary,
     borderRadius: 12,
     padding: 16,
     marginBottom: 16,
@@ -910,18 +911,18 @@ const styles = StyleSheet.create({
   driverDetailLabel: {
     fontSize: 12,
     fontWeight: '600' as const,
-    color: Colors.textSecondary,
+    color: colors.textSecondary,
     marginTop: 12,
     marginBottom: 4,
   },
   driverDetailValue: {
     fontSize: 16,
-    color: Colors.text,
+    color: colors.text,
     fontWeight: '500' as const,
   },
   qrInstructions: {
     fontSize: 14,
-    color: Colors.textSecondary,
+    color: colors.textSecondary,
     textAlign: 'center' as const,
     marginBottom: 24,
     lineHeight: 20,

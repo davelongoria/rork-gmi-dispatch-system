@@ -11,12 +11,15 @@ import {
 } from 'react-native';
 import { useData } from '@/contexts/DataContext';
 import { useRouter } from 'expo-router';
-import Colors from '@/constants/colors';
+import { useTheme } from '@/contexts/ThemeContext';
 import { Plus, Calendar, User, Truck as TruckIcon, MapPin, Send, X, Package, ChevronRight, Trash2, RotateCcw } from 'lucide-react-native';
 import type { Route, Job } from '@/types';
 
 export default function RoutesScreen() {
   const { routes, drivers, trucks, jobs, addRoute, updateRoute, updateJob, deleteRoute, yards, dumpSites } = useData();
+  const { theme } = useTheme();
+  const colors = theme.colors;
+  const styles = createStyles(colors);
   const [modalVisible, setModalVisible] = useState<boolean>(false);
   const [jobModalVisible, setJobModalVisible] = useState<boolean>(false);
   const [selectedRoute, setSelectedRoute] = useState<Route | null>(null);
@@ -123,15 +126,15 @@ export default function RoutesScreen() {
   const getJobTypeColor = (type: Job['type']) => {
     switch (type) {
       case 'DELIVER':
-        return Colors.success;
+        return colors.success;
       case 'PICKUP':
-        return Colors.accent;
+        return colors.accent;
       case 'SWITCH':
-        return Colors.warning;
+        return colors.warning;
       case 'ROUND_TRIP':
-        return Colors.primary;
+        return colors.primary;
       default:
-        return Colors.textSecondary;
+        return colors.textSecondary;
     }
   };
 
@@ -214,15 +217,15 @@ export default function RoutesScreen() {
   const getStatusColor = (status: Route['status']) => {
     switch (status) {
       case 'PLANNED':
-        return Colors.textSecondary;
+        return colors.textSecondary;
       case 'DISPATCHED':
-        return Colors.accent;
+        return colors.accent;
       case 'IN_PROGRESS':
-        return Colors.primary;
+        return colors.primary;
       case 'COMPLETED':
-        return Colors.success;
+        return colors.success;
       default:
-        return Colors.textSecondary;
+        return colors.textSecondary;
     }
   };
 
@@ -232,15 +235,15 @@ export default function RoutesScreen() {
         <View style={styles.routeInfo}>
           <Text style={styles.routeTitle}>Route #{item.id.slice(-6)}</Text>
           <View style={styles.routeMeta}>
-            <User size={14} color={Colors.textSecondary} />
+            <User size={14} color={colors.textSecondary} />
             <Text style={styles.routeMetaText}>{item.driverName || 'Unassigned'}</Text>
           </View>
           <View style={styles.routeMeta}>
-            <TruckIcon size={14} color={Colors.textSecondary} />
+            <TruckIcon size={14} color={colors.textSecondary} />
             <Text style={styles.routeMetaText}>{item.truckUnitNumber || 'No truck'}</Text>
           </View>
           <View style={styles.routeMeta}>
-            <MapPin size={14} color={Colors.textSecondary} />
+            <MapPin size={14} color={colors.textSecondary} />
             <Text style={styles.routeMetaText}>{item.jobIds.length} jobs</Text>
           </View>
         </View>
@@ -255,23 +258,23 @@ export default function RoutesScreen() {
             style={styles.manageJobsButton}
             onPress={() => handleManageJobs(item)}
           >
-            <Package size={16} color={Colors.primary} />
+            <Package size={16} color={colors.primary} />
             <Text style={styles.manageJobsButtonText}>Manage Jobs</Text>
-            <ChevronRight size={16} color={Colors.primary} />
+            <ChevronRight size={16} color={colors.primary} />
           </TouchableOpacity>
           <View style={styles.routeActionsRow}>
             <TouchableOpacity
               style={styles.dispatchButton}
               onPress={() => handleDispatchRoute(item)}
             >
-              <Send size={16} color={Colors.background} />
+              <Send size={16} color={colors.background} />
               <Text style={styles.dispatchButtonText}>Dispatch</Text>
             </TouchableOpacity>
             <TouchableOpacity
               style={styles.deleteButton}
               onPress={() => handleDeleteRoute(item)}
             >
-              <Trash2 size={16} color={Colors.background} />
+              <Trash2 size={16} color={colors.background} />
             </TouchableOpacity>
           </View>
         </View>
@@ -282,7 +285,7 @@ export default function RoutesScreen() {
             style={styles.reopenButton}
             onPress={() => handleReopenRoute(item)}
           >
-            <RotateCcw size={16} color={Colors.primary} />
+            <RotateCcw size={16} color={colors.primary} />
             <Text style={styles.reopenButtonText}>Reopen Route</Text>
           </TouchableOpacity>
         </View>
@@ -293,9 +296,9 @@ export default function RoutesScreen() {
             style={styles.manageJobsButton}
             onPress={() => handleManageJobs(item)}
           >
-            <Package size={16} color={Colors.primary} />
+            <Package size={16} color={colors.primary} />
             <Text style={styles.manageJobsButtonText}>Manage Jobs</Text>
-            <ChevronRight size={16} color={Colors.primary} />
+            <ChevronRight size={16} color={colors.primary} />
           </TouchableOpacity>
         </View>
       )}
@@ -306,7 +309,7 @@ export default function RoutesScreen() {
     <View style={styles.container}>
       <View style={styles.header}>
         <View style={styles.headerInfo}>
-          <Calendar size={20} color={Colors.primary} />
+          <Calendar size={20} color={colors.primary} />
           <Text style={styles.headerText}>Routes</Text>
         </View>
         <View style={styles.headerActions}>
@@ -319,7 +322,7 @@ export default function RoutesScreen() {
             </Text>
           </TouchableOpacity>
           <TouchableOpacity style={styles.addButton} onPress={handleCreateRoute}>
-            <Plus size={24} color={Colors.background} />
+            <Plus size={24} color={colors.background} />
           </TouchableOpacity>
         </View>
       </View>
@@ -371,7 +374,7 @@ export default function RoutesScreen() {
             <View style={styles.modalHeader}>
               <Text style={styles.modalTitle}>Create Route</Text>
               <TouchableOpacity onPress={() => setModalVisible(false)}>
-                <X size={24} color={Colors.text} />
+                <X size={24} color={colors.text} />
               </TouchableOpacity>
             </View>
 
@@ -521,7 +524,7 @@ export default function RoutesScreen() {
             <View style={styles.modalHeader}>
               <Text style={styles.modalTitle}>Manage Jobs</Text>
               <TouchableOpacity onPress={() => setJobModalVisible(false)}>
-                <X size={24} color={Colors.text} />
+                <X size={24} color={colors.text} />
               </TouchableOpacity>
             </View>
 
@@ -539,7 +542,7 @@ export default function RoutesScreen() {
                           <Text style={styles.assignedJobAddress} numberOfLines={1}>{job.address}</Text>
                         </View>
                         <TouchableOpacity onPress={() => toggleJobSelection(job.id)}>
-                          <X size={20} color={Colors.error} />
+                          <X size={20} color={colors.error} />
                         </TouchableOpacity>
                       </View>
                     );
@@ -600,10 +603,10 @@ export default function RoutesScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (colors: any) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.backgroundSecondary,
+    backgroundColor: colors.backgroundSecondary,
   },
   header: {
     flexDirection: 'row' as const,
@@ -619,12 +622,12 @@ const styles = StyleSheet.create({
   headerText: {
     fontSize: 18,
     fontWeight: '600' as const,
-    color: Colors.text,
+    color: colors.text,
   },
   addButton: {
     width: 48,
     height: 48,
-    backgroundColor: Colors.primary,
+    backgroundColor: colors.primary,
     borderRadius: 12,
     justifyContent: 'center' as const,
     alignItems: 'center' as const,
@@ -634,7 +637,7 @@ const styles = StyleSheet.create({
     paddingTop: 0,
   },
   routeCard: {
-    backgroundColor: Colors.background,
+    backgroundColor: colors.background,
     borderRadius: 12,
     padding: 16,
     marginBottom: 12,
@@ -651,7 +654,7 @@ const styles = StyleSheet.create({
   routeTitle: {
     fontSize: 18,
     fontWeight: '600' as const,
-    color: Colors.text,
+    color: colors.text,
     marginBottom: 8,
   },
   routeMeta: {
@@ -661,7 +664,7 @@ const styles = StyleSheet.create({
   },
   routeMetaText: {
     fontSize: 14,
-    color: Colors.textSecondary,
+    color: colors.textSecondary,
     marginLeft: 6,
   },
   statusBadge: {
@@ -672,13 +675,13 @@ const styles = StyleSheet.create({
   statusText: {
     fontSize: 12,
     fontWeight: '600' as const,
-    color: Colors.background,
+    color: colors.background,
   },
   dispatchButton: {
     flexDirection: 'row' as const,
     alignItems: 'center' as const,
     justifyContent: 'center' as const,
-    backgroundColor: Colors.primary,
+    backgroundColor: colors.primary,
     paddingVertical: 12,
     borderRadius: 8,
     gap: 8,
@@ -686,7 +689,7 @@ const styles = StyleSheet.create({
   dispatchButtonText: {
     fontSize: 14,
     fontWeight: '600' as const,
-    color: Colors.background,
+    color: colors.background,
   },
   emptyContainer: {
     alignItems: 'center' as const,
@@ -696,12 +699,12 @@ const styles = StyleSheet.create({
   emptyText: {
     fontSize: 18,
     fontWeight: '600' as const,
-    color: Colors.text,
+    color: colors.text,
     marginBottom: 8,
   },
   emptySubtext: {
     fontSize: 14,
-    color: Colors.textSecondary,
+    color: colors.textSecondary,
   },
   modalOverlay: {
     flex: 1,
@@ -709,7 +712,7 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end' as const,
   },
   modalContent: {
-    backgroundColor: Colors.background,
+    backgroundColor: colors.background,
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     paddingTop: 24,
@@ -725,7 +728,7 @@ const styles = StyleSheet.create({
   modalTitle: {
     fontSize: 24,
     fontWeight: '700' as const,
-    color: Colors.text,
+    color: colors.text,
   },
   form: {
     paddingHorizontal: 24,
@@ -734,27 +737,27 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 16,
     fontWeight: '600' as const,
-    color: Colors.text,
+    color: colors.text,
     marginBottom: 12,
   },
   selectionItem: {
     padding: 16,
     borderRadius: 12,
     borderWidth: 2,
-    borderColor: Colors.border,
+    borderColor: colors.border,
     marginBottom: 8,
   },
   selectionItemSelected: {
-    borderColor: Colors.primary,
-    backgroundColor: Colors.backgroundSecondary,
+    borderColor: colors.primary,
+    backgroundColor: colors.backgroundSecondary,
   },
   selectionText: {
     fontSize: 16,
-    color: Colors.text,
+    color: colors.text,
   },
   selectionTextSelected: {
     fontWeight: '600' as const,
-    color: Colors.primary,
+    color: colors.primary,
   },
   buttonRow: {
     flexDirection: 'row' as const,
@@ -769,20 +772,20 @@ const styles = StyleSheet.create({
     alignItems: 'center' as const,
   },
   buttonPrimary: {
-    backgroundColor: Colors.primary,
+    backgroundColor: colors.primary,
   },
   buttonPrimaryText: {
     fontSize: 16,
     fontWeight: '600' as const,
-    color: Colors.background,
+    color: colors.background,
   },
   buttonSecondary: {
-    backgroundColor: Colors.backgroundSecondary,
+    backgroundColor: colors.backgroundSecondary,
   },
   buttonSecondaryText: {
     fontSize: 16,
     fontWeight: '600' as const,
-    color: Colors.text,
+    color: colors.text,
   },
   routeActions: {
     gap: 8,
@@ -791,21 +794,21 @@ const styles = StyleSheet.create({
     flexDirection: 'row' as const,
     alignItems: 'center' as const,
     justifyContent: 'center' as const,
-    backgroundColor: Colors.backgroundSecondary,
+    backgroundColor: colors.backgroundSecondary,
     paddingVertical: 12,
     borderRadius: 8,
     gap: 8,
     borderWidth: 2,
-    borderColor: Colors.primary,
+    borderColor: colors.primary,
   },
   manageJobsButtonText: {
     fontSize: 14,
     fontWeight: '600' as const,
-    color: Colors.primary,
+    color: colors.primary,
   },
   noJobsText: {
     fontSize: 14,
-    color: Colors.textSecondary,
+    color: colors.textSecondary,
     fontStyle: 'italic' as const,
     marginBottom: 16,
   },
@@ -813,12 +816,12 @@ const styles = StyleSheet.create({
     padding: 16,
     borderRadius: 12,
     borderWidth: 2,
-    borderColor: Colors.border,
+    borderColor: colors.border,
     marginBottom: 8,
   },
   jobSelectionItemSelected: {
-    borderColor: Colors.primary,
-    backgroundColor: Colors.backgroundSecondary,
+    borderColor: colors.primary,
+    backgroundColor: colors.backgroundSecondary,
   },
   jobSelectionContent: {
     flexDirection: 'row' as const,
@@ -832,12 +835,12 @@ const styles = StyleSheet.create({
   jobSelectionCustomer: {
     fontSize: 16,
     fontWeight: '600' as const,
-    color: Colors.text,
+    color: colors.text,
     marginBottom: 4,
   },
   jobSelectionAddress: {
     fontSize: 14,
-    color: Colors.textSecondary,
+    color: colors.textSecondary,
   },
   jobTypeBadge: {
     paddingHorizontal: 10,
@@ -847,7 +850,7 @@ const styles = StyleSheet.create({
   jobTypeText: {
     fontSize: 11,
     fontWeight: '600' as const,
-    color: Colors.background,
+    color: colors.background,
   },
   assignedJobsList: {
     marginBottom: 16,
@@ -857,7 +860,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between' as const,
     alignItems: 'center' as const,
     padding: 12,
-    backgroundColor: Colors.backgroundSecondary,
+    backgroundColor: colors.backgroundSecondary,
     borderRadius: 8,
     marginBottom: 8,
   },
@@ -868,12 +871,12 @@ const styles = StyleSheet.create({
   assignedJobCustomer: {
     fontSize: 14,
     fontWeight: '600' as const,
-    color: Colors.text,
+    color: colors.text,
     marginBottom: 2,
   },
   assignedJobAddress: {
     fontSize: 12,
-    color: Colors.textSecondary,
+    color: colors.textSecondary,
   },
   headerActions: {
     flexDirection: 'row' as const,
@@ -883,15 +886,15 @@ const styles = StyleSheet.create({
   filterButton: {
     paddingHorizontal: 12,
     paddingVertical: 8,
-    backgroundColor: Colors.backgroundSecondary,
+    backgroundColor: colors.backgroundSecondary,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: Colors.primary,
+    borderColor: colors.primary,
   },
   filterButtonText: {
     fontSize: 12,
     fontWeight: '600' as const,
-    color: Colors.primary,
+    color: colors.primary,
   },
   routeActionsRow: {
     flexDirection: 'row' as const,
@@ -899,7 +902,7 @@ const styles = StyleSheet.create({
   },
   deleteButton: {
     width: 44,
-    backgroundColor: Colors.error,
+    backgroundColor: colors.error,
     paddingVertical: 12,
     borderRadius: 8,
     alignItems: 'center' as const,
@@ -909,27 +912,27 @@ const styles = StyleSheet.create({
     flexDirection: 'row' as const,
     alignItems: 'center' as const,
     justifyContent: 'center' as const,
-    backgroundColor: Colors.backgroundSecondary,
+    backgroundColor: colors.backgroundSecondary,
     paddingVertical: 12,
     borderRadius: 8,
     gap: 8,
     borderWidth: 2,
-    borderColor: Colors.primary,
+    borderColor: colors.primary,
   },
   reopenButtonText: {
     fontSize: 14,
     fontWeight: '600' as const,
-    color: Colors.primary,
+    color: colors.primary,
   },
   suspendedInfo: {
     fontSize: 12,
-    color: Colors.warning,
+    color: colors.warning,
     fontStyle: 'italic' as const,
     marginTop: 4,
   },
   tabContainer: {
     flexDirection: 'row' as const,
-    backgroundColor: Colors.background,
+    backgroundColor: colors.background,
     marginHorizontal: 16,
     marginBottom: 16,
     borderRadius: 12,
@@ -943,15 +946,15 @@ const styles = StyleSheet.create({
     borderRadius: 8,
   },
   tabActive: {
-    backgroundColor: Colors.primary,
+    backgroundColor: colors.primary,
   },
   tabText: {
     fontSize: 14,
     fontWeight: '600' as const,
-    color: Colors.textSecondary,
+    color: colors.textSecondary,
   },
   tabTextActive: {
-    color: Colors.background,
+    color: colors.background,
   },
   commercialContainer: {
     flex: 1,
@@ -964,22 +967,22 @@ const styles = StyleSheet.create({
     flexDirection: 'row' as const,
     alignItems: 'center' as const,
     justifyContent: 'center' as const,
-    backgroundColor: Colors.background,
+    backgroundColor: colors.background,
     paddingVertical: 16,
     paddingHorizontal: 24,
     borderRadius: 12,
     gap: 8,
     borderWidth: 2,
-    borderColor: Colors.primary,
+    borderColor: colors.primary,
   },
   commercialButtonText: {
     fontSize: 16,
     fontWeight: '600' as const,
-    color: Colors.primary,
+    color: colors.primary,
   },
   commercialDescription: {
     fontSize: 14,
-    color: Colors.textSecondary,
+    color: colors.textSecondary,
     textAlign: 'center' as const,
     marginTop: 12,
     paddingHorizontal: 32,
@@ -988,6 +991,9 @@ const styles = StyleSheet.create({
 
 function CommercialRoutesContent() {
   const router = useRouter();
+  const { theme } = useTheme();
+  const colors = theme.colors;
+  const styles = createStyles(colors);
   
   return (
     <View style={styles.commercialContainer}>
@@ -995,9 +1001,9 @@ function CommercialRoutesContent() {
         style={styles.commercialButton}
         onPress={() => router.push('/dispatcher/commercial-routes')}
       >
-        <Package size={20} color={Colors.primary} />
+        <Package size={20} color={colors.primary} />
         <Text style={styles.commercialButtonText}>Manage Commercial Routes</Text>
-        <ChevronRight size={20} color={Colors.primary} />
+        <ChevronRight size={20} color={colors.primary} />
       </TouchableOpacity>
       <Text style={styles.commercialDescription}>
         View and manage commercial frontload routes, stops, and schedules
