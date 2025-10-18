@@ -55,12 +55,12 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
     }
   };
 
-  const login = useCallback(async (email: string, password: string): Promise<boolean> => {
+  const login = useCallback(async (usernameOrEmail: string, password: string): Promise<boolean> => {
     try {
-      if (email === 'dispatcher@gmi.com') {
+      if (usernameOrEmail === 'dispatcher@gmi.com' || usernameOrEmail === 'dispatcher') {
         const mockUser: User = {
           id: 'disp-1',
-          email,
+          email: 'dispatcher@gmi.com',
           name: 'John Dispatcher',
           role: 'DISPATCHER',
           phone: '555-0100',
@@ -71,8 +71,16 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
         return true;
       }
       
-      const driver = drivers.find(d => d.email === email);
-      if (driver) {
+      const driver = drivers.find(d => 
+        d.email === usernameOrEmail || 
+        d.username === usernameOrEmail
+      );
+      
+      if (driver && driver.active) {
+        if (driver.password && driver.password !== password) {
+          return false;
+        }
+        
         const mockUser: User = {
           id: driver.id,
           email: driver.email,

@@ -33,6 +33,8 @@ export default function DriversScreen() {
     name: '',
     phone: '',
     email: '',
+    username: '',
+    password: '',
     licenseNumber: '',
     assignedTruckId: '',
     haulingCompanyId: '',
@@ -45,7 +47,7 @@ export default function DriversScreen() {
 
   const handleAddDriver = () => {
     setEditingDriver(null);
-    setFormData({ name: '', phone: '', email: '', licenseNumber: '', assignedTruckId: '', haulingCompanyId: '' });
+    setFormData({ name: '', phone: '', email: '', username: '', password: '', licenseNumber: '', assignedTruckId: '', haulingCompanyId: '' });
     setModalVisible(true);
   };
 
@@ -55,6 +57,8 @@ export default function DriversScreen() {
       name: driver.name,
       phone: driver.phone,
       email: driver.email,
+      username: driver.username || '',
+      password: driver.password || '',
       licenseNumber: driver.licenseNumber || '',
       assignedTruckId: driver.assignedTruckId || '',
       haulingCompanyId: driver.haulingCompanyId || '',
@@ -75,6 +79,8 @@ export default function DriversScreen() {
     if (editingDriver) {
       await updateDriver(editingDriver.id, {
         ...formData,
+        username: formData.username || undefined,
+        password: formData.password || undefined,
         licenseNumber: formData.licenseNumber || undefined,
         assignedTruckId: formData.assignedTruckId || undefined,
         haulingCompanyId: formData.haulingCompanyId || undefined,
@@ -83,6 +89,8 @@ export default function DriversScreen() {
       const newDriver: Driver = {
         id: `driver-${Date.now()}`,
         ...formData,
+        username: formData.username || undefined,
+        password: formData.password || undefined,
         licenseNumber: formData.licenseNumber || undefined,
         assignedTruckId: formData.assignedTruckId || undefined,
         haulingCompanyId: formData.haulingCompanyId || undefined,
@@ -94,7 +102,7 @@ export default function DriversScreen() {
     }
 
     setModalVisible(false);
-    setFormData({ name: '', phone: '', email: '', licenseNumber: '', assignedTruckId: '', haulingCompanyId: '' });
+    setFormData({ name: '', phone: '', email: '', username: '', password: '', licenseNumber: '', assignedTruckId: '', haulingCompanyId: '' });
   };
 
   const handleGenerateQR = async (driver: Driver) => {
@@ -431,6 +439,27 @@ export default function DriversScreen() {
                 placeholder="john@gmi.com"
                 placeholderTextColor={Colors.textSecondary}
                 keyboardType="email-address"
+                autoCapitalize="none"
+              />
+
+              <Text style={styles.label}>Username</Text>
+              <TextInput
+                style={styles.input}
+                value={formData.username}
+                onChangeText={text => setFormData({ ...formData, username: text })}
+                placeholder="john_driver"
+                placeholderTextColor={Colors.textSecondary}
+                autoCapitalize="none"
+              />
+
+              <Text style={styles.label}>Password</Text>
+              <TextInput
+                style={styles.input}
+                value={formData.password}
+                onChangeText={text => setFormData({ ...formData, password: text })}
+                placeholder="Enter password"
+                placeholderTextColor={Colors.textSecondary}
+                secureTextEntry
                 autoCapitalize="none"
               />
 

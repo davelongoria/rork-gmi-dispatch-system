@@ -21,7 +21,7 @@ import { CameraView, useCameraPermissions } from 'expo-camera';
 import { QrCode, KeyRound } from 'lucide-react-native';
 
 export default function LoginScreen() {
-  const [email, setEmail] = useState<string>('');
+  const [usernameOrEmail, setUsernameOrEmail] = useState<string>('');
   const [password, setPassword] = useState<string>('');
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [showQRScanner, setShowQRScanner] = useState<boolean>(true);
@@ -41,17 +41,17 @@ export default function LoginScreen() {
   }, [auth, router]);
 
   const handleLogin = async () => {
-    if (!auth || !email || !password) {
-      Alert.alert('Error', 'Please enter email and password');
+    if (!auth || !usernameOrEmail || !password) {
+      Alert.alert('Error', 'Please enter username/email and password');
       return;
     }
 
     setIsLoading(true);
-    const success = await auth.login(email, password);
+    const success = await auth.login(usernameOrEmail, password);
     setIsLoading(false);
 
     if (!success) {
-      Alert.alert('Login Failed', 'Invalid credentials. Try:\ndispatcher@gmi.com\ndriver@gmi.com\nPassword: any');
+      Alert.alert('Login Failed', 'Invalid credentials. Check your username/email and password.');
     }
   };
 
@@ -172,17 +172,16 @@ export default function LoginScreen() {
         ) : (
           <View style={styles.form}>
             <View style={styles.inputContainer}>
-              <Text style={styles.label}>Email</Text>
+              <Text style={styles.label}>Username or Email</Text>
               <TextInput
                 style={styles.input}
-                placeholder="dispatcher@gmi.com"
+                placeholder="username or email@company.com"
                 placeholderTextColor={Colors.textSecondary}
-                value={email}
-                onChangeText={setEmail}
+                value={usernameOrEmail}
+                onChangeText={setUsernameOrEmail}
                 autoCapitalize="none"
-                keyboardType="email-address"
-                autoComplete="email"
-                testID="email-input"
+                autoComplete="username"
+                testID="username-email-input"
               />
             </View>
 
@@ -225,12 +224,9 @@ export default function LoginScreen() {
 
             <View style={styles.demoInfo}>
               <Text style={styles.demoTitle}>Demo Accounts:</Text>
-              <Text style={styles.demoText}>Dispatcher: dispatcher@gmi.com</Text>
-              <Text style={styles.demoText}>Drivers:</Text>
-              <Text style={styles.demoText}>  • driver@gmi.com (Mike Driver)</Text>
-              <Text style={styles.demoText}>  • sarah.johnson@gmi.com</Text>
-              <Text style={styles.demoText}>  • tom.martinez@gmi.com</Text>
-              <Text style={styles.demoText}>Password: any</Text>
+              <Text style={styles.demoText}>Dispatcher: dispatcher@gmi.com or "dispatcher"</Text>
+              <Text style={styles.demoText}>Drivers: Use email or username set in Drivers screen</Text>
+              <Text style={styles.demoText}>Password: Set in driver settings (required if configured)</Text>
             </View>
           </View>
         )}

@@ -213,8 +213,12 @@ export default function SettingsScreen() {
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>User Management</Text>
             <Text style={styles.sectionDescription}>
-              Manage driver and dispatcher login credentials in the Drivers screen.
-              Set username and password for each user.
+              Manage driver login credentials in the Drivers screen.
+              Each driver can have:
+              {"\n"}• Email (required) - Can be used for login
+              {"\n"}• Username (optional) - Alternative login ID
+              {"\n"}• Password (optional) - If set, required for login
+              {"\n"}• QR Code - Quick login without credentials
             </Text>
           </View>
 
