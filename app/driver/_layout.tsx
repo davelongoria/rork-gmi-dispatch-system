@@ -50,6 +50,27 @@ export default function DriverLayout() {
           headerShown: true,
         }}
       />
+      <Stack.Screen
+        name="messages"
+        options={{
+          title: 'Messages',
+          headerShown: true,
+        }}
+      />
+      <Stack.Screen
+        name="route-details"
+        options={{
+          title: 'Route Details',
+          headerShown: true,
+        }}
+      />
+      <Stack.Screen
+        name="navigate"
+        options={{
+          title: 'Navigate',
+          headerShown: true,
+        }}
+      />
     </Stack>
   );
 }

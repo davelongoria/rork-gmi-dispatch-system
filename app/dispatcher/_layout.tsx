@@ -11,6 +11,7 @@ import {
   Package,
   Warehouse,
   Settings,
+  MessageCircle,
 } from 'lucide-react-native';
 import Colors from '@/constants/colors';
 
@@ -87,6 +88,13 @@ export default function DispatcherLayout() {
         options={{
           title: 'Yards',
           tabBarIcon: ({ color, size }) => <Warehouse size={size} color={color} />,
+        }}
+      />
+      <Tabs.Screen
+        name="messages"
+        options={{
+          title: 'Messages',
+          tabBarIcon: ({ color, size }) => <MessageCircle size={size} color={color} />,
         }}
       />
       <Tabs.Screen

@@ -10,10 +10,11 @@ import {
   Alert,
   ScrollView,
   Switch,
+  Linking,
 } from 'react-native';
 import { useData } from '@/contexts/DataContext';
 import Colors from '@/constants/colors';
-import { Plus, Search, Building2, MapPin, Phone, Mail, X, FileText, Calendar, Package, Edit2 } from 'lucide-react-native';
+import { Plus, Search, Building2, MapPin, Phone, Mail, X, FileText, Calendar, Package, Edit2, MessageSquare } from 'lucide-react-native';
 import type { Customer, Report, CommercialStop, ContainerSize, ServiceFrequency, DayOfWeek } from '@/types';
 import * as MailComposer from 'expo-mail-composer';
 import { Platform } from 'react-native';
@@ -368,6 +369,32 @@ ${Platform.OS === 'web' ? '\n\nCSV Data:\n' + report.csvData : ''}
     return assignments.length > 0 ? assignments.join(', ') : 'Not assigned to routes';
   };
 
+  const handleCallCustomer = (phone: string) => {
+    Alert.alert(
+      'Call Customer',
+      `Call ${phone}?`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Call',
+          onPress: () => {
+            const phoneNumber = Platform.select({
+              ios: `telprompt:${phone}`,
+              default: `tel:${phone}`,
+            });
+            if (phoneNumber) {
+              Linking.openURL(phoneNumber);
+            }
+          }
+        },
+      ]
+    );
+  };
+
+  const handleTextCustomer = (phone: string) => {
+    Linking.openURL(`sms:${phone}`);
+  };
+
   const renderCustomer = ({ item }: { item: Customer }) => (
     <View style={styles.customerCard}>
       <View style={styles.customerHeader}>
@@ -397,13 +424,31 @@ ${Platform.OS === 'web' ? '\n\nCSV Data:\n' + report.csvData : ''}
           </View>
         </View>
       </View>
-      <TouchableOpacity 
-        style={styles.reportButton} 
-        onPress={() => handleGenerateCustomerReport(item)}
-      >
-        <FileText size={16} color={Colors.primary} />
-        <Text style={styles.reportButtonText}>Generate Report</Text>
-      </TouchableOpacity>
+      <View style={styles.actionRow}>
+        {item.phone && (
+          <View style={styles.communicationButtons}>
+            <TouchableOpacity 
+              style={styles.iconButton} 
+              onPress={() => handleCallCustomer(item.phone!)}
+            >
+              <Phone size={18} color={Colors.primary} />
+            </TouchableOpacity>
+            <TouchableOpacity 
+              style={styles.iconButton} 
+              onPress={() => handleTextCustomer(item.phone!)}
+            >
+              <MessageSquare size={18} color={Colors.primary} />
+            </TouchableOpacity>
+          </View>
+        )}
+        <TouchableOpacity 
+          style={[styles.reportButton, !item.phone && styles.reportButtonFull]} 
+          onPress={() => handleGenerateCustomerReport(item)}
+        >
+          <FileText size={16} color={Colors.primary} />
+          <Text style={styles.reportButtonText}>Generate Report</Text>
+        </TouchableOpacity>
+      </View>
     </View>
   );
 
@@ -925,7 +970,27 @@ const styles = StyleSheet.create({
     color: Colors.primary,
     fontWeight: '600' as const,
   },
+  actionRow: {
+    flexDirection: 'row' as const,
+    gap: 8,
+    alignItems: 'center' as const,
+  },
+  communicationButtons: {
+    flexDirection: 'row' as const,
+    gap: 8,
+  },
+  iconButton: {
+    width: 44,
+    height: 44,
+    backgroundColor: Colors.backgroundSecondary,
+    borderRadius: 8,
+    justifyContent: 'center' as const,
+    alignItems: 'center' as const,
+    borderWidth: 1,
+    borderColor: Colors.primary,
+  },
   reportButton: {
+    flex: 1,
     flexDirection: 'row' as const,
     alignItems: 'center' as const,
     justifyContent: 'center' as const,
@@ -935,6 +1000,9 @@ const styles = StyleSheet.create({
     gap: 8,
     borderWidth: 1,
     borderColor: Colors.primary,
+  },
+  reportButtonFull: {
+    flex: 1,
   },
   reportButtonText: {
     fontSize: 14,

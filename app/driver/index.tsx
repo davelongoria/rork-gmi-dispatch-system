@@ -20,6 +20,7 @@ import {
   Play,
   Square,
   ArrowRight,
+  MessageCircle,
 } from 'lucide-react-native';
 import * as Location from 'expo-location';
 import type { TimeLog } from '@/types';
@@ -348,6 +349,19 @@ export default function DriverDashboard() {
           <View style={styles.actionContent}>
             <Text style={styles.actionTitle}>Dump Ticket</Text>
             <Text style={styles.actionSubtitle}>Capture dump ticket and weights</Text>
+          </View>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={styles.actionButton}
+          onPress={() => router.push('/driver/messages' as any)}
+        >
+          <View style={styles.actionIcon}>
+            <MessageCircle size={24} color={Colors.primary} />
+          </View>
+          <View style={styles.actionContent}>
+            <Text style={styles.actionTitle}>Message Dispatcher</Text>
+            <Text style={styles.actionSubtitle}>Send messages to dispatcher</Text>
           </View>
         </TouchableOpacity>
 
