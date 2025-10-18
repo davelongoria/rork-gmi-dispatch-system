@@ -6,6 +6,7 @@ import { View, ActivityIndicator, Text, StyleSheet } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { DataProvider } from "@/contexts/DataContext";
+import { ThemeProvider } from "@/contexts/ThemeContext";
 import Colors from "@/constants/colors";
 import { trpc, getTRPCClient } from "@/lib/trpc";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
@@ -29,6 +30,8 @@ function RootLayoutNav() {
   return (
     <Stack screenOptions={{ headerBackTitle: "Back" }}>
       <Stack.Screen name="index" options={{ headerShown: false }} />
+      <Stack.Screen name="company-selection" options={{ headerShown: false }} />
+      <Stack.Screen name="login" options={{ headerShown: false }} />
       <Stack.Screen name="dispatcher" options={{ headerShown: false }} />
       <Stack.Screen name="driver" options={{ headerShown: false }} />
     </Stack>
@@ -66,13 +69,15 @@ export default function RootLayout() {
     <ErrorBoundary>
       <trpc.Provider client={trpcClient} queryClient={queryClient}>
         <QueryClientProvider client={queryClient}>
-          <AuthProvider>
-            <DataProvider>
-              <GestureHandlerRootView style={{ flex: 1 }}>
-                <AppContent />
-              </GestureHandlerRootView>
-            </DataProvider>
-          </AuthProvider>
+          <ThemeProvider>
+            <AuthProvider>
+              <DataProvider>
+                <GestureHandlerRootView style={{ flex: 1 }}>
+                  <AppContent />
+                </GestureHandlerRootView>
+              </DataProvider>
+            </AuthProvider>
+          </ThemeProvider>
         </QueryClientProvider>
       </trpc.Provider>
     </ErrorBoundary>

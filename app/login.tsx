@@ -16,8 +16,6 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTheme } from '@/contexts/ThemeContext';
-import Colors from '@/constants/colors';
-import { DEFAULT_COMPANY } from '@/constants/haulingCompanies';
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import { QrCode, KeyRound } from 'lucide-react-native';
 
@@ -29,29 +27,20 @@ export default function LoginScreen() {
   const [logoLoaded, setLogoLoaded] = useState<boolean>(false);
   const [permission, requestPermission] = useCameraPermissions();
   const auth = useAuth();
-  const { selectedCompany, isLoading: themeLoading } = useTheme();
+  const { theme } = useTheme();
   const router = useRouter();
 
+  const colors = theme.colors;
+
   useEffect(() => {
-    if (themeLoading) {
-      return;
-    }
-
-    if (!selectedCompany) {
-      router.replace('/company-selection' as any);
-      return;
-    }
-
     if (auth && auth.isAuthenticated && !auth.isLoading) {
       if (auth.isDispatcher) {
         router.replace('/dispatcher' as any);
       } else if (auth.isDriver) {
         router.replace('/driver' as any);
       }
-    } else if (auth && !auth.isAuthenticated && !auth.isLoading) {
-      router.replace('/login' as any);
     }
-  }, [auth, router, selectedCompany, themeLoading]);
+  }, [auth, router]);
 
   const handleLogin = async () => {
     if (!auth || !usernameOrEmail || !password) {
@@ -82,18 +71,18 @@ export default function LoginScreen() {
 
   if (!auth) {
     return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color={Colors.primary} />
-        <Text style={styles.loadingText}>Loading...</Text>
+      <View style={[styles.loadingContainer, { backgroundColor: colors.background }]}>
+        <ActivityIndicator size="large" color={colors.primary} />
+        <Text style={[styles.loadingText, { color: colors.text }]}>Loading...</Text>
       </View>
     );
   }
 
   return (
-    <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
+    <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.background }]} edges={['top', 'bottom']}>
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        style={styles.container}
+        style={[styles.container, { backgroundColor: colors.background }]}
       >
       <ScrollView 
         contentContainerStyle={styles.scrollContent}
@@ -103,53 +92,53 @@ export default function LoginScreen() {
         <View style={styles.header}>
           <View style={styles.logoContainer}>
             <Image
-              source={{ uri: DEFAULT_COMPANY.logo }}
+              source={{ uri: theme.logo }}
               style={styles.logo}
               resizeMode="contain"
               onLoad={() => setLogoLoaded(true)}
               onError={() => setLogoLoaded(false)}
             />
           </View>
-          {!logoLoaded && <Text style={styles.title}>{DEFAULT_COMPANY.name}</Text>}
-          <Text style={styles.subtitle}>Driver & Dispatch System</Text>
+          {!logoLoaded && <Text style={[styles.title, { color: colors.primary }]}>{theme.name}</Text>}
+          <Text style={[styles.subtitle, { color: colors.textSecondary }]}>Driver & Dispatch System</Text>
         </View>
 
         {showQRScanner ? (
           <View style={styles.qrContainer}>
             {Platform.OS === 'web' ? (
-              <View style={styles.qrPlaceholder}>
-                <QrCode size={48} color={Colors.textSecondary} />
-                <Text style={styles.qrPlaceholderText}>
+              <View style={[styles.qrPlaceholder, { backgroundColor: colors.backgroundSecondary }]}>
+                <QrCode size={48} color={colors.textSecondary} />
+                <Text style={[styles.qrPlaceholderText, { color: colors.textSecondary }]}>
                   QR Scanner not available on web
                 </Text>
                 <TouchableOpacity
-                  style={[styles.button, { marginTop: 16 }]}
+                  style={[styles.button, { marginTop: 16, backgroundColor: colors.primary }]}
                   onPress={() => setShowQRScanner(false)}
                 >
-                  <Text style={styles.buttonText}>Use Email & Password</Text>
+                  <Text style={[styles.buttonText, { color: colors.background }]}>Use Email & Password</Text>
                 </TouchableOpacity>
               </View>
             ) : !permission ? (
-              <View style={styles.qrPlaceholder}>
-                <ActivityIndicator size="large" color={Colors.primary} />
+              <View style={[styles.qrPlaceholder, { backgroundColor: colors.backgroundSecondary }]}>
+                <ActivityIndicator size="large" color={colors.primary} />
               </View>
             ) : !permission.granted ? (
-              <View style={styles.qrPlaceholder}>
-                <QrCode size={48} color={Colors.textSecondary} />
-                <Text style={styles.qrPlaceholderText}>
+              <View style={[styles.qrPlaceholder, { backgroundColor: colors.backgroundSecondary }]}>
+                <QrCode size={48} color={colors.textSecondary} />
+                <Text style={[styles.qrPlaceholderText, { color: colors.textSecondary }]}>
                   Camera permission required to scan QR codes
                 </Text>
                 <TouchableOpacity
-                  style={[styles.button, { marginTop: 16 }]}
+                  style={[styles.button, { marginTop: 16, backgroundColor: colors.primary }]}
                   onPress={requestPermission}
                 >
-                  <Text style={styles.buttonText}>Grant Permission</Text>
+                  <Text style={[styles.buttonText, { color: colors.background }]}>Grant Permission</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
-                  style={[styles.button, styles.buttonSecondary, { marginTop: 8 }]}
+                  style={[styles.button, styles.buttonSecondary, { marginTop: 8, backgroundColor: colors.backgroundSecondary }]}
                   onPress={() => setShowQRScanner(false)}
                 >
-                  <Text style={styles.buttonSecondaryText}>Use Email & Password</Text>
+                  <Text style={[styles.buttonSecondaryText, { color: colors.text }]}>Use Email & Password</Text>
                 </TouchableOpacity>
               </View>
             ) : (
@@ -167,17 +156,17 @@ export default function LoginScreen() {
                   }}
                 />
                 <View style={styles.qrOverlay}>
-                  <View style={styles.qrFrame} />
+                  <View style={[styles.qrFrame, { borderColor: colors.primary }]} />
                   <Text style={styles.qrInstructions}>
                     Position QR code within the frame
                   </Text>
                 </View>
                 <TouchableOpacity
-                  style={[styles.button, styles.buttonSecondary, { marginTop: 16 }]}
+                  style={[styles.button, styles.buttonSecondary, { marginTop: 16, backgroundColor: colors.backgroundSecondary }]}
                   onPress={() => setShowQRScanner(false)}
                 >
-                  <KeyRound size={20} color={Colors.text} style={{ marginRight: 8 }} />
-                  <Text style={styles.buttonSecondaryText}>Use Email & Password</Text>
+                  <KeyRound size={20} color={colors.text} style={{ marginRight: 8 }} />
+                  <Text style={[styles.buttonSecondaryText, { color: colors.text }]}>Use Email & Password</Text>
                 </TouchableOpacity>
               </View>
             )}
@@ -185,11 +174,11 @@ export default function LoginScreen() {
         ) : (
           <View style={styles.form}>
             <View style={styles.inputContainer}>
-              <Text style={styles.label}>Username or Email</Text>
+              <Text style={[styles.label, { color: colors.text }]}>Username or Email</Text>
               <TextInput
-                style={styles.input}
+                style={[styles.input, { borderColor: colors.border, color: colors.text, backgroundColor: colors.background }]}
                 placeholder="username or email@company.com"
-                placeholderTextColor={Colors.textSecondary}
+                placeholderTextColor={colors.textSecondary}
                 value={usernameOrEmail}
                 onChangeText={setUsernameOrEmail}
                 autoCapitalize="none"
@@ -199,11 +188,11 @@ export default function LoginScreen() {
             </View>
 
             <View style={styles.inputContainer}>
-              <Text style={styles.label}>Password</Text>
+              <Text style={[styles.label, { color: colors.text }]}>Password</Text>
               <TextInput
-                style={styles.input}
+                style={[styles.input, { borderColor: colors.border, color: colors.text, backgroundColor: colors.background }]}
                 placeholder="Enter password"
-                placeholderTextColor={Colors.textSecondary}
+                placeholderTextColor={colors.textSecondary}
                 value={password}
                 onChangeText={setPassword}
                 secureTextEntry
@@ -213,33 +202,33 @@ export default function LoginScreen() {
             </View>
 
             <TouchableOpacity
-              style={[styles.button, isLoading && styles.buttonDisabled]}
+              style={[styles.button, isLoading && styles.buttonDisabled, { backgroundColor: colors.primary }]}
               onPress={handleLogin}
               disabled={isLoading}
               testID="login-button"
             >
               {isLoading ? (
-                <ActivityIndicator color={Colors.background} />
+                <ActivityIndicator color={colors.background} />
               ) : (
-                <Text style={styles.buttonText}>Sign In</Text>
+                <Text style={[styles.buttonText, { color: colors.background }]}>Sign In</Text>
               )}
             </TouchableOpacity>
 
             {Platform.OS !== 'web' && (
               <TouchableOpacity
-                style={[styles.button, styles.buttonSecondary, { marginTop: 12 }]}
+                style={[styles.button, styles.buttonSecondary, { marginTop: 12, backgroundColor: colors.backgroundSecondary }]}
                 onPress={() => setShowQRScanner(true)}
               >
-                <QrCode size={20} color={Colors.text} style={{ marginRight: 8 }} />
-                <Text style={styles.buttonSecondaryText}>Scan QR Code</Text>
+                <QrCode size={20} color={colors.text} style={{ marginRight: 8 }} />
+                <Text style={[styles.buttonSecondaryText, { color: colors.text }]}>Scan QR Code</Text>
               </TouchableOpacity>
             )}
 
-            <View style={styles.demoInfo}>
-              <Text style={styles.demoTitle}>Demo Accounts:</Text>
-              <Text style={styles.demoText}>Dispatcher: dispatcher@gmi.com or "dispatcher"</Text>
-              <Text style={styles.demoText}>Drivers: Use email or username set in Drivers screen</Text>
-              <Text style={styles.demoText}>Password: Set in driver settings (required if configured)</Text>
+            <View style={[styles.demoInfo, { backgroundColor: colors.backgroundSecondary }]}>
+              <Text style={[styles.demoTitle, { color: colors.text }]}>Demo Accounts:</Text>
+              <Text style={[styles.demoText, { color: colors.textSecondary }]}>Dispatcher: dispatcher@gmi.com or &quot;dispatcher&quot;</Text>
+              <Text style={[styles.demoText, { color: colors.textSecondary }]}>Drivers: Use email or username set in Drivers screen</Text>
+              <Text style={[styles.demoText, { color: colors.textSecondary }]}>Password: Set in driver settings (required if configured)</Text>
             </View>
           </View>
         )}
@@ -253,37 +242,33 @@ export default function LoginScreen() {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: Colors.background,
   },
   container: {
     flex: 1,
-    backgroundColor: Colors.background,
   },
   loadingContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: Colors.background,
     gap: 16,
   },
   loadingText: {
     fontSize: 16,
-    color: Colors.text,
     marginTop: 8,
   },
   scrollContent: {
     flexGrow: 1,
-    justifyContent: 'center' as const,
+    justifyContent: 'center',
     paddingVertical: 24,
   },
   content: {
     width: '100%',
     maxWidth: 480,
-    alignSelf: 'center' as const,
+    alignSelf: 'center',
     paddingHorizontal: 24,
   },
   header: {
-    alignItems: 'center' as const,
+    alignItems: 'center',
     marginBottom: 32,
   },
   logoContainer: {
@@ -299,13 +284,11 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 32,
-    fontWeight: '700' as const,
-    color: Colors.primary,
+    fontWeight: '700',
     marginBottom: 8,
   },
   subtitle: {
     fontSize: 16,
-    color: Colors.textSecondary,
   },
   form: {
     width: '100%',
@@ -315,23 +298,18 @@ const styles = StyleSheet.create({
   },
   label: {
     fontSize: 14,
-    fontWeight: '600' as const,
-    color: Colors.text,
+    fontWeight: '600',
     marginBottom: 8,
   },
   input: {
     height: 52,
     borderWidth: 1,
-    borderColor: Colors.border,
     borderRadius: 12,
     paddingHorizontal: 16,
     fontSize: 16,
-    color: Colors.text,
-    backgroundColor: Colors.background,
   },
   button: {
     height: 52,
-    backgroundColor: Colors.primary,
     borderRadius: 12,
     justifyContent: 'center',
     alignItems: 'center',
@@ -342,61 +320,56 @@ const styles = StyleSheet.create({
   },
   buttonText: {
     fontSize: 16,
-    fontWeight: '600' as const,
-    color: Colors.background,
+    fontWeight: '600',
   },
   demoInfo: {
     marginTop: 32,
     padding: 16,
-    backgroundColor: Colors.backgroundSecondary,
     borderRadius: 12,
   },
   demoTitle: {
     fontSize: 14,
-    fontWeight: '600' as const,
-    color: Colors.text,
+    fontWeight: '600',
     marginBottom: 8,
   },
   demoText: {
     fontSize: 13,
-    color: Colors.textSecondary,
     marginBottom: 4,
   },
   qrContainer: {
     width: '100%',
-    alignItems: 'center' as const,
+    alignItems: 'center',
   },
   qrScannerContainer: {
     width: '100%',
-    alignItems: 'center' as const,
+    alignItems: 'center',
   },
   camera: {
     width: '100%',
     maxWidth: 320,
     aspectRatio: 1,
     borderRadius: 24,
-    overflow: 'hidden' as const,
+    overflow: 'hidden',
   },
   qrOverlay: {
     ...StyleSheet.absoluteFillObject,
-    justifyContent: 'center' as const,
-    alignItems: 'center' as const,
-    pointerEvents: 'none' as const,
+    justifyContent: 'center',
+    alignItems: 'center',
+    pointerEvents: 'none',
   },
   qrFrame: {
     width: 250,
     height: 250,
     borderWidth: 4,
-    borderColor: Colors.primary,
     borderRadius: 24,
     backgroundColor: 'transparent',
   },
   qrInstructions: {
     marginTop: 24,
     fontSize: 16,
-    fontWeight: '600' as const,
-    color: Colors.background,
-    textAlign: 'center' as const,
+    fontWeight: '600',
+    color: '#FFFFFF',
+    textAlign: 'center',
     backgroundColor: 'rgba(0,0,0,0.7)',
     paddingHorizontal: 16,
     paddingVertical: 8,
@@ -407,24 +380,20 @@ const styles = StyleSheet.create({
     maxWidth: 320,
     aspectRatio: 1,
     borderRadius: 24,
-    backgroundColor: Colors.backgroundSecondary,
-    justifyContent: 'center' as const,
-    alignItems: 'center' as const,
+    justifyContent: 'center',
+    alignItems: 'center',
     padding: 32,
   },
   qrPlaceholderText: {
     marginTop: 16,
     fontSize: 16,
-    color: Colors.textSecondary,
-    textAlign: 'center' as const,
+    textAlign: 'center',
   },
   buttonSecondary: {
-    backgroundColor: Colors.backgroundSecondary,
-    flexDirection: 'row' as const,
+    flexDirection: 'row',
   },
   buttonSecondaryText: {
     fontSize: 16,
-    fontWeight: '600' as const,
-    color: Colors.text,
+    fontWeight: '600',
   },
 });
