@@ -13,7 +13,7 @@ import {
   Linking,
 } from 'react-native';
 import { useData } from '@/contexts/DataContext';
-import Colors from '@/constants/colors';
+import { useTheme } from '@/contexts/ThemeContext';
 import { Plus, Search, Building2, MapPin, Phone, Mail, X, FileText, Calendar, Package, Edit2, MessageSquare } from 'lucide-react-native';
 import type { Customer, Report, CommercialStop, ContainerSize, ServiceFrequency, DayOfWeek } from '@/types';
 import * as MailComposer from 'expo-mail-composer';
@@ -22,6 +22,11 @@ import * as FileSystem from 'expo-file-system';
 
 export default function CustomersScreen() {
   const { customers, addCustomer, jobs, dumpTickets, dumpSites, mileageLogs, addReport, dispatcherSettings, commercialStops, addCommercialStop, updateCommercialStop } = useData();
+  const { theme } = useTheme();
+  const colors = theme?.colors || {};
+  
+  const styles = React.useMemo(() => createStyles(colors), [colors]);
+
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [showCommercial, setShowCommercial] = useState<boolean>(false);
   const [modalVisible, setModalVisible] = useState<boolean>(false);
@@ -394,6 +399,8 @@ ${Platform.OS === 'web' ? '\n\nCSV Data:\n' + report.csvData : ''}
   const handleTextCustomer = (phone: string) => {
     Linking.openURL(`sms:${phone}`);
   };
+
+  const Colors = colors;
 
   const renderCustomer = ({ item }: { item: Customer }) => (
     <View style={styles.customerCard}>
@@ -881,7 +888,7 @@ ${Platform.OS === 'web' ? '\n\nCSV Data:\n' + report.csvData : ''}
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (Colors: any) => StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: Colors.backgroundSecondary,

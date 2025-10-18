@@ -11,7 +11,7 @@ import {
   TextInput,
 } from 'react-native';
 import { useData } from '@/contexts/DataContext';
-import Colors from '@/constants/colors';
+import { useTheme } from '@/contexts/ThemeContext';
 import { Plus, Package, MapPin, Calendar, X, User, Trash2, Edit, Save, RefreshCw, Folder } from 'lucide-react-native';
 import type { Job, JobType, RecurringJob } from '@/types';
 
@@ -28,6 +28,11 @@ export default function JobsScreen() {
     updateRecurringJob,
     deleteRecurringJob,
   } = useData();
+  const { theme } = useTheme();
+  const colors = theme?.colors || {};
+  
+  const styles = React.useMemo(() => createStyles(colors), [colors]);
+
   const [modalVisible, setModalVisible] = useState<boolean>(false);
   const [recurringModalVisible, setRecurringModalVisible] = useState<boolean>(false);
   const [editingJob, setEditingJob] = useState<Job | null>(null);
@@ -434,6 +439,8 @@ export default function JobsScreen() {
   );
 
   const jobTypes: JobType[] = ['DELIVER', 'PICKUP', 'SWITCH', 'ROUND_TRIP'];
+
+  const Colors = colors;
 
   return (
     <View style={styles.container}>
@@ -873,7 +880,7 @@ export default function JobsScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (Colors: any) => StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: Colors.backgroundSecondary,

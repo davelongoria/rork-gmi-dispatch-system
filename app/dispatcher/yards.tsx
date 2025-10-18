@@ -11,12 +11,17 @@ import {
   TextInput,
 } from 'react-native';
 import { useData } from '@/contexts/DataContext';
-import Colors from '@/constants/colors';
+import { useTheme } from '@/contexts/ThemeContext';
 import { Plus, Warehouse, MapPin, X, Trash2, Edit } from 'lucide-react-native';
 import type { Yard } from '@/types';
 
 export default function YardsScreen() {
   const { yards, addYard, updateYard, deleteYard } = useData();
+  const { theme } = useTheme();
+  const colors = theme?.colors || {};
+  
+  const styles = React.useMemo(() => createStyles(colors), [colors]);
+
   const [modalVisible, setModalVisible] = useState<boolean>(false);
   const [editingYard, setEditingYard] = useState<Yard | null>(null);
   const [name, setName] = useState<string>('');
@@ -81,6 +86,8 @@ export default function YardsScreen() {
     }
     setModalVisible(false);
   };
+
+  const Colors = colors;
 
   const renderYard = ({ item }: { item: Yard }) => (
     <View style={styles.yardCard}>
@@ -193,7 +200,7 @@ export default function YardsScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (Colors: any) => StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: Colors.backgroundSecondary,

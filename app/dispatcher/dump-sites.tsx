@@ -11,12 +11,17 @@ import {
   ScrollView,
 } from 'react-native';
 import { useData } from '@/contexts/DataContext';
-import Colors from '@/constants/colors';
+import { useTheme } from '@/contexts/ThemeContext';
 import { Plus, Search, MapPin, Clock, Phone, X, Edit2, Trash2 } from 'lucide-react-native';
 import type { DumpSite } from '@/types';
 
 export default function DumpSitesScreen() {
   const { dumpSites, addDumpSite, updateDumpSite, deleteDumpSite } = useData();
+  const { theme } = useTheme();
+  const colors = theme?.colors || {};
+  
+  const styles = React.useMemo(() => createStyles(colors), [colors]);
+
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [modalVisible, setModalVisible] = useState<boolean>(false);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -118,6 +123,8 @@ export default function DumpSitesScreen() {
       Alert.alert('Success', 'Dump site added successfully');
     }
   };
+
+  const Colors = colors;
 
   const renderSite = ({ item }: { item: DumpSite }) => (
     <View style={styles.siteCard}>
@@ -297,7 +304,7 @@ export default function DumpSitesScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (Colors: any) => StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: Colors.backgroundSecondary,
