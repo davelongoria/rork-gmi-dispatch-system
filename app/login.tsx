@@ -27,7 +27,7 @@ export default function LoginScreen() {
   const [logoLoaded, setLogoLoaded] = useState<boolean>(false);
   const [permission, requestPermission] = useCameraPermissions();
   const auth = useAuth();
-  const { theme, selectedCompany, isLoading: themeLoading, clearCompanySelection } = useTheme();
+  const { theme, selectedCompanyId, isLoading: themeLoading, clearCompanySelection } = useTheme();
   const router = useRouter();
 
   const colors = theme.colors;
@@ -37,7 +37,7 @@ export default function LoginScreen() {
       return;
     }
 
-    if (!selectedCompany) {
+    if (!selectedCompanyId) {
       router.replace('/company-selection' as any);
       return;
     }
@@ -49,7 +49,7 @@ export default function LoginScreen() {
         router.replace('/driver' as any);
       }
     }
-  }, [auth, router, selectedCompany, themeLoading]);
+  }, [auth, router, selectedCompanyId, themeLoading]);
 
   const handleLogin = async () => {
     if (!auth || !usernameOrEmail || !password) {
@@ -107,7 +107,6 @@ export default function LoginScreen() {
             }}
           >
             <ArrowLeft size={24} color={colors.text} />
-            <Text style={[styles.backButtonText, { color: colors.text }]}>Change Company</Text>
           </TouchableOpacity>
           
           <View style={styles.logoContainer}>

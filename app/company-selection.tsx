@@ -6,18 +6,18 @@ import {
   StyleSheet,
   Image,
   ActivityIndicator,
+  ScrollView,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { useTheme } from '@/contexts/ThemeContext';
-import { THEMES } from '@/constants/themes';
 
 export default function CompanySelectionScreen() {
-  const { selectCompany, isLoading } = useTheme();
+  const { selectCompany, isLoading, availableCompanies } = useTheme();
   const router = useRouter();
-  const [selectedId, setSelectedId] = React.useState<'gmi' | 'region' | null>(null);
+  const [selectedId, setSelectedId] = React.useState<string | null>(null);
 
-  const handleSelectCompany = async (companyId: 'gmi' | 'region') => {
+  const handleSelectCompany = async (companyId: string) => {
     setSelectedId(companyId);
     await selectCompany(companyId);
     router.replace('/login' as any);
@@ -40,51 +40,35 @@ export default function CompanySelectionScreen() {
           <Text style={styles.subtitle}>Choose your company to continue</Text>
         </View>
 
-        <View style={styles.companiesContainer}>
-          <TouchableOpacity
-            style={[
-              styles.companyCard,
-              selectedId === 'gmi' && styles.companyCardSelected,
-            ]}
-            onPress={() => handleSelectCompany('gmi')}
-            disabled={selectedId !== null}
-            activeOpacity={0.7}
-          >
-            <View style={styles.logoContainer}>
-              <Image
-                source={{ uri: THEMES.gmi.logo }}
-                style={styles.logo}
-                resizeMode="contain"
-              />
-            </View>
-            <Text style={styles.companyName}>{THEMES.gmi.name}</Text>
-            {selectedId === 'gmi' && (
-              <ActivityIndicator size="small" color={THEMES.gmi.colors.primary} style={styles.loader} />
-            )}
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={[
-              styles.companyCard,
-              selectedId === 'region' && styles.companyCardSelected,
-            ]}
-            onPress={() => handleSelectCompany('region')}
-            disabled={selectedId !== null}
-            activeOpacity={0.7}
-          >
-            <View style={styles.logoContainer}>
-              <Image
-                source={{ uri: THEMES.region.logo }}
-                style={styles.logo}
-                resizeMode="contain"
-              />
-            </View>
-            <Text style={styles.companyName}>{THEMES.region.name}</Text>
-            {selectedId === 'region' && (
-              <ActivityIndicator size="small" color={THEMES.region.colors.primary} style={styles.loader} />
-            )}
-          </TouchableOpacity>
-        </View>
+        <ScrollView 
+          style={styles.scrollView}
+          contentContainerStyle={styles.companiesContainer}
+        >
+          {availableCompanies.map((company) => (
+            <TouchableOpacity
+              key={company.id}
+              style={[
+                styles.companyCard,
+                selectedId === company.id && styles.companyCardSelected,
+              ]}
+              onPress={() => handleSelectCompany(company.id)}
+              disabled={selectedId !== null}
+              activeOpacity={0.7}
+            >
+              <View style={styles.logoContainer}>
+                <Image
+                  source={{ uri: company.logo }}
+                  style={styles.logo}
+                  resizeMode="contain"
+                />
+              </View>
+              <Text style={styles.companyName}>{company.name}</Text>
+              {selectedId === company.id && (
+                <ActivityIndicator size="small" color={company.primaryColor} style={styles.loader} />
+              )}
+            </TouchableOpacity>
+          ))}
+        </ScrollView>
       </View>
     </SafeAreaView>
   );
@@ -98,7 +82,10 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     paddingHorizontal: 24,
-    paddingVertical: 32,
+    paddingTop: 32,
+  },
+  scrollView: {
+    flex: 1,
   },
   loadingContainer: {
     flex: 1,
@@ -130,8 +117,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   companiesContainer: {
-    flex: 1,
-    justifyContent: 'center',
+    paddingBottom: 32,
     gap: 24,
   },
   companyCard: {

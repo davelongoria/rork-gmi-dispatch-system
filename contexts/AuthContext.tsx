@@ -72,13 +72,17 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
       }
       
       const driver = drivers.find(d => 
-        d.email === usernameOrEmail || 
-        d.username === usernameOrEmail
+        (d.email?.toLowerCase() === usernameOrEmail.toLowerCase() || 
+         d.username?.toLowerCase() === usernameOrEmail.toLowerCase()) &&
+        d.active
       );
       
-      if (driver && driver.active) {
-        if (driver.password && driver.password !== password) {
-          return false;
+      if (driver) {
+        if (driver.password) {
+          if (driver.password !== password) {
+            console.log(`Password mismatch for driver ${driver.name}`);
+            return false;
+          }
         }
         
         const mockUser: User = {
@@ -94,6 +98,7 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
         return true;
       }
       
+      console.log(`No active driver found with email/username: ${usernameOrEmail}`);
       return false;
     } catch (error) {
       console.error('Login failed:', error);
