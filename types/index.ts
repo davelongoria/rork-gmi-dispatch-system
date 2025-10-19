@@ -307,7 +307,7 @@ export interface RecurringJob {
 }
 
 export type RouteType = 'DUMP_TRUCK' | 'COMMERCIAL_FRONTLOAD';
-export type ServiceFrequency = 'ONCE_WEEK' | 'TWICE_WEEK' | 'THREE_WEEK' | 'FOUR_WEEK' | 'FIVE_WEEK' | 'BIWEEKLY' | 'MONTHLY' | 'ON_CALL';
+export type ServiceFrequency = 'ONCE_WEEK' | 'TWICE_WEEK' | 'THREE_WEEK' | 'FOUR_WEEK' | 'FIVE_WEEK' | 'BIWEEKLY' | 'EVERY_OTHER_WEEK' | 'MONTHLY' | 'ON_CALL';
 export type StopStatus = 'PENDING' | 'COMPLETED' | 'NOT_OUT' | 'BLOCKED' | 'SKIPPED';
 export type ContainerSize = '1' | '1.5' | '2' | '4' | '6' | '8' | 'COMPACTOR';
 export type DayOfWeek = 'MONDAY' | 'TUESDAY' | 'WEDNESDAY' | 'THURSDAY' | 'FRIDAY' | 'SATURDAY' | 'SUNDAY';
@@ -384,5 +384,61 @@ export interface Company {
   secondaryColor?: string;
   accentColor?: string;
   active: boolean;
+  createdAt: string;
+}
+
+export interface ResidentialCustomer {
+  id: string;
+  name: string;
+  address: string;
+  phone?: string;
+  email?: string;
+  serviceDay: DayOfWeek;
+  serviceFrequency: 'ONCE_WEEK' | 'EVERY_OTHER_WEEK';
+  weekOffset?: number;
+  notes?: string;
+  active: boolean;
+  routeId?: string;
+  routeName?: string;
+  createdAt: string;
+}
+
+export interface ResidentialStop {
+  id: string;
+  customerId: string;
+  customerName?: string;
+  address: string;
+  latitude?: number;
+  longitude?: number;
+  serviceDay: DayOfWeek;
+  status: StopStatus;
+  notOutPhoto?: string;
+  notOutTimestamp?: string;
+  notOutNotes?: string;
+  completedAt?: string;
+  completedByDriverId?: string;
+  history?: StopHistoryEntry[];
+  active: boolean;
+  createdAt: string;
+}
+
+export interface ResidentialRoute {
+  id: string;
+  name: string;
+  dayOfWeek: DayOfWeek;
+  date: string;
+  driverId?: string;
+  driverName?: string;
+  truckId?: string;
+  truckUnitNumber?: string;
+  customerIds: string[];
+  status: RouteStatus;
+  routeType: 'RESIDENTIAL_TRASH';
+  dispatchedAt?: string;
+  startedAt?: string;
+  completedAt?: string;
+  startMileage?: number;
+  endMileage?: number;
+  holidayShiftDays?: number;
   createdAt: string;
 }

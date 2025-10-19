@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback, useMemo } from 'react';
 import { trpc } from '@/lib/trpc';
 import type {
   Driver, Truck, DumpSite, Yard, Customer, Job, Route,
-  TimeLog, DVIR, FuelLog, DumpTicket, Message, GPSBreadcrumb, MileageLog, DispatcherSettings, Report, RecurringJob, CommercialRoute, CommercialStop, Company
+  TimeLog, DVIR, FuelLog, DumpTicket, Message, GPSBreadcrumb, MileageLog, DispatcherSettings, Report, RecurringJob, CommercialRoute, CommercialStop, Company, ResidentialCustomer, ResidentialRoute, ResidentialStop
 } from '@/types';
 import {
   sampleDrivers,
@@ -35,6 +35,9 @@ const STORAGE_KEYS = {
   COMMERCIAL_ROUTES: '@gmi_commercial_routes',
   COMMERCIAL_STOPS: '@gmi_commercial_stops',
   COMPANIES: '@gmi_companies',
+  RESIDENTIAL_CUSTOMERS: '@gmi_residential_customers',
+  RESIDENTIAL_ROUTES: '@gmi_residential_routes',
+  RESIDENTIAL_STOPS: '@gmi_residential_stops',
   LAST_SYNC: '@gmi_last_sync',
 };
 
@@ -59,6 +62,9 @@ export const [DataProvider, useData] = createContextHook(() => {
   const [commercialRoutes, setCommercialRoutes] = useState<CommercialRoute[]>([]);
   const [commercialStops, setCommercialStops] = useState<CommercialStop[]>([]);
   const [companies, setCompanies] = useState<Company[]>([]);
+  const [residentialCustomers, setResidentialCustomers] = useState<ResidentialCustomer[]>([]);
+  const [residentialRoutes, setResidentialRoutes] = useState<ResidentialRoute[]>([]);
+  const [residentialStops, setResidentialStops] = useState<ResidentialStop[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [isSyncing, setIsSyncing] = useState<boolean>(false);
 
@@ -112,6 +118,9 @@ export const [DataProvider, useData] = createContextHook(() => {
     setCommercialRoutes(data.commercialRoutes || []);
     setCommercialStops(data.commercialStops || []);
     setCompanies(data.companies || []);
+    setResidentialCustomers(data.residentialCustomers || []);
+    setResidentialRoutes(data.residentialRoutes || []);
+    setResidentialStops(data.residentialStops || []);
 
     await Promise.all([
       AsyncStorage.setItem(STORAGE_KEYS.DRIVERS, JSON.stringify(data.drivers || [])),
@@ -134,6 +143,9 @@ export const [DataProvider, useData] = createContextHook(() => {
       AsyncStorage.setItem(STORAGE_KEYS.COMMERCIAL_ROUTES, JSON.stringify(data.commercialRoutes || [])),
       AsyncStorage.setItem(STORAGE_KEYS.COMMERCIAL_STOPS, JSON.stringify(data.commercialStops || [])),
       AsyncStorage.setItem(STORAGE_KEYS.COMPANIES, JSON.stringify(data.companies || [])),
+      AsyncStorage.setItem(STORAGE_KEYS.RESIDENTIAL_CUSTOMERS, JSON.stringify(data.residentialCustomers || [])),
+      AsyncStorage.setItem(STORAGE_KEYS.RESIDENTIAL_ROUTES, JSON.stringify(data.residentialRoutes || [])),
+      AsyncStorage.setItem(STORAGE_KEYS.RESIDENTIAL_STOPS, JSON.stringify(data.residentialStops || [])),
       AsyncStorage.setItem(STORAGE_KEYS.LAST_SYNC, new Date().toISOString()),
     ]);
   };
@@ -148,7 +160,7 @@ export const [DataProvider, useData] = createContextHook(() => {
       const [
         driversData, trucksData, dumpSitesData, yardsData, customersData,
         jobsData, routesData, timeLogsData, dvirsData, fuelLogsData,
-        dumpTicketsData, messagesData, gpsData, mileageLogsData, settingsData, reportsData, recurringJobsData, commercialRoutesData, commercialStopsData, companiesData
+        dumpTicketsData, messagesData, gpsData, mileageLogsData, settingsData, reportsData, recurringJobsData, commercialRoutesData, commercialStopsData, companiesData, residentialCustomersData, residentialRoutesData, residentialStopsData
       ] = await Promise.all([
         AsyncStorage.getItem(STORAGE_KEYS.DRIVERS),
         AsyncStorage.getItem(STORAGE_KEYS.TRUCKS),
@@ -170,6 +182,9 @@ export const [DataProvider, useData] = createContextHook(() => {
         AsyncStorage.getItem(STORAGE_KEYS.COMMERCIAL_ROUTES),
         AsyncStorage.getItem(STORAGE_KEYS.COMMERCIAL_STOPS),
         AsyncStorage.getItem(STORAGE_KEYS.COMPANIES),
+        AsyncStorage.getItem(STORAGE_KEYS.RESIDENTIAL_CUSTOMERS),
+        AsyncStorage.getItem(STORAGE_KEYS.RESIDENTIAL_ROUTES),
+        AsyncStorage.getItem(STORAGE_KEYS.RESIDENTIAL_STOPS),
       ]);
 
       if (driversData && driversData !== 'null' && driversData !== 'undefined') {
@@ -385,6 +400,33 @@ export const [DataProvider, useData] = createContextHook(() => {
           if (Array.isArray(parsed)) setCompanies(parsed);
         } catch (e) {
           console.error('Failed to parse companies data:', e);
+        }
+      }
+      
+      if (residentialCustomersData && residentialCustomersData !== 'null' && residentialCustomersData !== 'undefined') {
+        try {
+          const parsed = JSON.parse(residentialCustomersData);
+          if (Array.isArray(parsed)) setResidentialCustomers(parsed);
+        } catch (e) {
+          console.error('Failed to parse residential customers data:', e);
+        }
+      }
+      
+      if (residentialRoutesData && residentialRoutesData !== 'null' && residentialRoutesData !== 'undefined') {
+        try {
+          const parsed = JSON.parse(residentialRoutesData);
+          if (Array.isArray(parsed)) setResidentialRoutes(parsed);
+        } catch (e) {
+          console.error('Failed to parse residential routes data:', e);
+        }
+      }
+      
+      if (residentialStopsData && residentialStopsData !== 'null' && residentialStopsData !== 'undefined') {
+        try {
+          const parsed = JSON.parse(residentialStopsData);
+          if (Array.isArray(parsed)) setResidentialStops(parsed);
+        } catch (e) {
+          console.error('Failed to parse residential stops data:', e);
         }
       }
 
@@ -686,6 +728,60 @@ export const [DataProvider, useData] = createContextHook(() => {
     await syncToBackend({ companies: updated });
   }, [companies, syncToBackend]);
 
+  const addResidentialCustomer = useCallback(async (customer: ResidentialCustomer) => {
+    const updated = [...residentialCustomers, customer];
+    setResidentialCustomers(updated);
+    await syncToBackend({ residentialCustomers: updated });
+  }, [residentialCustomers, syncToBackend]);
+
+  const updateResidentialCustomer = useCallback(async (id: string, updates: Partial<ResidentialCustomer>) => {
+    const updated = residentialCustomers.map(c => c.id === id ? { ...c, ...updates } : c);
+    setResidentialCustomers(updated);
+    await syncToBackend({ residentialCustomers: updated });
+  }, [residentialCustomers, syncToBackend]);
+
+  const deleteResidentialCustomer = useCallback(async (id: string) => {
+    const updated = residentialCustomers.filter(c => c.id !== id);
+    setResidentialCustomers(updated);
+    await syncToBackend({ residentialCustomers: updated });
+  }, [residentialCustomers, syncToBackend]);
+
+  const addResidentialRoute = useCallback(async (route: ResidentialRoute) => {
+    const updated = [...residentialRoutes, route];
+    setResidentialRoutes(updated);
+    await syncToBackend({ residentialRoutes: updated });
+  }, [residentialRoutes, syncToBackend]);
+
+  const updateResidentialRoute = useCallback(async (id: string, updates: Partial<ResidentialRoute>) => {
+    const updated = residentialRoutes.map(r => r.id === id ? { ...r, ...updates } : r);
+    setResidentialRoutes(updated);
+    await syncToBackend({ residentialRoutes: updated });
+  }, [residentialRoutes, syncToBackend]);
+
+  const deleteResidentialRoute = useCallback(async (id: string) => {
+    const updated = residentialRoutes.filter(r => r.id !== id);
+    setResidentialRoutes(updated);
+    await syncToBackend({ residentialRoutes: updated });
+  }, [residentialRoutes, syncToBackend]);
+
+  const addResidentialStop = useCallback(async (stop: ResidentialStop) => {
+    const updated = [...residentialStops, stop];
+    setResidentialStops(updated);
+    await syncToBackend({ residentialStops: updated });
+  }, [residentialStops, syncToBackend]);
+
+  const updateResidentialStop = useCallback(async (id: string, updates: Partial<ResidentialStop>) => {
+    const updated = residentialStops.map(s => s.id === id ? { ...s, ...updates } : s);
+    setResidentialStops(updated);
+    await syncToBackend({ residentialStops: updated });
+  }, [residentialStops, syncToBackend]);
+
+  const deleteResidentialStop = useCallback(async (id: string) => {
+    const updated = residentialStops.filter(s => s.id !== id);
+    setResidentialStops(updated);
+    await syncToBackend({ residentialStops: updated });
+  }, [residentialStops, syncToBackend]);
+
   const forceRefreshFromBackend = useCallback(async () => {
     try {
       setBackendAvailable(true);
@@ -724,6 +820,9 @@ export const [DataProvider, useData] = createContextHook(() => {
     commercialRoutes,
     commercialStops,
     companies,
+    residentialCustomers,
+    residentialRoutes,
+    residentialStops,
     isLoading: isLoading,
     isSyncing,
     backendAvailable,
@@ -772,9 +871,18 @@ export const [DataProvider, useData] = createContextHook(() => {
     addCompany,
     updateCompany,
     deleteCompany,
+    addResidentialCustomer,
+    updateResidentialCustomer,
+    deleteResidentialCustomer,
+    addResidentialRoute,
+    updateResidentialRoute,
+    deleteResidentialRoute,
+    addResidentialStop,
+    updateResidentialStop,
+    deleteResidentialStop,
   }), [
     drivers, trucks, dumpSites, yards, customers, jobs, routes,
-    timeLogs, dvirs, fuelLogs, dumpTickets, messages, gpsBreadcrumbs, mileageLogs, dispatcherSettings, reports, recurringJobs, commercialRoutes, commercialStops, companies,
+    timeLogs, dvirs, fuelLogs, dumpTickets, messages, gpsBreadcrumbs, mileageLogs, dispatcherSettings, reports, recurringJobs, commercialRoutes, commercialStops, companies, residentialCustomers, residentialRoutes, residentialStops,
     isLoading, isSyncing, backendAvailable,
     forceRefreshFromBackend,
     addDriver, updateDriver, deleteDriver, addTruck, updateTruck, deleteTruck,
@@ -784,6 +892,9 @@ export const [DataProvider, useData] = createContextHook(() => {
     deleteDumpSite, addYard, updateYard, deleteYard, addMileageLog, updateDispatcherSettings,
     addReport, updateReport, deleteReport, addRecurringJob, updateRecurringJob, deleteRecurringJob,
     addCommercialRoute, updateCommercialRoute, deleteCommercialRoute, addCommercialStop, updateCommercialStop, deleteCommercialStop,
-    addCompany, updateCompany, deleteCompany
+    addCompany, updateCompany, deleteCompany,
+    addResidentialCustomer, updateResidentialCustomer, deleteResidentialCustomer,
+    addResidentialRoute, updateResidentialRoute, deleteResidentialRoute,
+    addResidentialStop, updateResidentialStop, deleteResidentialStop
   ]);
 });
