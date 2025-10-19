@@ -333,7 +333,7 @@ export default function RoutesScreen() {
           onPress={() => setActiveTab('rolloff')}
         >
           <Text style={[styles.tabText, activeTab === 'rolloff' && styles.tabTextActive]}>
-            Roll-Off
+            Comm R/O
           </Text>
         </TouchableOpacity>
         <TouchableOpacity
@@ -349,7 +349,7 @@ export default function RoutesScreen() {
           onPress={() => setActiveTab('residential')}
         >
           <Text style={[styles.tabText, activeTab === 'residential' && styles.tabTextActive]}>
-            Residential
+            Resi
           </Text>
         </TouchableOpacity>
         <TouchableOpacity
@@ -357,7 +357,7 @@ export default function RoutesScreen() {
           onPress={() => setActiveTab('container')}
         >
           <Text style={[styles.tabText, activeTab === 'container' && styles.tabTextActive]}>
-            Container
+            Cont.
           </Text>
         </TouchableOpacity>
       </View>
