@@ -21,7 +21,7 @@ import { Platform } from 'react-native';
 import * as FileSystem from 'expo-file-system';
 
 export default function CustomersScreen() {
-  const { customers, addCustomer, jobs, dumpTickets, dumpSites, mileageLogs, addReport, dispatcherSettings, commercialStops, addCommercialStop, updateCommercialStop } = useData();
+  const { customers, addCustomer, updateCustomer, deleteCustomer, jobs, dumpTickets, dumpSites, mileageLogs, addReport, dispatcherSettings, commercialStops, addCommercialStop, updateCommercialStop } = useData();
   const { theme } = useTheme();
   const colors = theme?.colors || {};
   
@@ -30,6 +30,7 @@ export default function CustomersScreen() {
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [customerFilter, setCustomerFilter] = useState<'all' | 'commercial' | 'residential'>('all');
   const [modalVisible, setModalVisible] = useState<boolean>(false);
+  const [selectedRolloffCustomer, setSelectedRolloffCustomer] = useState<Customer | null>(null);
   const [commercialModalVisible, setCommercialModalVisible] = useState<boolean>(false);
   const [selectedCommercialStop, setSelectedCommercialStop] = useState<CommercialStop | null>(null);
   const [reportModalVisible, setReportModalVisible] = useState<boolean>(false);
@@ -100,6 +101,7 @@ export default function CustomersScreen() {
       });
       setResidentialModalVisible(true);
     } else {
+      setSelectedRolloffCustomer(null);
       setFormData({
         name: '',
         address: '',
@@ -118,21 +120,32 @@ export default function CustomersScreen() {
       return;
     }
 
-    const newCustomer: Customer = {
-      id: `customer-${Date.now()}`,
-      name: formData.name,
-      address: formData.address,
-      phone: formData.phone || undefined,
-      email: formData.email || undefined,
-      billingAddress: formData.billingAddress || undefined,
-      notes: formData.notes || undefined,
-      active: true,
-      createdAt: new Date().toISOString(),
-    };
-
-    await addCustomer(newCustomer);
+    if (selectedRolloffCustomer) {
+      await updateCustomer(selectedRolloffCustomer.id, {
+        name: formData.name,
+        address: formData.address,
+        phone: formData.phone || undefined,
+        email: formData.email || undefined,
+        billingAddress: formData.billingAddress || undefined,
+        notes: formData.notes || undefined,
+      });
+      Alert.alert('Success', 'Customer updated successfully');
+    } else {
+      const newCustomer: Customer = {
+        id: `customer-${Date.now()}`,
+        name: formData.name,
+        address: formData.address,
+        phone: formData.phone || undefined,
+        email: formData.email || undefined,
+        billingAddress: formData.billingAddress || undefined,
+        notes: formData.notes || undefined,
+        active: true,
+        createdAt: new Date().toISOString(),
+      };
+      await addCustomer(newCustomer);
+      Alert.alert('Success', 'Customer added successfully');
+    }
     setModalVisible(false);
-    Alert.alert('Success', 'Customer added successfully');
   };
 
   const handleGenerateCustomerReport = (customer: Customer) => {
@@ -432,6 +445,37 @@ ${Platform.OS === 'web' ? '\n\nCSV Data:\n' + report.csvData : ''}
     Linking.openURL(`sms:${phone}`);
   };
 
+  const handleEditCustomer = (customer: Customer) => {
+    setSelectedRolloffCustomer(customer);
+    setFormData({
+      name: customer.name,
+      address: customer.address,
+      phone: customer.phone || '',
+      email: customer.email || '',
+      billingAddress: customer.billingAddress || '',
+      notes: customer.notes || '',
+    });
+    setModalVisible(true);
+  };
+
+  const handleDeleteCustomer = (customer: Customer) => {
+    Alert.alert(
+      'Delete Customer',
+      `Are you sure you want to delete ${customer.name}?`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: async () => {
+            await deleteCustomer(customer.id);
+            Alert.alert('Success', 'Customer deleted successfully');
+          },
+        },
+      ]
+    );
+  };
+
   const renderCustomer = ({ item }: { item: Customer }) => (
     <View style={styles.customerCard}>
       <View style={styles.customerHeader}>
@@ -479,11 +523,26 @@ ${Platform.OS === 'web' ? '\n\nCSV Data:\n' + report.csvData : ''}
           </View>
         )}
         <TouchableOpacity 
-          style={[styles.reportButton, !item.phone && styles.reportButtonFull]} 
+          style={styles.reportButton} 
           onPress={() => handleGenerateCustomerReport(item)}
         >
           <FileText size={16} color={Colors.primary} />
-          <Text style={styles.reportButtonText}>Generate Report</Text>
+        </TouchableOpacity>
+      </View>
+      <View style={styles.customerActionsRow}>
+        <TouchableOpacity 
+          style={styles.customerActionButton} 
+          onPress={() => handleEditCustomer(item)}
+        >
+          <Edit2 size={16} color={Colors.primary} />
+          <Text style={styles.customerActionButtonText}>Edit</Text>
+        </TouchableOpacity>
+        <TouchableOpacity 
+          style={[styles.customerActionButton, styles.deleteButton]} 
+          onPress={() => handleDeleteCustomer(item)}
+        >
+          <X size={16} color={Colors.error} />
+          <Text style={[styles.customerActionButtonText, styles.deleteButtonText]}>Delete</Text>
         </TouchableOpacity>
       </View>
     </View>
@@ -692,7 +751,7 @@ ${Platform.OS === 'web' ? '\n\nCSV Data:\n' + report.csvData : ''}
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
             <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Add Customer</Text>
+              <Text style={styles.modalTitle}>{selectedRolloffCustomer ? 'Edit Customer' : 'Add Customer'}</Text>
               <TouchableOpacity onPress={() => setModalVisible(false)}>
                 <X size={24} color={Colors.text} />
               </TouchableOpacity>
@@ -1239,19 +1298,15 @@ const createStyles = (Colors: any) => StyleSheet.create({
     borderColor: Colors.primary,
   },
   reportButton: {
-    flex: 1,
+    width: 44,
+    height: 44,
     flexDirection: 'row' as const,
     alignItems: 'center' as const,
     justifyContent: 'center' as const,
     backgroundColor: Colors.backgroundSecondary,
-    padding: 12,
     borderRadius: 8,
-    gap: 8,
     borderWidth: 1,
     borderColor: Colors.primary,
-  },
-  reportButtonFull: {
-    flex: 1,
   },
   reportButtonText: {
     fontSize: 14,
@@ -1560,5 +1615,33 @@ const createStyles = (Colors: any) => StyleSheet.create({
   pickerButtonText: {
     fontSize: 16,
     color: Colors.text,
+  },
+  customerActionsRow: {
+    flexDirection: 'row' as const,
+    gap: 8,
+    marginTop: 12,
+  },
+  customerActionButton: {
+    flex: 1,
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    justifyContent: 'center' as const,
+    backgroundColor: Colors.backgroundSecondary,
+    padding: 12,
+    borderRadius: 8,
+    gap: 8,
+    borderWidth: 1,
+    borderColor: Colors.primary,
+  },
+  customerActionButtonText: {
+    fontSize: 14,
+    fontWeight: '600' as const,
+    color: Colors.primary,
+  },
+  deleteButton: {
+    borderColor: Colors.error,
+  },
+  deleteButtonText: {
+    color: Colors.error,
   },
 });
