@@ -207,91 +207,6 @@ export const sampleCommercialRoutes: CommercialRoute[] = [
   },
 ];
 
-export const sampleResidentialRoutes: ResidentialRoute[] = [
-  {
-    id: 'resi-route-mon',
-    name: 'Monday Residential',
-    dayOfWeek: 'MONDAY',
-    date: new Date().toISOString(),
-    customerIds: [],
-    status: 'PLANNED',
-    routeType: 'RESIDENTIAL_TRASH',
-    createdAt: new Date().toISOString(),
-  },
-  {
-    id: 'resi-route-tue',
-    name: 'Tuesday Residential',
-    dayOfWeek: 'TUESDAY',
-    date: new Date().toISOString(),
-    customerIds: [],
-    status: 'PLANNED',
-    routeType: 'RESIDENTIAL_TRASH',
-    createdAt: new Date().toISOString(),
-  },
-  {
-    id: 'resi-route-wed',
-    name: 'Wednesday Residential',
-    dayOfWeek: 'WEDNESDAY',
-    date: new Date().toISOString(),
-    customerIds: [],
-    status: 'PLANNED',
-    routeType: 'RESIDENTIAL_TRASH',
-    createdAt: new Date().toISOString(),
-  },
-  {
-    id: 'resi-route-thu',
-    name: 'Thursday Residential',
-    dayOfWeek: 'THURSDAY',
-    date: new Date().toISOString(),
-    customerIds: [],
-    status: 'PLANNED',
-    routeType: 'RESIDENTIAL_TRASH',
-    createdAt: new Date().toISOString(),
-  },
-  {
-    id: 'resi-route-fri',
-    name: 'Friday Residential',
-    dayOfWeek: 'FRIDAY',
-    date: new Date().toISOString(),
-    customerIds: [],
-    status: 'PLANNED',
-    routeType: 'RESIDENTIAL_TRASH',
-    createdAt: new Date().toISOString(),
-  },
-  {
-    id: 'resi-route-sat',
-    name: 'Saturday Residential',
-    dayOfWeek: 'SATURDAY',
-    date: new Date().toISOString(),
-    customerIds: [],
-    status: 'PLANNED',
-    routeType: 'RESIDENTIAL_TRASH',
-    createdAt: new Date().toISOString(),
-  },
-  {
-    id: 'resi-route-sun',
-    name: 'Sunday Residential',
-    dayOfWeek: 'SUNDAY',
-    date: new Date().toISOString(),
-    customerIds: [],
-    status: 'PLANNED',
-    routeType: 'RESIDENTIAL_TRASH',
-    createdAt: new Date().toISOString(),
-  },
-];
-
-export const sampleContainerRoutes: ContainerRoute[] = [
-  {
-    id: 'cont-route-1',
-    name: 'Container Route 1',
-    date: new Date().toISOString(),
-    jobIds: [],
-    status: 'PLANNED',
-    routeType: 'CONTAINER_DELIVERY',
-    createdAt: new Date().toISOString(),
-  },
-];
-
 const streets = [
   'Oak Street', 'Maple Avenue', 'Elm Drive', 'Pine Lane', 'Cedar Court',
   'Birch Road', 'Willow Way', 'Spruce Street', 'Ash Boulevard', 'Hickory Place',
@@ -355,3 +270,88 @@ for (let i = 0; i < 70; i++) {
   sampleResidentialCustomers.push(customer);
   sampleResidentialStops.push(stop);
 }
+
+export const sampleResidentialRoutes: ResidentialRoute[] = [
+  {
+    id: 'resi-route-mon',
+    name: 'Monday Residential',
+    dayOfWeek: 'MONDAY',
+    date: new Date().toISOString(),
+    customerIds: sampleResidentialStops.filter(s => s.serviceDay === 'MONDAY').map(s => s.customerId),
+    status: 'PLANNED',
+    routeType: 'RESIDENTIAL_TRASH',
+    createdAt: new Date().toISOString(),
+  },
+  {
+    id: 'resi-route-tue',
+    name: 'Tuesday Residential',
+    dayOfWeek: 'TUESDAY',
+    date: new Date().toISOString(),
+    customerIds: sampleResidentialStops.filter(s => s.serviceDay === 'TUESDAY').map(s => s.customerId),
+    status: 'PLANNED',
+    routeType: 'RESIDENTIAL_TRASH',
+    createdAt: new Date().toISOString(),
+  },
+  {
+    id: 'resi-route-wed',
+    name: 'Wednesday Residential',
+    dayOfWeek: 'WEDNESDAY',
+    date: new Date().toISOString(),
+    customerIds: sampleResidentialStops.filter(s => s.serviceDay === 'WEDNESDAY').map(s => s.customerId),
+    status: 'PLANNED',
+    routeType: 'RESIDENTIAL_TRASH',
+    createdAt: new Date().toISOString(),
+  },
+  {
+    id: 'resi-route-thu',
+    name: 'Thursday Residential',
+    dayOfWeek: 'THURSDAY',
+    date: new Date().toISOString(),
+    customerIds: sampleResidentialStops.filter(s => s.serviceDay === 'THURSDAY').map(s => s.customerId),
+    status: 'PLANNED',
+    routeType: 'RESIDENTIAL_TRASH',
+    createdAt: new Date().toISOString(),
+  },
+  {
+    id: 'resi-route-fri',
+    name: 'Friday Residential',
+    dayOfWeek: 'FRIDAY',
+    date: new Date().toISOString(),
+    customerIds: sampleResidentialStops.filter(s => s.serviceDay === 'FRIDAY').map(s => s.customerId),
+    status: 'PLANNED',
+    routeType: 'RESIDENTIAL_TRASH',
+    createdAt: new Date().toISOString(),
+  },
+  {
+    id: 'resi-route-sat',
+    name: 'Saturday Residential',
+    dayOfWeek: 'SATURDAY',
+    date: new Date().toISOString(),
+    customerIds: sampleResidentialStops.filter(s => s.serviceDay === 'SATURDAY').map(s => s.customerId),
+    status: 'PLANNED',
+    routeType: 'RESIDENTIAL_TRASH',
+    createdAt: new Date().toISOString(),
+  },
+  {
+    id: 'resi-route-sun',
+    name: 'Sunday Residential',
+    dayOfWeek: 'SUNDAY',
+    date: new Date().toISOString(),
+    customerIds: sampleResidentialStops.filter(s => s.serviceDay === 'SUNDAY').map(s => s.customerId),
+    status: 'PLANNED',
+    routeType: 'RESIDENTIAL_TRASH',
+    createdAt: new Date().toISOString(),
+  },
+];
+
+export const sampleContainerRoutes: ContainerRoute[] = [
+  {
+    id: 'cont-route-1',
+    name: 'Container Route 1',
+    date: new Date().toISOString(),
+    jobIds: [],
+    status: 'PLANNED',
+    routeType: 'CONTAINER_DELIVERY',
+    createdAt: new Date().toISOString(),
+  },
+];

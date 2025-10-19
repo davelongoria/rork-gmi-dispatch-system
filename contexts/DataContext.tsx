@@ -398,13 +398,16 @@ export const [DataProvider, useData] = createContextHook(() => {
             setCommercialRoutes(parsed);
           } else {
             setCommercialRoutes(sampleCommercialRoutes);
+            await AsyncStorage.setItem(STORAGE_KEYS.COMMERCIAL_ROUTES, JSON.stringify(sampleCommercialRoutes));
           }
         } catch (e) {
           console.error('Failed to parse commercial routes data:', e);
           setCommercialRoutes(sampleCommercialRoutes);
+          await AsyncStorage.setItem(STORAGE_KEYS.COMMERCIAL_ROUTES, JSON.stringify(sampleCommercialRoutes));
         }
       } else {
         setCommercialRoutes(sampleCommercialRoutes);
+        await AsyncStorage.setItem(STORAGE_KEYS.COMMERCIAL_ROUTES, JSON.stringify(sampleCommercialRoutes));
       }
       
       if (commercialStopsData && commercialStopsData !== 'null' && commercialStopsData !== 'undefined') {
@@ -432,13 +435,16 @@ export const [DataProvider, useData] = createContextHook(() => {
             setResidentialCustomers(parsed);
           } else {
             setResidentialCustomers(sampleResidentialCustomers);
+            await AsyncStorage.setItem(STORAGE_KEYS.RESIDENTIAL_CUSTOMERS, JSON.stringify(sampleResidentialCustomers));
           }
         } catch (e) {
           console.error('Failed to parse residential customers data:', e);
           setResidentialCustomers(sampleResidentialCustomers);
+          await AsyncStorage.setItem(STORAGE_KEYS.RESIDENTIAL_CUSTOMERS, JSON.stringify(sampleResidentialCustomers));
         }
       } else {
         setResidentialCustomers(sampleResidentialCustomers);
+        await AsyncStorage.setItem(STORAGE_KEYS.RESIDENTIAL_CUSTOMERS, JSON.stringify(sampleResidentialCustomers));
       }
       
       if (residentialRoutesData && residentialRoutesData !== 'null' && residentialRoutesData !== 'undefined') {
@@ -448,13 +454,16 @@ export const [DataProvider, useData] = createContextHook(() => {
             setResidentialRoutes(parsed);
           } else {
             setResidentialRoutes(sampleResidentialRoutes);
+            await AsyncStorage.setItem(STORAGE_KEYS.RESIDENTIAL_ROUTES, JSON.stringify(sampleResidentialRoutes));
           }
         } catch (e) {
           console.error('Failed to parse residential routes data:', e);
           setResidentialRoutes(sampleResidentialRoutes);
+          await AsyncStorage.setItem(STORAGE_KEYS.RESIDENTIAL_ROUTES, JSON.stringify(sampleResidentialRoutes));
         }
       } else {
         setResidentialRoutes(sampleResidentialRoutes);
+        await AsyncStorage.setItem(STORAGE_KEYS.RESIDENTIAL_ROUTES, JSON.stringify(sampleResidentialRoutes));
       }
       
       if (residentialStopsData && residentialStopsData !== 'null' && residentialStopsData !== 'undefined') {
@@ -464,13 +473,16 @@ export const [DataProvider, useData] = createContextHook(() => {
             setResidentialStops(parsed);
           } else {
             setResidentialStops(sampleResidentialStops);
+            await AsyncStorage.setItem(STORAGE_KEYS.RESIDENTIAL_STOPS, JSON.stringify(sampleResidentialStops));
           }
         } catch (e) {
           console.error('Failed to parse residential stops data:', e);
           setResidentialStops(sampleResidentialStops);
+          await AsyncStorage.setItem(STORAGE_KEYS.RESIDENTIAL_STOPS, JSON.stringify(sampleResidentialStops));
         }
       } else {
         setResidentialStops(sampleResidentialStops);
+        await AsyncStorage.setItem(STORAGE_KEYS.RESIDENTIAL_STOPS, JSON.stringify(sampleResidentialStops));
       }
       
       if (containerRoutesData && containerRoutesData !== 'null' && containerRoutesData !== 'undefined') {
@@ -480,13 +492,16 @@ export const [DataProvider, useData] = createContextHook(() => {
             setContainerRoutes(parsed);
           } else {
             setContainerRoutes(sampleContainerRoutes);
+            await AsyncStorage.setItem(STORAGE_KEYS.CONTAINER_ROUTES, JSON.stringify(sampleContainerRoutes));
           }
         } catch (e) {
           console.error('Failed to parse container routes data:', e);
           setContainerRoutes(sampleContainerRoutes);
+          await AsyncStorage.setItem(STORAGE_KEYS.CONTAINER_ROUTES, JSON.stringify(sampleContainerRoutes));
         }
       } else {
         setContainerRoutes(sampleContainerRoutes);
+        await AsyncStorage.setItem(STORAGE_KEYS.CONTAINER_ROUTES, JSON.stringify(sampleContainerRoutes));
       }
       
       if (containerJobsData && containerJobsData !== 'null' && containerJobsData !== 'undefined') {
