@@ -321,9 +321,6 @@ export default function RoutesScreen() {
               {showCompleted ? 'Hide Completed' : 'Show All'}
             </Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.addButton} onPress={handleCreateRoute}>
-            <Plus size={24} color={colors.background} />
-          </TouchableOpacity>
         </View>
       </View>
 
@@ -363,18 +360,30 @@ export default function RoutesScreen() {
       </View>
 
       {activeTab === 'rolloff' ? (
-        <FlatList
-          data={todayRoutes}
-          renderItem={renderRoute}
-          keyExtractor={item => item.id}
-          contentContainerStyle={styles.listContent}
-          ListEmptyComponent={
-            <View style={styles.emptyContainer}>
-              <Text style={styles.emptyText}>No routes for today</Text>
-              <Text style={styles.emptySubtext}>Tap + to create a new route</Text>
-            </View>
-          }
-        />
+        <View style={{ flex: 1 }}>
+          <View style={styles.tabHeaderActions}>
+            <TouchableOpacity
+              style={styles.manageButton}
+              onPress={handleCreateRoute}
+            >
+              <Package size={20} color={colors.primary} />
+              <Text style={styles.manageButtonText}>Manage Routes</Text>
+              <ChevronRight size={20} color={colors.primary} />
+            </TouchableOpacity>
+          </View>
+          <FlatList
+            data={todayRoutes}
+            renderItem={renderRoute}
+            keyExtractor={item => item.id}
+            contentContainerStyle={styles.listContent}
+            ListEmptyComponent={
+              <View style={styles.emptyContainer}>
+                <Text style={styles.emptyText}>No routes for today</Text>
+                <Text style={styles.emptySubtext}>Use Manage Routes to create a new route</Text>
+              </View>
+            }
+          />
+        </View>
       ) : activeTab === 'commercial' ? (
         <CommercialRoutesContent />
       ) : activeTab === 'residential' ? (
@@ -1006,6 +1015,28 @@ const createStyles = (colors: any) => StyleSheet.create({
     textAlign: 'center' as const,
     marginTop: 12,
     paddingHorizontal: 32,
+  },
+  tabHeaderActions: {
+    padding: 16,
+    alignItems: 'center' as const,
+    justifyContent: 'center' as const,
+  },
+  manageButton: {
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    justifyContent: 'center' as const,
+    backgroundColor: colors.background,
+    paddingVertical: 16,
+    paddingHorizontal: 24,
+    borderRadius: 12,
+    gap: 8,
+    borderWidth: 2,
+    borderColor: colors.primary,
+  },
+  manageButtonText: {
+    fontSize: 16,
+    fontWeight: '600' as const,
+    color: colors.primary,
   },
 });
 

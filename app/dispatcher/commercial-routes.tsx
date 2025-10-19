@@ -293,6 +293,7 @@ export default function CommercialRoutesScreen() {
       }
 
       await addCommercialRoute(newRoute);
+      console.log('Commercial route created:', newRoute);
       Alert.alert('Success', 'Route created successfully');
     }
     
