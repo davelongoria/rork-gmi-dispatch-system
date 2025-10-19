@@ -12,6 +12,11 @@ import {
   sampleDumpSites,
   sampleYards,
   sampleCustomers,
+  sampleCommercialRoutes,
+  sampleResidentialRoutes,
+  sampleContainerRoutes,
+  sampleResidentialCustomers,
+  sampleResidentialStops,
 } from '@/utils/sampleData';
 
 const STORAGE_KEYS = {
@@ -389,10 +394,17 @@ export const [DataProvider, useData] = createContextHook(() => {
       if (commercialRoutesData && commercialRoutesData !== 'null' && commercialRoutesData !== 'undefined') {
         try {
           const parsed = JSON.parse(commercialRoutesData);
-          if (Array.isArray(parsed)) setCommercialRoutes(parsed);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            setCommercialRoutes(parsed);
+          } else {
+            setCommercialRoutes(sampleCommercialRoutes);
+          }
         } catch (e) {
           console.error('Failed to parse commercial routes data:', e);
+          setCommercialRoutes(sampleCommercialRoutes);
         }
+      } else {
+        setCommercialRoutes(sampleCommercialRoutes);
       }
       
       if (commercialStopsData && commercialStopsData !== 'null' && commercialStopsData !== 'undefined') {
@@ -416,37 +428,65 @@ export const [DataProvider, useData] = createContextHook(() => {
       if (residentialCustomersData && residentialCustomersData !== 'null' && residentialCustomersData !== 'undefined') {
         try {
           const parsed = JSON.parse(residentialCustomersData);
-          if (Array.isArray(parsed)) setResidentialCustomers(parsed);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            setResidentialCustomers(parsed);
+          } else {
+            setResidentialCustomers(sampleResidentialCustomers);
+          }
         } catch (e) {
           console.error('Failed to parse residential customers data:', e);
+          setResidentialCustomers(sampleResidentialCustomers);
         }
+      } else {
+        setResidentialCustomers(sampleResidentialCustomers);
       }
       
       if (residentialRoutesData && residentialRoutesData !== 'null' && residentialRoutesData !== 'undefined') {
         try {
           const parsed = JSON.parse(residentialRoutesData);
-          if (Array.isArray(parsed)) setResidentialRoutes(parsed);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            setResidentialRoutes(parsed);
+          } else {
+            setResidentialRoutes(sampleResidentialRoutes);
+          }
         } catch (e) {
           console.error('Failed to parse residential routes data:', e);
+          setResidentialRoutes(sampleResidentialRoutes);
         }
+      } else {
+        setResidentialRoutes(sampleResidentialRoutes);
       }
       
       if (residentialStopsData && residentialStopsData !== 'null' && residentialStopsData !== 'undefined') {
         try {
           const parsed = JSON.parse(residentialStopsData);
-          if (Array.isArray(parsed)) setResidentialStops(parsed);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            setResidentialStops(parsed);
+          } else {
+            setResidentialStops(sampleResidentialStops);
+          }
         } catch (e) {
           console.error('Failed to parse residential stops data:', e);
+          setResidentialStops(sampleResidentialStops);
         }
+      } else {
+        setResidentialStops(sampleResidentialStops);
       }
       
       if (containerRoutesData && containerRoutesData !== 'null' && containerRoutesData !== 'undefined') {
         try {
           const parsed = JSON.parse(containerRoutesData);
-          if (Array.isArray(parsed)) setContainerRoutes(parsed);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            setContainerRoutes(parsed);
+          } else {
+            setContainerRoutes(sampleContainerRoutes);
+          }
         } catch (e) {
           console.error('Failed to parse container routes data:', e);
+          setContainerRoutes(sampleContainerRoutes);
         }
+      } else {
+        setContainerRoutes(sampleContainerRoutes);
       }
       
       if (containerJobsData && containerJobsData !== 'null' && containerJobsData !== 'undefined') {
