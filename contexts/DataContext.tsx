@@ -731,20 +731,64 @@ export const [DataProvider, useData] = createContextHook(() => {
   const addResidentialCustomer = useCallback(async (customer: ResidentialCustomer) => {
     const updated = [...residentialCustomers, customer];
     setResidentialCustomers(updated);
-    await syncToBackend({ residentialCustomers: updated });
-  }, [residentialCustomers, syncToBackend]);
+    
+    const newStop: ResidentialStop = {
+      id: `resi-stop-${Date.now()}`,
+      customerId: customer.id,
+      customerName: customer.name,
+      address: customer.address,
+      serviceDay: customer.serviceDay,
+      status: 'PENDING',
+      active: true,
+      createdAt: new Date().toISOString(),
+    };
+    const updatedStops = [...residentialStops, newStop];
+    setResidentialStops(updatedStops);
+    
+    await syncToBackend({ 
+      residentialCustomers: updated,
+      residentialStops: updatedStops 
+    });
+  }, [residentialCustomers, residentialStops, syncToBackend]);
 
   const updateResidentialCustomer = useCallback(async (id: string, updates: Partial<ResidentialCustomer>) => {
     const updated = residentialCustomers.map(c => c.id === id ? { ...c, ...updates } : c);
     setResidentialCustomers(updated);
-    await syncToBackend({ residentialCustomers: updated });
-  }, [residentialCustomers, syncToBackend]);
+    
+    if (updates.serviceDay || updates.name || updates.address) {
+      const updatedStops = residentialStops.map(s => {
+        if (s.customerId === id) {
+          return {
+            ...s,
+            ...(updates.name && { customerName: updates.name }),
+            ...(updates.address && { address: updates.address }),
+            ...(updates.serviceDay && { serviceDay: updates.serviceDay }),
+          };
+        }
+        return s;
+      });
+      setResidentialStops(updatedStops);
+      await syncToBackend({ 
+        residentialCustomers: updated,
+        residentialStops: updatedStops 
+      });
+    } else {
+      await syncToBackend({ residentialCustomers: updated });
+    }
+  }, [residentialCustomers, residentialStops, syncToBackend]);
 
   const deleteResidentialCustomer = useCallback(async (id: string) => {
     const updated = residentialCustomers.filter(c => c.id !== id);
     setResidentialCustomers(updated);
-    await syncToBackend({ residentialCustomers: updated });
-  }, [residentialCustomers, syncToBackend]);
+    
+    const updatedStops = residentialStops.filter(s => s.customerId !== id);
+    setResidentialStops(updatedStops);
+    
+    await syncToBackend({ 
+      residentialCustomers: updated,
+      residentialStops: updatedStops 
+    });
+  }, [residentialCustomers, residentialStops, syncToBackend]);
 
   const addResidentialRoute = useCallback(async (route: ResidentialRoute) => {
     const updated = [...residentialRoutes, route];
