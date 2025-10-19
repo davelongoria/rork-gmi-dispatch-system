@@ -15,7 +15,7 @@ import {
 import { useData } from '@/contexts/DataContext';
 import { useTheme } from '@/contexts/ThemeContext';
 import { Plus, Search, Building2, MapPin, Phone, Mail, X, FileText, Calendar, Package, Edit2, MessageSquare } from 'lucide-react-native';
-import type { Customer, Report, CommercialStop, ContainerSize, ServiceFrequency, DayOfWeek } from '@/types';
+import type { Customer, Report, CommercialStop, ContainerSize, ServiceFrequency, DayOfWeek, ResidentialCustomer } from '@/types';
 import * as MailComposer from 'expo-mail-composer';
 import { Platform } from 'react-native';
 import * as FileSystem from 'expo-file-system';
@@ -431,8 +431,6 @@ ${Platform.OS === 'web' ? '\n\nCSV Data:\n' + report.csvData : ''}
   const handleTextCustomer = (phone: string) => {
     Linking.openURL(`sms:${phone}`);
   };
-
-  const Colors = colors;
 
   const renderCustomer = ({ item }: { item: Customer }) => (
     <View style={styles.customerCard}>
