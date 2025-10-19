@@ -332,13 +332,15 @@ export const syncDataProcedure = publicProcedure
     if (input.commercialRoutes) {
       const stmt = db.prepare(`
         INSERT OR REPLACE INTO commercialRoutes 
-        (id, name, date, driverId, driverName, truckId, truckUnitNumber, status, dispatchedAt, startedAt, completedAt, createdAt, updatedAt)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        (id, name, date, dayOfWeek, scheduledFor, driverId, driverName, truckId, truckUnitNumber, stopIds, routeType, status, dispatchedAt, startedAt, completedAt, createdAt, updatedAt)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `);
       for (const route of input.commercialRoutes) {
         stmt.run(
-          route.id, route.name, route.date, route.driverId || null,
+          route.id, route.name, route.date, route.dayOfWeek,
+          route.scheduledFor || null, route.driverId || null,
           route.driverName || null, route.truckId || null, route.truckUnitNumber || null,
+          JSON.stringify(route.stopIds || []), route.routeType || 'COMMERCIAL_FRONTLOAD',
           route.status, route.dispatchedAt || null, route.startedAt || null,
           route.completedAt || null, route.createdAt, now
         );

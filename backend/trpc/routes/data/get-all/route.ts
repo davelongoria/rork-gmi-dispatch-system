@@ -86,7 +86,10 @@ export const getAllDataProcedure = publicProcedure.query(() => {
       ...c,
       active: c.active === 1,
     })),
-    commercialRoutes,
+    commercialRoutes: commercialRoutes.map((r: any) => ({
+      ...r,
+      stopIds: JSON.parse(r.stopIds || '[]'),
+    })),
     commercialStops,
     residentialCustomers: residentialCustomers.map((c: any) => ({
       ...c,
