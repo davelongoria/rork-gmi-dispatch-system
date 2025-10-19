@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback, useMemo } from 'react';
 import { trpc } from '@/lib/trpc';
 import type {
   Driver, Truck, DumpSite, Yard, Customer, Job, Route,
-  TimeLog, DVIR, FuelLog, DumpTicket, Message, GPSBreadcrumb, MileageLog, DispatcherSettings, Report, RecurringJob, CommercialRoute, CommercialStop, Company, ResidentialCustomer, ResidentialRoute, ResidentialStop
+  TimeLog, DVIR, FuelLog, DumpTicket, Message, GPSBreadcrumb, MileageLog, DispatcherSettings, Report, RecurringJob, CommercialRoute, CommercialStop, Company, ResidentialCustomer, ResidentialRoute, ResidentialStop, ContainerRoute, ContainerJob
 } from '@/types';
 import {
   sampleDrivers,
@@ -38,6 +38,8 @@ const STORAGE_KEYS = {
   RESIDENTIAL_CUSTOMERS: '@gmi_residential_customers',
   RESIDENTIAL_ROUTES: '@gmi_residential_routes',
   RESIDENTIAL_STOPS: '@gmi_residential_stops',
+  CONTAINER_ROUTES: '@gmi_container_routes',
+  CONTAINER_JOBS: '@gmi_container_jobs',
   LAST_SYNC: '@gmi_last_sync',
 };
 
@@ -65,6 +67,8 @@ export const [DataProvider, useData] = createContextHook(() => {
   const [residentialCustomers, setResidentialCustomers] = useState<ResidentialCustomer[]>([]);
   const [residentialRoutes, setResidentialRoutes] = useState<ResidentialRoute[]>([]);
   const [residentialStops, setResidentialStops] = useState<ResidentialStop[]>([]);
+  const [containerRoutes, setContainerRoutes] = useState<ContainerRoute[]>([]);
+  const [containerJobs, setContainerJobs] = useState<ContainerJob[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [isSyncing, setIsSyncing] = useState<boolean>(false);
 
@@ -121,6 +125,8 @@ export const [DataProvider, useData] = createContextHook(() => {
     setResidentialCustomers(data.residentialCustomers || []);
     setResidentialRoutes(data.residentialRoutes || []);
     setResidentialStops(data.residentialStops || []);
+    setContainerRoutes(data.containerRoutes || []);
+    setContainerJobs(data.containerJobs || []);
 
     await Promise.all([
       AsyncStorage.setItem(STORAGE_KEYS.DRIVERS, JSON.stringify(data.drivers || [])),
@@ -146,6 +152,8 @@ export const [DataProvider, useData] = createContextHook(() => {
       AsyncStorage.setItem(STORAGE_KEYS.RESIDENTIAL_CUSTOMERS, JSON.stringify(data.residentialCustomers || [])),
       AsyncStorage.setItem(STORAGE_KEYS.RESIDENTIAL_ROUTES, JSON.stringify(data.residentialRoutes || [])),
       AsyncStorage.setItem(STORAGE_KEYS.RESIDENTIAL_STOPS, JSON.stringify(data.residentialStops || [])),
+      AsyncStorage.setItem(STORAGE_KEYS.CONTAINER_ROUTES, JSON.stringify(data.containerRoutes || [])),
+      AsyncStorage.setItem(STORAGE_KEYS.CONTAINER_JOBS, JSON.stringify(data.containerJobs || [])),
       AsyncStorage.setItem(STORAGE_KEYS.LAST_SYNC, new Date().toISOString()),
     ]);
   };
@@ -160,7 +168,7 @@ export const [DataProvider, useData] = createContextHook(() => {
       const [
         driversData, trucksData, dumpSitesData, yardsData, customersData,
         jobsData, routesData, timeLogsData, dvirsData, fuelLogsData,
-        dumpTicketsData, messagesData, gpsData, mileageLogsData, settingsData, reportsData, recurringJobsData, commercialRoutesData, commercialStopsData, companiesData, residentialCustomersData, residentialRoutesData, residentialStopsData
+        dumpTicketsData, messagesData, gpsData, mileageLogsData, settingsData, reportsData, recurringJobsData, commercialRoutesData, commercialStopsData, companiesData, residentialCustomersData, residentialRoutesData, residentialStopsData, containerRoutesData, containerJobsData
       ] = await Promise.all([
         AsyncStorage.getItem(STORAGE_KEYS.DRIVERS),
         AsyncStorage.getItem(STORAGE_KEYS.TRUCKS),
@@ -185,6 +193,8 @@ export const [DataProvider, useData] = createContextHook(() => {
         AsyncStorage.getItem(STORAGE_KEYS.RESIDENTIAL_CUSTOMERS),
         AsyncStorage.getItem(STORAGE_KEYS.RESIDENTIAL_ROUTES),
         AsyncStorage.getItem(STORAGE_KEYS.RESIDENTIAL_STOPS),
+        AsyncStorage.getItem(STORAGE_KEYS.CONTAINER_ROUTES),
+        AsyncStorage.getItem(STORAGE_KEYS.CONTAINER_JOBS),
       ]);
 
       if (driversData && driversData !== 'null' && driversData !== 'undefined') {
@@ -427,6 +437,24 @@ export const [DataProvider, useData] = createContextHook(() => {
           if (Array.isArray(parsed)) setResidentialStops(parsed);
         } catch (e) {
           console.error('Failed to parse residential stops data:', e);
+        }
+      }
+      
+      if (containerRoutesData && containerRoutesData !== 'null' && containerRoutesData !== 'undefined') {
+        try {
+          const parsed = JSON.parse(containerRoutesData);
+          if (Array.isArray(parsed)) setContainerRoutes(parsed);
+        } catch (e) {
+          console.error('Failed to parse container routes data:', e);
+        }
+      }
+      
+      if (containerJobsData && containerJobsData !== 'null' && containerJobsData !== 'undefined') {
+        try {
+          const parsed = JSON.parse(containerJobsData);
+          if (Array.isArray(parsed)) setContainerJobs(parsed);
+        } catch (e) {
+          console.error('Failed to parse container jobs data:', e);
         }
       }
 
@@ -826,6 +854,42 @@ export const [DataProvider, useData] = createContextHook(() => {
     await syncToBackend({ residentialStops: updated });
   }, [residentialStops, syncToBackend]);
 
+  const addContainerRoute = useCallback(async (route: ContainerRoute) => {
+    const updated = [...containerRoutes, route];
+    setContainerRoutes(updated);
+    await syncToBackend({ containerRoutes: updated });
+  }, [containerRoutes, syncToBackend]);
+
+  const updateContainerRoute = useCallback(async (id: string, updates: Partial<ContainerRoute>) => {
+    const updated = containerRoutes.map(r => r.id === id ? { ...r, ...updates } : r);
+    setContainerRoutes(updated);
+    await syncToBackend({ containerRoutes: updated });
+  }, [containerRoutes, syncToBackend]);
+
+  const deleteContainerRoute = useCallback(async (id: string) => {
+    const updated = containerRoutes.filter(r => r.id !== id);
+    setContainerRoutes(updated);
+    await syncToBackend({ containerRoutes: updated });
+  }, [containerRoutes, syncToBackend]);
+
+  const addContainerJob = useCallback(async (job: ContainerJob) => {
+    const updated = [...containerJobs, job];
+    setContainerJobs(updated);
+    await syncToBackend({ containerJobs: updated });
+  }, [containerJobs, syncToBackend]);
+
+  const updateContainerJob = useCallback(async (id: string, updates: Partial<ContainerJob>) => {
+    const updated = containerJobs.map(j => j.id === id ? { ...j, ...updates } : j);
+    setContainerJobs(updated);
+    await syncToBackend({ containerJobs: updated });
+  }, [containerJobs, syncToBackend]);
+
+  const deleteContainerJob = useCallback(async (id: string) => {
+    const updated = containerJobs.filter(j => j.id !== id);
+    setContainerJobs(updated);
+    await syncToBackend({ containerJobs: updated });
+  }, [containerJobs, syncToBackend]);
+
   const forceRefreshFromBackend = useCallback(async () => {
     try {
       setBackendAvailable(true);
@@ -867,6 +931,8 @@ export const [DataProvider, useData] = createContextHook(() => {
     residentialCustomers,
     residentialRoutes,
     residentialStops,
+    containerRoutes,
+    containerJobs,
     isLoading: isLoading,
     isSyncing,
     backendAvailable,
@@ -924,9 +990,15 @@ export const [DataProvider, useData] = createContextHook(() => {
     addResidentialStop,
     updateResidentialStop,
     deleteResidentialStop,
+    addContainerRoute,
+    updateContainerRoute,
+    deleteContainerRoute,
+    addContainerJob,
+    updateContainerJob,
+    deleteContainerJob,
   }), [
     drivers, trucks, dumpSites, yards, customers, jobs, routes,
-    timeLogs, dvirs, fuelLogs, dumpTickets, messages, gpsBreadcrumbs, mileageLogs, dispatcherSettings, reports, recurringJobs, commercialRoutes, commercialStops, companies, residentialCustomers, residentialRoutes, residentialStops,
+    timeLogs, dvirs, fuelLogs, dumpTickets, messages, gpsBreadcrumbs, mileageLogs, dispatcherSettings, reports, recurringJobs, commercialRoutes, commercialStops, companies, residentialCustomers, residentialRoutes, residentialStops, containerRoutes, containerJobs,
     isLoading, isSyncing, backendAvailable,
     forceRefreshFromBackend,
     addDriver, updateDriver, deleteDriver, addTruck, updateTruck, deleteTruck,
@@ -939,6 +1011,8 @@ export const [DataProvider, useData] = createContextHook(() => {
     addCompany, updateCompany, deleteCompany,
     addResidentialCustomer, updateResidentialCustomer, deleteResidentialCustomer,
     addResidentialRoute, updateResidentialRoute, deleteResidentialRoute,
-    addResidentialStop, updateResidentialStop, deleteResidentialStop
+    addResidentialStop, updateResidentialStop, deleteResidentialStop,
+    addContainerRoute, updateContainerRoute, deleteContainerRoute,
+    addContainerJob, updateContainerJob, deleteContainerJob
   ]);
 });

@@ -442,3 +442,46 @@ export interface ResidentialRoute {
   holidayShiftDays?: number;
   createdAt: string;
 }
+
+export type ContainerJobType = 'TOTER_DELIVERY' | 'COMM_CONTAINER_DELIVERY' | 'CONTAINER_PICKUP' | 'TOTER_PICKUP' | 'MISSED_PICKUP' | 'EXTRA_PICKUP';
+
+export interface ContainerJob {
+  id: string;
+  type: ContainerJobType;
+  address: string;
+  customerId?: string;
+  customerName?: string;
+  latitude?: number;
+  longitude?: number;
+  containerType?: ContainerSize | 'TOTER';
+  containerCount?: number;
+  notes?: string;
+  status: StopStatus;
+  completedAt?: string;
+  completedByDriverId?: string;
+  completionPhotos?: string[];
+  completionNotes?: string;
+  issuePhotos?: string[];
+  issueNotes?: string;
+  history?: StopHistoryEntry[];
+  createdAt: string;
+}
+
+export interface ContainerRoute {
+  id: string;
+  name: string;
+  date: string;
+  driverId?: string;
+  driverName?: string;
+  truckId?: string;
+  truckUnitNumber?: string;
+  jobIds: string[];
+  status: RouteStatus;
+  routeType: 'CONTAINER_DELIVERY';
+  dispatchedAt?: string;
+  startedAt?: string;
+  completedAt?: string;
+  startMileage?: number;
+  endMileage?: number;
+  createdAt: string;
+}
