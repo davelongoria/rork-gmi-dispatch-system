@@ -164,22 +164,16 @@ export default function CommercialRoutesScreen() {
   };
 
   const getCurrentWeekRoutes = () => {
-    const today = new Date();
-    const startOfWeek = new Date(today);
-    startOfWeek.setDate(today.getDate() - today.getDay() + 1);
-    const endOfWeek = new Date(startOfWeek);
-    endOfWeek.setDate(startOfWeek.getDate() + 6);
-
     return commercialRoutes.filter((r: CommercialRoute) => {
-      const routeDate = new Date(r.date);
-      const isInWeek = routeDate >= startOfWeek && routeDate <= endOfWeek;
-      
-      if (!isInWeek) return false;
-      
       if (!showCompleted && r.status === 'COMPLETED') return false;
-      
       return true;
     }).sort((a: CommercialRoute, b: CommercialRoute) => {
+      const dayOrder: Record<string, number> = { 
+        MONDAY: 0, TUESDAY: 1, WEDNESDAY: 2, THURSDAY: 3, FRIDAY: 4, SATURDAY: 5, SUNDAY: 6 
+      };
+      const dayDiff = dayOrder[a.dayOfWeek] - dayOrder[b.dayOfWeek];
+      if (dayDiff !== 0) return dayDiff;
+      
       const statusOrder: Record<string, number> = { PLANNED: 0, DISPATCHED: 1, IN_PROGRESS: 2, COMPLETED: 3 };
       return statusOrder[a.status] - statusOrder[b.status];
     });
@@ -263,12 +257,15 @@ export default function CommercialRoutesScreen() {
       Alert.alert('Success', 'Route updated successfully');
     } else {
       const newRouteId = `cr-${Date.now()}`;
+      const today = new Date();
+      const dateStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+      
       const newRoute: CommercialRoute = {
         id: newRouteId,
         name: routeName,
         dayOfWeek: routeDayOfWeek,
         scheduledFor: routeScheduledFor || undefined,
-        date: new Date().toISOString().split('T')[0],
+        date: dateStr,
         driverId: selectedDriver,
         driverName: driver?.name,
         truckId: selectedTruck,
@@ -610,7 +607,7 @@ export default function CommercialRoutesScreen() {
         contentContainerStyle={styles.listContent}
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
-            <Text style={styles.emptyText}>No commercial routes for this week</Text>
+            <Text style={styles.emptyText}>No commercial routes</Text>
             <Text style={styles.emptySubtext}>Tap + to create a new route</Text>
           </View>
         }
