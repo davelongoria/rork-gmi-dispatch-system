@@ -74,6 +74,20 @@ export default function DriverLayout() {
           headerShown: true,
         }}
       />
+      <Stack.Screen
+        name="residential-route"
+        options={{
+          title: 'Residential Route',
+          headerShown: true,
+        }}
+      />
+      <Stack.Screen
+        name="container-route"
+        options={{
+          title: 'Container Route',
+          headerShown: true,
+        }}
+      />
     </Stack>
   );
 }

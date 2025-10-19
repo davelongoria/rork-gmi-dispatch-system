@@ -126,6 +126,18 @@ export default function DispatcherLayout() {
           href: null,
         }}
       />
+      <Tabs.Screen
+        name="residential-routes"
+        options={{
+          href: null,
+        }}
+      />
+      <Tabs.Screen
+        name="container-routes"
+        options={{
+          href: null,
+        }}
+      />
     </Tabs>
   );
 }
