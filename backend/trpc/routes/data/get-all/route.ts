@@ -19,6 +19,14 @@ export const getAllDataProcedure = publicProcedure.query(() => {
   const dispatcherSettingsRow = db.prepare('SELECT * FROM dispatcherSettings LIMIT 1').get();
   const reports = db.prepare('SELECT * FROM reports').all();
   const recurringJobs = db.prepare('SELECT * FROM recurringJobs').all();
+  const companies = db.prepare('SELECT * FROM companies').all();
+  const commercialRoutes = db.prepare('SELECT * FROM commercialRoutes').all();
+  const commercialStops = db.prepare('SELECT * FROM commercialStops').all();
+  const residentialCustomers = db.prepare('SELECT * FROM residentialCustomers').all();
+  const residentialRoutes = db.prepare('SELECT * FROM residentialRoutes').all();
+  const residentialStops = db.prepare('SELECT * FROM residentialStops').all();
+  const containerRoutes = db.prepare('SELECT * FROM containerRoutes').all();
+  const containerJobs = db.prepare('SELECT * FROM containerJobs').all();
 
   return {
     drivers: drivers.map((d: any) => ({
@@ -74,5 +82,22 @@ export const getAllDataProcedure = publicProcedure.query(() => {
       emailedTo: r.emailedTo ? JSON.parse(r.emailedTo) : undefined,
     })),
     recurringJobs,
+    companies: companies.map((c: any) => ({
+      ...c,
+      active: c.active === 1,
+    })),
+    commercialRoutes,
+    commercialStops,
+    residentialCustomers: residentialCustomers.map((c: any) => ({
+      ...c,
+      active: c.active === 1,
+    })),
+    residentialRoutes,
+    residentialStops: residentialStops.map((s: any) => ({
+      ...s,
+      active: s.active === 1,
+    })),
+    containerRoutes,
+    containerJobs,
   };
 });

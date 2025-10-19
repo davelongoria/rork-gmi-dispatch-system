@@ -296,12 +296,144 @@ db.exec(`
     updatedAt TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
   );
 
+  CREATE TABLE IF NOT EXISTS companies (
+    id TEXT PRIMARY KEY,
+    name TEXT NOT NULL,
+    address TEXT NOT NULL,
+    phone TEXT,
+    email TEXT,
+    billingAddress TEXT,
+    notes TEXT,
+    active INTEGER NOT NULL DEFAULT 1,
+    createdAt TEXT NOT NULL,
+    updatedAt TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+  );
+
+  CREATE TABLE IF NOT EXISTS commercialRoutes (
+    id TEXT PRIMARY KEY,
+    name TEXT NOT NULL,
+    date TEXT NOT NULL,
+    driverId TEXT,
+    driverName TEXT,
+    truckId TEXT,
+    truckUnitNumber TEXT,
+    status TEXT NOT NULL DEFAULT 'PLANNED',
+    dispatchedAt TEXT,
+    startedAt TEXT,
+    completedAt TEXT,
+    createdAt TEXT NOT NULL,
+    updatedAt TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+  );
+
+  CREATE TABLE IF NOT EXISTS commercialStops (
+    id TEXT PRIMARY KEY,
+    routeId TEXT NOT NULL,
+    companyId TEXT NOT NULL,
+    companyName TEXT NOT NULL,
+    address TEXT NOT NULL,
+    latitude REAL,
+    longitude REAL,
+    containerSize TEXT,
+    serviceType TEXT NOT NULL,
+    status TEXT NOT NULL DEFAULT 'PENDING',
+    completedAt TEXT,
+    notes TEXT,
+    orderIndex INTEGER NOT NULL DEFAULT 0,
+    createdAt TEXT NOT NULL,
+    updatedAt TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+  );
+
+  CREATE TABLE IF NOT EXISTS residentialCustomers (
+    id TEXT PRIMARY KEY,
+    name TEXT NOT NULL,
+    address TEXT NOT NULL,
+    phone TEXT,
+    email TEXT,
+    serviceDay TEXT NOT NULL,
+    notes TEXT,
+    active INTEGER NOT NULL DEFAULT 1,
+    createdAt TEXT NOT NULL,
+    updatedAt TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+  );
+
+  CREATE TABLE IF NOT EXISTS residentialRoutes (
+    id TEXT PRIMARY KEY,
+    name TEXT NOT NULL,
+    serviceDay TEXT NOT NULL,
+    driverId TEXT,
+    driverName TEXT,
+    truckId TEXT,
+    truckUnitNumber TEXT,
+    status TEXT NOT NULL DEFAULT 'PLANNED',
+    dispatchedAt TEXT,
+    startedAt TEXT,
+    completedAt TEXT,
+    createdAt TEXT NOT NULL,
+    updatedAt TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+  );
+
+  CREATE TABLE IF NOT EXISTS residentialStops (
+    id TEXT PRIMARY KEY,
+    customerId TEXT NOT NULL,
+    customerName TEXT NOT NULL,
+    address TEXT NOT NULL,
+    serviceDay TEXT NOT NULL,
+    status TEXT NOT NULL DEFAULT 'PENDING',
+    completedAt TEXT,
+    notes TEXT,
+    routeId TEXT,
+    orderIndex INTEGER NOT NULL DEFAULT 0,
+    active INTEGER NOT NULL DEFAULT 1,
+    createdAt TEXT NOT NULL,
+    updatedAt TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+  );
+
+  CREATE TABLE IF NOT EXISTS containerRoutes (
+    id TEXT PRIMARY KEY,
+    name TEXT NOT NULL,
+    date TEXT NOT NULL,
+    driverId TEXT,
+    driverName TEXT,
+    truckId TEXT,
+    truckUnitNumber TEXT,
+    status TEXT NOT NULL DEFAULT 'PLANNED',
+    dispatchedAt TEXT,
+    startedAt TEXT,
+    completedAt TEXT,
+    createdAt TEXT NOT NULL,
+    updatedAt TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+  );
+
+  CREATE TABLE IF NOT EXISTS containerJobs (
+    id TEXT PRIMARY KEY,
+    routeId TEXT NOT NULL,
+    type TEXT NOT NULL,
+    address TEXT NOT NULL,
+    latitude REAL,
+    longitude REAL,
+    containerType TEXT,
+    containerSize TEXT,
+    quantity INTEGER,
+    customerId TEXT,
+    customerName TEXT,
+    status TEXT NOT NULL DEFAULT 'PENDING',
+    completedAt TEXT,
+    notes TEXT,
+    orderIndex INTEGER NOT NULL DEFAULT 0,
+    createdAt TEXT NOT NULL,
+    updatedAt TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+  );
+
   CREATE INDEX IF NOT EXISTS idx_jobs_routeId ON jobs(routeId);
   CREATE INDEX IF NOT EXISTS idx_jobs_status ON jobs(status);
   CREATE INDEX IF NOT EXISTS idx_routes_driverId ON routes(driverId);
   CREATE INDEX IF NOT EXISTS idx_routes_date ON routes(date);
   CREATE INDEX IF NOT EXISTS idx_messages_toUserId ON messages(toUserId);
   CREATE INDEX IF NOT EXISTS idx_messages_fromUserId ON messages(fromUserId);
+  CREATE INDEX IF NOT EXISTS idx_commercialStops_routeId ON commercialStops(routeId);
+  CREATE INDEX IF NOT EXISTS idx_residentialStops_customerId ON residentialStops(customerId);
+  CREATE INDEX IF NOT EXISTS idx_residentialStops_routeId ON residentialStops(routeId);
+  CREATE INDEX IF NOT EXISTS idx_containerJobs_routeId ON containerJobs(routeId);
 `);
 
 export default db;

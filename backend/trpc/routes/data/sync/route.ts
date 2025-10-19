@@ -21,6 +21,14 @@ export const syncDataProcedure = publicProcedure
     dispatcherSettings: z.any().optional(),
     reports: z.array(z.any()).optional(),
     recurringJobs: z.array(z.any()).optional(),
+    companies: z.array(z.any()).optional(),
+    commercialRoutes: z.array(z.any()).optional(),
+    commercialStops: z.array(z.any()).optional(),
+    residentialCustomers: z.array(z.any()).optional(),
+    residentialRoutes: z.array(z.any()).optional(),
+    residentialStops: z.array(z.any()).optional(),
+    containerRoutes: z.array(z.any()).optional(),
+    containerJobs: z.array(z.any()).optional(),
   }))
   .mutation(async ({ input }) => {
     try {
@@ -302,6 +310,133 @@ export const syncDataProcedure = publicProcedure
           job.latitude || null, job.longitude || null, job.notes || null,
           job.dumpSiteId || null, job.projectName || null,
           job.createdAt, now
+        );
+      }
+    }
+
+    if (input.companies) {
+      const stmt = db.prepare(`
+        INSERT OR REPLACE INTO companies 
+        (id, name, address, phone, email, billingAddress, notes, active, createdAt, updatedAt)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `);
+      for (const company of input.companies) {
+        stmt.run(
+          company.id, company.name, company.address, company.phone || null,
+          company.email || null, company.billingAddress || null, company.notes || null,
+          company.active ? 1 : 0, company.createdAt, now
+        );
+      }
+    }
+
+    if (input.commercialRoutes) {
+      const stmt = db.prepare(`
+        INSERT OR REPLACE INTO commercialRoutes 
+        (id, name, date, driverId, driverName, truckId, truckUnitNumber, status, dispatchedAt, startedAt, completedAt, createdAt, updatedAt)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `);
+      for (const route of input.commercialRoutes) {
+        stmt.run(
+          route.id, route.name, route.date, route.driverId || null,
+          route.driverName || null, route.truckId || null, route.truckUnitNumber || null,
+          route.status, route.dispatchedAt || null, route.startedAt || null,
+          route.completedAt || null, route.createdAt, now
+        );
+      }
+    }
+
+    if (input.commercialStops) {
+      const stmt = db.prepare(`
+        INSERT OR REPLACE INTO commercialStops 
+        (id, routeId, companyId, companyName, address, latitude, longitude, containerSize, serviceType, status, completedAt, notes, orderIndex, createdAt, updatedAt)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `);
+      for (const stop of input.commercialStops) {
+        stmt.run(
+          stop.id, stop.routeId, stop.companyId, stop.companyName, stop.address,
+          stop.latitude || null, stop.longitude || null, stop.containerSize || null,
+          stop.serviceType, stop.status, stop.completedAt || null, stop.notes || null,
+          stop.orderIndex || 0, stop.createdAt, now
+        );
+      }
+    }
+
+    if (input.residentialCustomers) {
+      const stmt = db.prepare(`
+        INSERT OR REPLACE INTO residentialCustomers 
+        (id, name, address, phone, email, serviceDay, notes, active, createdAt, updatedAt)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `);
+      for (const customer of input.residentialCustomers) {
+        stmt.run(
+          customer.id, customer.name, customer.address, customer.phone || null,
+          customer.email || null, customer.serviceDay, customer.notes || null,
+          customer.active ? 1 : 0, customer.createdAt, now
+        );
+      }
+    }
+
+    if (input.residentialRoutes) {
+      const stmt = db.prepare(`
+        INSERT OR REPLACE INTO residentialRoutes 
+        (id, name, serviceDay, driverId, driverName, truckId, truckUnitNumber, status, dispatchedAt, startedAt, completedAt, createdAt, updatedAt)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `);
+      for (const route of input.residentialRoutes) {
+        stmt.run(
+          route.id, route.name, route.serviceDay, route.driverId || null,
+          route.driverName || null, route.truckId || null, route.truckUnitNumber || null,
+          route.status, route.dispatchedAt || null, route.startedAt || null,
+          route.completedAt || null, route.createdAt, now
+        );
+      }
+    }
+
+    if (input.residentialStops) {
+      const stmt = db.prepare(`
+        INSERT OR REPLACE INTO residentialStops 
+        (id, customerId, customerName, address, serviceDay, status, completedAt, notes, routeId, orderIndex, active, createdAt, updatedAt)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `);
+      for (const stop of input.residentialStops) {
+        stmt.run(
+          stop.id, stop.customerId, stop.customerName, stop.address, stop.serviceDay,
+          stop.status, stop.completedAt || null, stop.notes || null,
+          stop.routeId || null, stop.orderIndex || 0, stop.active ? 1 : 0,
+          stop.createdAt, now
+        );
+      }
+    }
+
+    if (input.containerRoutes) {
+      const stmt = db.prepare(`
+        INSERT OR REPLACE INTO containerRoutes 
+        (id, name, date, driverId, driverName, truckId, truckUnitNumber, status, dispatchedAt, startedAt, completedAt, createdAt, updatedAt)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `);
+      for (const route of input.containerRoutes) {
+        stmt.run(
+          route.id, route.name, route.date, route.driverId || null,
+          route.driverName || null, route.truckId || null, route.truckUnitNumber || null,
+          route.status, route.dispatchedAt || null, route.startedAt || null,
+          route.completedAt || null, route.createdAt, now
+        );
+      }
+    }
+
+    if (input.containerJobs) {
+      const stmt = db.prepare(`
+        INSERT OR REPLACE INTO containerJobs 
+        (id, routeId, type, address, latitude, longitude, containerType, containerSize, quantity, customerId, customerName, status, completedAt, notes, orderIndex, createdAt, updatedAt)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `);
+      for (const job of input.containerJobs) {
+        stmt.run(
+          job.id, job.routeId, job.type, job.address, job.latitude || null,
+          job.longitude || null, job.containerType || null, job.containerSize || null,
+          job.quantity || null, job.customerId || null, job.customerName || null,
+          job.status, job.completedAt || null, job.notes || null,
+          job.orderIndex || 0, job.createdAt, now
         );
       }
     }
