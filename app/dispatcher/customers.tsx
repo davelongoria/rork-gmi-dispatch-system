@@ -569,7 +569,7 @@ ${Platform.OS === 'web' ? '\n\nCSV Data:\n' + report.csvData : ''}
           onPress={() => setCustomerFilter('all')}
         >
           <Text style={[styles.filterButtonText, { color: customerFilter === 'all' ? Colors.background : Colors.text }]}>
-            All
+            R/O
           </Text>
         </TouchableOpacity>
         <TouchableOpacity
@@ -577,7 +577,7 @@ ${Platform.OS === 'web' ? '\n\nCSV Data:\n' + report.csvData : ''}
           onPress={() => setCustomerFilter('commercial')}
         >
           <Text style={[styles.filterButtonText, { color: customerFilter === 'commercial' ? Colors.background : Colors.text }]}>
-            Commercial
+            Comm
           </Text>
         </TouchableOpacity>
         <TouchableOpacity
@@ -585,7 +585,7 @@ ${Platform.OS === 'web' ? '\n\nCSV Data:\n' + report.csvData : ''}
           onPress={() => setCustomerFilter('residential')}
         >
           <Text style={[styles.filterButtonText, { color: customerFilter === 'residential' ? Colors.background : Colors.text }]}>
-            Residential
+            Resi
           </Text>
         </TouchableOpacity>
       </View>
