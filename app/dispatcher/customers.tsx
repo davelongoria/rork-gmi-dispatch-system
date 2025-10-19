@@ -28,7 +28,7 @@ export default function CustomersScreen() {
   const styles = React.useMemo(() => createStyles(colors), [colors]);
 
   const [searchQuery, setSearchQuery] = useState<string>('');
-  const [showCommercial, setShowCommercial] = useState<boolean>(false);
+  const [customerFilter, setCustomerFilter] = useState<'all' | 'commercial' | 'residential'>('all');
   const [modalVisible, setModalVisible] = useState<boolean>(false);
   const [commercialModalVisible, setCommercialModalVisible] = useState<boolean>(false);
   const [selectedCommercialStop, setSelectedCommercialStop] = useState<CommercialStop | null>(null);
@@ -62,6 +62,24 @@ export default function CustomersScreen() {
     c.address.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
+  const { residentialCustomers, addResidentialCustomer } = useData();
+  const [residentialModalVisible, setResidentialModalVisible] = useState<boolean>(false);
+  const [residentialFormData, setResidentialFormData] = useState({
+    name: '',
+    address: '',
+    phone: '',
+    email: '',
+    serviceDay: 'MONDAY' as DayOfWeek,
+    serviceFrequency: 'ONCE_WEEK' as 'ONCE_WEEK' | 'EVERY_OTHER_WEEK',
+    weekOffset: 0,
+    notes: '',
+  });
+
+  const filteredResidentialCustomers = residentialCustomers.filter(c =>
+    c.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    c.address.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
   const filteredCommercialStops = commercialStops.filter(s =>
     s.jobName.toLowerCase().includes(searchQuery.toLowerCase()) ||
     (s.customerName && s.customerName.toLowerCase().includes(searchQuery.toLowerCase())) ||
@@ -69,15 +87,29 @@ export default function CustomersScreen() {
   );
 
   const handleAddCustomer = () => {
-    setFormData({
-      name: '',
-      address: '',
-      phone: '',
-      email: '',
-      billingAddress: '',
-      notes: '',
-    });
-    setModalVisible(true);
+    if (customerFilter === 'residential') {
+      setResidentialFormData({
+        name: '',
+        address: '',
+        phone: '',
+        email: '',
+        serviceDay: 'MONDAY',
+        serviceFrequency: 'ONCE_WEEK',
+        weekOffset: 0,
+        notes: '',
+      });
+      setResidentialModalVisible(true);
+    } else {
+      setFormData({
+        name: '',
+        address: '',
+        phone: '',
+        email: '',
+        billingAddress: '',
+        notes: '',
+      });
+      setModalVisible(true);
+    }
   };
 
   const handleSave = async () => {
@@ -504,16 +536,60 @@ ${Platform.OS === 'web' ? '\n\nCSV Data:\n' + report.csvData : ''}
     </View>
   );
 
+  const handleSaveResidentialCustomer = async () => {
+    if (!residentialFormData.name || !residentialFormData.address) {
+      Alert.alert('Error', 'Please fill in name and address');
+      return;
+    }
+
+    const newCustomer: ResidentialCustomer = {
+      id: `resi-customer-${Date.now()}`,
+      name: residentialFormData.name,
+      address: residentialFormData.address,
+      phone: residentialFormData.phone || undefined,
+      email: residentialFormData.email || undefined,
+      serviceDay: residentialFormData.serviceDay,
+      serviceFrequency: residentialFormData.serviceFrequency,
+      weekOffset: residentialFormData.weekOffset,
+      notes: residentialFormData.notes || undefined,
+      active: true,
+      createdAt: new Date().toISOString(),
+    };
+
+    await addResidentialCustomer(newCustomer);
+    setResidentialModalVisible(false);
+    Alert.alert('Success', 'Residential customer added successfully');
+  };
+
+  const Colors = colors;
+
   return (
     <View style={styles.container}>
-      <View style={styles.toggleContainer}>
-        <Text style={styles.toggleLabel}>Show Commercial Customers</Text>
-        <Switch
-          value={showCommercial}
-          onValueChange={setShowCommercial}
-          trackColor={{ false: Colors.border, true: Colors.primary }}
-          thumbColor={Colors.background}
-        />
+      <View style={styles.filterContainer}>
+        <TouchableOpacity
+          style={[styles.filterButton, customerFilter === 'all' && { backgroundColor: Colors.primary }]}
+          onPress={() => setCustomerFilter('all')}
+        >
+          <Text style={[styles.filterButtonText, { color: customerFilter === 'all' ? Colors.background : Colors.text }]}>
+            All
+          </Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[styles.filterButton, customerFilter === 'commercial' && { backgroundColor: Colors.primary }]}
+          onPress={() => setCustomerFilter('commercial')}
+        >
+          <Text style={[styles.filterButtonText, { color: customerFilter === 'commercial' ? Colors.background : Colors.text }]}>
+            Commercial
+          </Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[styles.filterButton, customerFilter === 'residential' && { backgroundColor: Colors.primary }]}
+          onPress={() => setCustomerFilter('residential')}
+        >
+          <Text style={[styles.filterButtonText, { color: customerFilter === 'residential' ? Colors.background : Colors.text }]}>
+            Residential
+          </Text>
+        </TouchableOpacity>
       </View>
 
       <View style={styles.searchContainer}>
@@ -529,13 +605,19 @@ ${Platform.OS === 'web' ? '\n\nCSV Data:\n' + report.csvData : ''}
         </View>
         <TouchableOpacity 
           style={styles.addButton} 
-          onPress={showCommercial ? handleAddCommercialStop : handleAddCustomer}
+          onPress={() => {
+            if (customerFilter === 'commercial') {
+              handleAddCommercialStop();
+            } else {
+              handleAddCustomer();
+            }
+          }}
         >
           <Plus size={24} color={Colors.background} />
         </TouchableOpacity>
       </View>
 
-      {showCommercial ? (
+      {customerFilter === 'commercial' ? (
         <FlatList
           data={filteredCommercialStops}
           renderItem={renderCommercialStop}
@@ -545,6 +627,45 @@ ${Platform.OS === 'web' ? '\n\nCSV Data:\n' + report.csvData : ''}
             <View style={styles.emptyContainer}>
               <Text style={styles.emptyText}>No commercial stops found</Text>
               <Text style={styles.emptySubtext}>Tap + to add your first commercial stop</Text>
+            </View>
+          }
+        />
+      ) : customerFilter === 'residential' ? (
+        <FlatList
+          data={filteredResidentialCustomers}
+          renderItem={({ item }) => (
+            <View style={styles.customerCard}>
+              <View style={styles.customerHeader}>
+                <View style={styles.customerIcon}>
+                  <Building2 size={24} color={Colors.background} />
+                </View>
+                <View style={styles.customerInfo}>
+                  <Text style={styles.customerName}>{item.name}</Text>
+                  <View style={styles.customerMeta}>
+                    <MapPin size={14} color={Colors.textSecondary} />
+                    <Text style={styles.customerMetaText}>{item.address}</Text>
+                  </View>
+                  {item.phone && (
+                    <View style={styles.customerMeta}>
+                      <Phone size={14} color={Colors.textSecondary} />
+                      <Text style={styles.customerMetaText}>{item.phone}</Text>
+                    </View>
+                  )}
+                  <View style={styles.commercialStopDetails}>
+                    <Text style={styles.commercialStopDetailText}>
+                      {item.serviceDay.substring(0, 3)} • {item.serviceFrequency === 'ONCE_WEEK' ? 'Weekly' : 'Bi-weekly'}
+                    </Text>
+                  </View>
+                </View>
+              </View>
+            </View>
+          )}
+          keyExtractor={item => item.id}
+          contentContainerStyle={styles.listContent}
+          ListEmptyComponent={
+            <View style={styles.emptyContainer}>
+              <Text style={styles.emptyText}>No residential customers found</Text>
+              <Text style={styles.emptySubtext}>Tap + to add your first residential customer</Text>
             </View>
           }
         />
@@ -884,6 +1005,129 @@ ${Platform.OS === 'web' ? '\n\nCSV Data:\n' + report.csvData : ''}
           </View>
         </View>
       </Modal>
+
+      <Modal
+        visible={residentialModalVisible}
+        animationType="slide"
+        transparent
+        onRequestClose={() => setResidentialModalVisible(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Add Residential Customer</Text>
+              <TouchableOpacity onPress={() => setResidentialModalVisible(false)}>
+                <X size={24} color={Colors.text} />
+              </TouchableOpacity>
+            </View>
+
+            <ScrollView style={styles.form}>
+              <Text style={styles.label}>Name *</Text>
+              <TextInput
+                style={styles.input}
+                value={residentialFormData.name}
+                onChangeText={text => setResidentialFormData({ ...residentialFormData, name: text })}
+                placeholder="John Doe"
+                placeholderTextColor={Colors.textSecondary}
+              />
+
+              <Text style={styles.label}>Address *</Text>
+              <TextInput
+                style={styles.input}
+                value={residentialFormData.address}
+                onChangeText={text => setResidentialFormData({ ...residentialFormData, address: text })}
+                placeholder="123 Main St, City, State"
+                placeholderTextColor={Colors.textSecondary}
+              />
+
+              <Text style={styles.label}>Phone</Text>
+              <TextInput
+                style={styles.input}
+                value={residentialFormData.phone}
+                onChangeText={text => setResidentialFormData({ ...residentialFormData, phone: text })}
+                placeholder="555-0100"
+                placeholderTextColor={Colors.textSecondary}
+                keyboardType="phone-pad"
+              />
+
+              <Text style={styles.label}>Email</Text>
+              <TextInput
+                style={styles.input}
+                value={residentialFormData.email}
+                onChangeText={text => setResidentialFormData({ ...residentialFormData, email: text })}
+                placeholder="john@example.com"
+                placeholderTextColor={Colors.textSecondary}
+                keyboardType="email-address"
+                autoCapitalize="none"
+              />
+
+              <Text style={styles.label}>Service Day</Text>
+              <View style={styles.daysGrid}>
+                {(['MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY'] as DayOfWeek[]).map(day => (
+                  <TouchableOpacity
+                    key={day}
+                    style={[
+                      styles.dayButton,
+                      residentialFormData.serviceDay === day && styles.dayButtonActive
+                    ]}
+                    onPress={() => setResidentialFormData({ ...residentialFormData, serviceDay: day })}
+                  >
+                    <Text style={[
+                      styles.dayButtonText,
+                      residentialFormData.serviceDay === day && styles.dayButtonTextActive
+                    ]}>
+                      {day.substring(0, 3)}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+
+              <Text style={styles.label}>Service Frequency</Text>
+              <View style={styles.pickerContainer}>
+                <TouchableOpacity 
+                  style={styles.pickerButton}
+                  onPress={() => {
+                    Alert.alert('Select Frequency', 'Choose service frequency', [
+                      { text: 'Once a week', onPress: () => setResidentialFormData({ ...residentialFormData, serviceFrequency: 'ONCE_WEEK' }) },
+                      { text: 'Every other week', onPress: () => setResidentialFormData({ ...residentialFormData, serviceFrequency: 'EVERY_OTHER_WEEK' }) },
+                    ]);
+                  }}
+                >
+                  <Text style={styles.pickerButtonText}>
+                    {residentialFormData.serviceFrequency === 'ONCE_WEEK' ? 'Once a week' : 'Every other week'}
+                  </Text>
+                </TouchableOpacity>
+              </View>
+
+              <Text style={styles.label}>Notes</Text>
+              <TextInput
+                style={[styles.input, styles.textArea]}
+                value={residentialFormData.notes}
+                onChangeText={text => setResidentialFormData({ ...residentialFormData, notes: text })}
+                placeholder="Additional notes..."
+                placeholderTextColor={Colors.textSecondary}
+                multiline
+                numberOfLines={3}
+              />
+
+              <View style={styles.buttonRow}>
+                <TouchableOpacity
+                  style={[styles.button, styles.buttonSecondary]}
+                  onPress={() => setResidentialModalVisible(false)}
+                >
+                  <Text style={styles.buttonSecondaryText}>Cancel</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[styles.button, styles.buttonPrimary]}
+                  onPress={handleSaveResidentialCustomer}
+                >
+                  <Text style={styles.buttonPrimaryText}>Save</Text>
+                </TouchableOpacity>
+              </View>
+            </ScrollView>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -1180,20 +1424,27 @@ const createStyles = (Colors: any) => StyleSheet.create({
     fontWeight: '600' as const,
     color: Colors.background,
   },
-  toggleContainer: {
+  filterContainer: {
     flexDirection: 'row' as const,
-    justifyContent: 'space-between' as const,
-    alignItems: 'center' as const,
     paddingHorizontal: 16,
     paddingVertical: 12,
+    gap: 8,
     backgroundColor: Colors.background,
     borderBottomWidth: 1,
     borderBottomColor: Colors.border,
   },
-  toggleLabel: {
-    fontSize: 16,
+  filterButton: {
+    flex: 1,
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    borderRadius: 8,
+    backgroundColor: Colors.backgroundSecondary,
+    alignItems: 'center' as const,
+    justifyContent: 'center' as const,
+  },
+  filterButtonText: {
+    fontSize: 14,
     fontWeight: '600' as const,
-    color: Colors.text,
   },
   commercialStopDetails: {
     marginTop: 6,

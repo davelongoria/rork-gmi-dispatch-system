@@ -30,7 +30,7 @@ export default function RoutesScreen() {
   const [selectedDumpSite, setSelectedDumpSite] = useState<string>('');
 
   const [showCompleted, setShowCompleted] = useState<boolean>(false);
-  const [activeTab, setActiveTab] = useState<'rolloff' | 'commercial'>('rolloff');
+  const [activeTab, setActiveTab] = useState<'rolloff' | 'commercial' | 'residential' | 'container'>('rolloff');
 
   const todayRoutes = routes.filter(r => {
     const today = new Date().toISOString().split('T')[0];
@@ -333,7 +333,7 @@ export default function RoutesScreen() {
           onPress={() => setActiveTab('rolloff')}
         >
           <Text style={[styles.tabText, activeTab === 'rolloff' && styles.tabTextActive]}>
-            Roll-Off Routes
+            Roll-Off
           </Text>
         </TouchableOpacity>
         <TouchableOpacity
@@ -341,7 +341,23 @@ export default function RoutesScreen() {
           onPress={() => setActiveTab('commercial')}
         >
           <Text style={[styles.tabText, activeTab === 'commercial' && styles.tabTextActive]}>
-            Commercial Routes
+            Commercial
+          </Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[styles.tab, activeTab === 'residential' && styles.tabActive]}
+          onPress={() => setActiveTab('residential')}
+        >
+          <Text style={[styles.tabText, activeTab === 'residential' && styles.tabTextActive]}>
+            Residential
+          </Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[styles.tab, activeTab === 'container' && styles.tabActive]}
+          onPress={() => setActiveTab('container')}
+        >
+          <Text style={[styles.tabText, activeTab === 'container' && styles.tabTextActive]}>
+            Container
           </Text>
         </TouchableOpacity>
       </View>
@@ -359,8 +375,12 @@ export default function RoutesScreen() {
             </View>
           }
         />
-      ) : (
+      ) : activeTab === 'commercial' ? (
         <CommercialRoutesContent />
+      ) : activeTab === 'residential' ? (
+        <ResidentialRoutesContent />
+      ) : (
+        <ContainerRoutesContent />
       )}
 
       <Modal
@@ -1007,6 +1027,52 @@ function CommercialRoutesContent() {
       </TouchableOpacity>
       <Text style={styles.commercialDescription}>
         View and manage commercial frontload routes, stops, and schedules
+      </Text>
+    </View>
+  );
+}
+
+function ResidentialRoutesContent() {
+  const router = useRouter();
+  const { theme } = useTheme();
+  const colors = theme.colors;
+  const styles = createStyles(colors);
+  
+  return (
+    <View style={styles.commercialContainer}>
+      <TouchableOpacity
+        style={styles.commercialButton}
+        onPress={() => router.push('/dispatcher/residential-routes')}
+      >
+        <Package size={20} color={colors.primary} />
+        <Text style={styles.commercialButtonText}>Manage Residential Routes</Text>
+        <ChevronRight size={20} color={colors.primary} />
+      </TouchableOpacity>
+      <Text style={styles.commercialDescription}>
+        View and manage residential trash pickup routes and schedules
+      </Text>
+    </View>
+  );
+}
+
+function ContainerRoutesContent() {
+  const router = useRouter();
+  const { theme } = useTheme();
+  const colors = theme.colors;
+  const styles = createStyles(colors);
+  
+  return (
+    <View style={styles.commercialContainer}>
+      <TouchableOpacity
+        style={styles.commercialButton}
+        onPress={() => router.push('/dispatcher/container-routes')}
+      >
+        <Package size={20} color={colors.primary} />
+        <Text style={styles.commercialButtonText}>Manage Container Routes</Text>
+        <ChevronRight size={20} color={colors.primary} />
+      </TouchableOpacity>
+      <Text style={styles.commercialDescription}>
+        Delivery, pickup, and swap routes for toters and commercial containers
       </Text>
     </View>
   );
