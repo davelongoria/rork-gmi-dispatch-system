@@ -307,7 +307,7 @@ export interface RecurringJob {
 }
 
 export type RouteType = 'DUMP_TRUCK' | 'COMMERCIAL_FRONTLOAD';
-export type ServiceFrequency = 'ONCE_WEEK' | 'TWICE_WEEK' | 'THREE_WEEK' | 'FOUR_WEEK' | 'FIVE_WEEK' | 'BIWEEKLY' | 'EVERY_OTHER_WEEK' | 'MONTHLY' | 'ON_CALL';
+export type ServiceFrequency = 'ONCE_WEEK' | 'TWICE_WEEK' | 'THREE_WEEK' | 'FOUR_WEEK' | 'FIVE_WEEK' | 'SIX_WEEK' | 'SEVEN_WEEK' | 'EIGHT_WEEK' | 'NINE_WEEK' | 'TEN_WEEK' | 'BIWEEKLY' | 'EVERY_OTHER_WEEK' | 'MONTHLY' | 'ON_CALL';
 export type StopStatus = 'PENDING' | 'COMPLETED' | 'NOT_OUT' | 'BLOCKED' | 'SKIPPED';
 export type ContainerSize = '1' | '1.5' | '2' | '4' | '6' | '8' | 'COMPACTOR';
 export type DayOfWeek = 'MONDAY' | 'TUESDAY' | 'WEDNESDAY' | 'THURSDAY' | 'FRIDAY' | 'SATURDAY' | 'SUNDAY';

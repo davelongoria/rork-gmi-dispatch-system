@@ -999,7 +999,7 @@ ${Platform.OS === 'web' ? '\n\nCSV Data:\n' + report.csvData : ''}
                 <TouchableOpacity 
                   style={styles.pickerButton}
                   onPress={() => {
-                    const frequencies: ServiceFrequency[] = ['ONCE_WEEK', 'TWICE_WEEK', 'THREE_WEEK', 'FOUR_WEEK', 'FIVE_WEEK', 'BIWEEKLY', 'MONTHLY', 'ON_CALL'];
+                    const frequencies: ServiceFrequency[] = ['ONCE_WEEK', 'TWICE_WEEK', 'THREE_WEEK', 'FOUR_WEEK', 'FIVE_WEEK', 'SIX_WEEK', 'SEVEN_WEEK', 'EIGHT_WEEK', 'NINE_WEEK', 'TEN_WEEK', 'BIWEEKLY', 'MONTHLY', 'ON_CALL'];
                     Alert.alert('Select Frequency', 'Choose service frequency', frequencies.map(freq => ({
                       text: freq.replace(/_/g, ' '),
                       onPress: () => setCommercialFormData({ ...commercialFormData, serviceFrequency: freq })
