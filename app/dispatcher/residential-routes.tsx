@@ -12,7 +12,7 @@ import {
 } from 'react-native';
 import { useData } from '@/contexts/DataContext';
 import { useTheme } from '@/contexts/ThemeContext';
-import { Plus, Calendar, User, Truck as TruckIcon, MapPin, Send, X, Trash2, Edit3 } from 'lucide-react-native';
+import { Plus, Calendar, User, Truck as TruckIcon, MapPin, Send, X, Trash2, Edit3, GripVertical, ChevronUp, ChevronDown } from 'lucide-react-native';
 import type { ResidentialRoute, ResidentialStop, DayOfWeek } from '@/types';
 
 const DAYS_OF_WEEK: { value: DayOfWeek; label: string }[] = [
@@ -47,6 +47,7 @@ export default function ResidentialRoutesScreen() {
   const [selectedDriver, setSelectedDriver] = useState<string>('');
   const [selectedTruck, setSelectedTruck] = useState<string>('');
   const [selectedStops, setSelectedStops] = useState<string[]>([]);
+  const [isReorderMode, setIsReorderMode] = useState<boolean>(false);
   const [showCompleted, setShowCompleted] = useState<boolean>(false);
 
   const getCurrentWeekRoutes = () => {
@@ -89,6 +90,7 @@ export default function ResidentialRoutesScreen() {
     setSelectedDriver(route.driverId || '');
     setSelectedTruck(route.truckId || '');
     setSelectedStops([...route.customerIds]);
+    setIsReorderMode(false);
     setModalVisible(true);
   };
 
@@ -146,6 +148,20 @@ export default function ResidentialRoutesScreen() {
         ? prev.filter(id => id !== stopId)
         : [...prev, stopId]
     );
+  };
+
+  const moveStopUp = (index: number) => {
+    if (index === 0) return;
+    const newStops = [...selectedStops];
+    [newStops[index - 1], newStops[index]] = [newStops[index], newStops[index - 1]];
+    setSelectedStops(newStops);
+  };
+
+  const moveStopDown = (index: number) => {
+    if (index === selectedStops.length - 1) return;
+    const newStops = [...selectedStops];
+    [newStops[index], newStops[index + 1]] = [newStops[index + 1], newStops[index]];
+    setSelectedStops(newStops);
   };
 
   const availableStops = residentialStops.filter((s: ResidentialStop) => 
@@ -393,34 +409,98 @@ export default function ResidentialRoutesScreen() {
                 </TouchableOpacity>
               ))}
 
-              <Text style={[styles.label, { marginTop: 24 }]}>Select Stops for {getDayLabel(routeDayOfWeek)}</Text>
-              {availableStops.length === 0 ? (
-                <Text style={styles.noStopsText}>No stops available for this day.</Text>
-              ) : (
-                availableStops.map((stop: ResidentialStop) => (
+              <View style={styles.stopsHeader}>
+                <Text style={[styles.label, { marginTop: 24, marginBottom: 12 }]}>Select Stops for {getDayLabel(routeDayOfWeek)}</Text>
+                {selectedStops.length > 0 && (
                   <TouchableOpacity
-                    key={stop.id}
-                    style={[
-                      styles.stopSelectionItem,
-                      selectedStops.includes(stop.id) && styles.stopSelectionItemSelected,
-                    ]}
-                    onPress={() => toggleStopSelection(stop.id)}
+                    style={styles.reorderButton}
+                    onPress={() => setIsReorderMode(!isReorderMode)}
                   >
-                    <View style={styles.stopSelectionContent}>
-                      <View style={styles.stopSelectionInfo}>
-                        <Text style={styles.stopSelectionCustomer}>
-                          {stop.customerName || stop.address}
-                        </Text>
-                        <Text style={styles.stopSelectionAddress} numberOfLines={1}>
-                          {stop.address}
-                        </Text>
-                        <Text style={styles.stopSelectionDetail}>
-                          {stop.serviceDay}
-                        </Text>
-                      </View>
-                    </View>
+                    <GripVertical size={18} color={colors.primary} />
+                    <Text style={styles.reorderButtonText}>
+                      {isReorderMode ? 'Done' : 'Reorder'}
+                    </Text>
                   </TouchableOpacity>
-                ))
+                )}
+              </View>
+
+              {isReorderMode ? (
+                selectedStops.length === 0 ? (
+                  <Text style={styles.noStopsText}>No stops selected yet.</Text>
+                ) : (
+                  selectedStops.map((stopId, index) => {
+                    const stop = residentialStops.find(s => s.id === stopId);
+                    if (!stop) return null;
+                    return (
+                      <View key={stop.id} style={styles.reorderStopItem}>
+                        <View style={styles.reorderStopContent}>
+                          <View style={styles.reorderStopNumber}>
+                            <Text style={styles.reorderStopNumberText}>{index + 1}</Text>
+                          </View>
+                          <View style={styles.reorderStopInfo}>
+                            <Text style={styles.stopSelectionCustomer}>
+                              {stop.customerName || stop.address}
+                            </Text>
+                            <Text style={styles.stopSelectionAddress} numberOfLines={1}>
+                              {stop.address}
+                            </Text>
+                          </View>
+                        </View>
+                        <View style={styles.reorderStopActions}>
+                          <TouchableOpacity
+                            onPress={() => moveStopUp(index)}
+                            disabled={index === 0}
+                            style={[
+                              styles.reorderActionButton,
+                              index === 0 && styles.reorderActionButtonDisabled,
+                            ]}
+                          >
+                            <ChevronUp size={20} color={index === 0 ? colors.textSecondary : colors.primary} />
+                          </TouchableOpacity>
+                          <TouchableOpacity
+                            onPress={() => moveStopDown(index)}
+                            disabled={index === selectedStops.length - 1}
+                            style={[
+                              styles.reorderActionButton,
+                              index === selectedStops.length - 1 && styles.reorderActionButtonDisabled,
+                            ]}
+                          >
+                            <ChevronDown size={20} color={index === selectedStops.length - 1 ? colors.textSecondary : colors.primary} />
+                          </TouchableOpacity>
+                        </View>
+                      </View>
+                    );
+                  })
+                )
+              ) : (
+                availableStops.length === 0 ? (
+                  <Text style={styles.noStopsText}>No stops available for this day.</Text>
+                ) : (
+                  availableStops.map((stop: ResidentialStop) => (
+                    <TouchableOpacity
+                      key={stop.id}
+                      style={[
+                        styles.stopSelectionItem,
+                        selectedStops.includes(stop.id) && styles.stopSelectionItemSelected,
+                      ]}
+                      onPress={() => toggleStopSelection(stop.id)}
+                    >
+                      <View style={styles.stopSelectionContent}>
+                        <View style={styles.stopSelectionInfo}>
+                          <Text style={styles.stopSelectionCustomer}>
+                            {stop.customerName || stop.address}
+                          </Text>
+                          <Text style={styles.stopSelectionAddress} numberOfLines={1}>
+                            {stop.address}
+                          </Text>
+                          <Text style={styles.stopSelectionDetail}>
+                            {stop.serviceDay}
+                          </Text>
+                        </View>
+                      </View>
+                    </TouchableOpacity>
+                  ))
+                )
               )}
 
               <View style={styles.buttonRow}>
@@ -771,5 +851,69 @@ const createStyles = (colors: any) => StyleSheet.create({
     fontSize: 11,
     fontWeight: '600' as const,
     color: colors.background,
+  },
+  stopsHeader: {
+    flexDirection: 'row' as const,
+    justifyContent: 'space-between' as const,
+    alignItems: 'center' as const,
+  },
+  reorderButton: {
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    gap: 4,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    backgroundColor: colors.backgroundSecondary,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: colors.primary,
+  },
+  reorderButtonText: {
+    fontSize: 14,
+    fontWeight: '600' as const,
+    color: colors.primary,
+  },
+  reorderStopItem: {
+    flexDirection: 'row' as const,
+    justifyContent: 'space-between' as const,
+    alignItems: 'center' as const,
+    padding: 16,
+    backgroundColor: colors.backgroundSecondary,
+    borderRadius: 12,
+    marginBottom: 8,
+    borderWidth: 2,
+    borderColor: colors.primary,
+  },
+  reorderStopContent: {
+    flex: 1,
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    gap: 12,
+  },
+  reorderStopNumber: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: colors.primary,
+    justifyContent: 'center' as const,
+    alignItems: 'center' as const,
+  },
+  reorderStopNumberText: {
+    fontSize: 16,
+    fontWeight: '700' as const,
+    color: colors.background,
+  },
+  reorderStopInfo: {
+    flex: 1,
+  },
+  reorderStopActions: {
+    flexDirection: 'column' as const,
+    gap: 4,
+  },
+  reorderActionButton: {
+    padding: 4,
+  },
+  reorderActionButtonDisabled: {
+    opacity: 0.3,
   },
 });
