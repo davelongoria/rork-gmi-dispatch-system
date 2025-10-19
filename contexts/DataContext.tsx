@@ -102,7 +102,22 @@ export const [DataProvider, useData] = createContextHook(() => {
     } else if (getAllQuery.data && !getAllQuery.isLoading && !getAllQuery.isFetching) {
       console.log('Backend data received, syncing to local storage');
       setBackendAvailable(true);
-      updateFromBackend(getAllQuery.data);
+      
+      const backendData = getAllQuery.data;
+      const hasCommercialRoutes = backendData.commercialRoutes && backendData.commercialRoutes.length > 0;
+      const hasResidentialRoutes = backendData.residentialRoutes && backendData.residentialRoutes.length > 0;
+      const hasResidentialCustomers = backendData.residentialCustomers && backendData.residentialCustomers.length > 0;
+      const hasResidentialStops = backendData.residentialStops && backendData.residentialStops.length > 0;
+      
+      const dataToUpdate = {
+        ...backendData,
+        commercialRoutes: hasCommercialRoutes ? backendData.commercialRoutes : sampleCommercialRoutes,
+        residentialRoutes: hasResidentialRoutes ? backendData.residentialRoutes : sampleResidentialRoutes,
+        residentialCustomers: hasResidentialCustomers ? backendData.residentialCustomers : sampleResidentialCustomers,
+        residentialStops: hasResidentialStops ? backendData.residentialStops : sampleResidentialStops,
+      };
+      
+      updateFromBackend(dataToUpdate);
     }
   }, [getAllQuery.data, getAllQuery.isLoading, getAllQuery.isFetching, getAllQuery.isError]);
 
