@@ -381,14 +381,15 @@ export const syncDataProcedure = publicProcedure
     if (input.residentialRoutes) {
       const stmt = db.prepare(`
         INSERT OR REPLACE INTO residentialRoutes 
-        (id, name, serviceDay, driverId, driverName, truckId, truckUnitNumber, status, dispatchedAt, startedAt, completedAt, createdAt, updatedAt)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        (id, name, dayOfWeek, date, driverId, driverName, truckId, truckUnitNumber, customerIds, status, routeType, dispatchedAt, startedAt, completedAt, createdAt, updatedAt)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `);
       for (const route of input.residentialRoutes) {
         stmt.run(
-          route.id, route.name, route.serviceDay, route.driverId || null,
+          route.id, route.name, route.dayOfWeek, route.date, route.driverId || null,
           route.driverName || null, route.truckId || null, route.truckUnitNumber || null,
-          route.status, route.dispatchedAt || null, route.startedAt || null,
+          JSON.stringify(route.customerIds || []), route.status, route.routeType || 'RESIDENTIAL_TRASH',
+          route.dispatchedAt || null, route.startedAt || null,
           route.completedAt || null, route.createdAt, now
         );
       }
