@@ -561,9 +561,12 @@ export const [DataProvider, useData] = createContextHook(() => {
   const addDriver = useCallback(async (driver: Driver) => {
     const updated = [...drivers, driver];
     setDrivers(updated);
-    await AsyncStorage.setItem(STORAGE_KEYS.DRIVERS, JSON.stringify(updated));
+    await Promise.all([
+      AsyncStorage.setItem(STORAGE_KEYS.DRIVERS, JSON.stringify(updated)),
+      AsyncStorage.setItem(STORAGE_KEYS.TRUCKS, JSON.stringify(trucks)),
+    ]);
     await syncToBackend({ drivers: updated });
-  }, [drivers, syncToBackend]);
+  }, [drivers, trucks, syncToBackend]);
 
   const updateDriver = useCallback(async (id: string, updates: Partial<Driver>) => {
     const updated = drivers.map(d => d.id === id ? { ...d, ...updates } : d);
@@ -780,36 +783,42 @@ export const [DataProvider, useData] = createContextHook(() => {
   const addCommercialRoute = useCallback(async (route: CommercialRoute) => {
     const updated = [...commercialRoutes, route];
     setCommercialRoutes(updated);
+    await AsyncStorage.setItem(STORAGE_KEYS.COMMERCIAL_ROUTES, JSON.stringify(updated));
     await syncToBackend({ commercialRoutes: updated });
   }, [commercialRoutes, syncToBackend]);
 
   const updateCommercialRoute = useCallback(async (id: string, updates: Partial<CommercialRoute>) => {
     const updated = commercialRoutes.map(r => r.id === id ? { ...r, ...updates } : r);
     setCommercialRoutes(updated);
+    await AsyncStorage.setItem(STORAGE_KEYS.COMMERCIAL_ROUTES, JSON.stringify(updated));
     await syncToBackend({ commercialRoutes: updated });
   }, [commercialRoutes, syncToBackend]);
 
   const deleteCommercialRoute = useCallback(async (id: string) => {
     const updated = commercialRoutes.filter(r => r.id !== id);
     setCommercialRoutes(updated);
+    await AsyncStorage.setItem(STORAGE_KEYS.COMMERCIAL_ROUTES, JSON.stringify(updated));
     await syncToBackend({ commercialRoutes: updated });
   }, [commercialRoutes, syncToBackend]);
 
   const addCommercialStop = useCallback(async (stop: CommercialStop) => {
     const updated = [...commercialStops, stop];
     setCommercialStops(updated);
+    await AsyncStorage.setItem(STORAGE_KEYS.COMMERCIAL_STOPS, JSON.stringify(updated));
     await syncToBackend({ commercialStops: updated });
   }, [commercialStops, syncToBackend]);
 
   const updateCommercialStop = useCallback(async (id: string, updates: Partial<CommercialStop>) => {
     const updated = commercialStops.map(s => s.id === id ? { ...s, ...updates } : s);
     setCommercialStops(updated);
+    await AsyncStorage.setItem(STORAGE_KEYS.COMMERCIAL_STOPS, JSON.stringify(updated));
     await syncToBackend({ commercialStops: updated });
   }, [commercialStops, syncToBackend]);
 
   const deleteCommercialStop = useCallback(async (id: string) => {
     const updated = commercialStops.filter(s => s.id !== id);
     setCommercialStops(updated);
+    await AsyncStorage.setItem(STORAGE_KEYS.COMMERCIAL_STOPS, JSON.stringify(updated));
     await syncToBackend({ commercialStops: updated });
   }, [commercialStops, syncToBackend]);
 
@@ -848,6 +857,8 @@ export const [DataProvider, useData] = createContextHook(() => {
     const updatedStops = [...residentialStops, newStop];
     setResidentialStops(updatedStops);
     
+    await AsyncStorage.setItem(STORAGE_KEYS.RESIDENTIAL_CUSTOMERS, JSON.stringify(updated));
+    await AsyncStorage.setItem(STORAGE_KEYS.RESIDENTIAL_STOPS, JSON.stringify(updatedStops));
     await syncToBackend({ 
       residentialCustomers: updated,
       residentialStops: updatedStops 
@@ -871,11 +882,14 @@ export const [DataProvider, useData] = createContextHook(() => {
         return s;
       });
       setResidentialStops(updatedStops);
+      await AsyncStorage.setItem(STORAGE_KEYS.RESIDENTIAL_CUSTOMERS, JSON.stringify(updated));
+      await AsyncStorage.setItem(STORAGE_KEYS.RESIDENTIAL_STOPS, JSON.stringify(updatedStops));
       await syncToBackend({ 
         residentialCustomers: updated,
         residentialStops: updatedStops 
       });
     } else {
+      await AsyncStorage.setItem(STORAGE_KEYS.RESIDENTIAL_CUSTOMERS, JSON.stringify(updated));
       await syncToBackend({ residentialCustomers: updated });
     }
   }, [residentialCustomers, residentialStops, syncToBackend]);
@@ -887,6 +901,8 @@ export const [DataProvider, useData] = createContextHook(() => {
     const updatedStops = residentialStops.filter(s => s.customerId !== id);
     setResidentialStops(updatedStops);
     
+    await AsyncStorage.setItem(STORAGE_KEYS.RESIDENTIAL_CUSTOMERS, JSON.stringify(updated));
+    await AsyncStorage.setItem(STORAGE_KEYS.RESIDENTIAL_STOPS, JSON.stringify(updatedStops));
     await syncToBackend({ 
       residentialCustomers: updated,
       residentialStops: updatedStops 
@@ -896,54 +912,63 @@ export const [DataProvider, useData] = createContextHook(() => {
   const addResidentialRoute = useCallback(async (route: ResidentialRoute) => {
     const updated = [...residentialRoutes, route];
     setResidentialRoutes(updated);
+    await AsyncStorage.setItem(STORAGE_KEYS.RESIDENTIAL_ROUTES, JSON.stringify(updated));
     await syncToBackend({ residentialRoutes: updated });
   }, [residentialRoutes, syncToBackend]);
 
   const updateResidentialRoute = useCallback(async (id: string, updates: Partial<ResidentialRoute>) => {
     const updated = residentialRoutes.map(r => r.id === id ? { ...r, ...updates } : r);
     setResidentialRoutes(updated);
+    await AsyncStorage.setItem(STORAGE_KEYS.RESIDENTIAL_ROUTES, JSON.stringify(updated));
     await syncToBackend({ residentialRoutes: updated });
   }, [residentialRoutes, syncToBackend]);
 
   const deleteResidentialRoute = useCallback(async (id: string) => {
     const updated = residentialRoutes.filter(r => r.id !== id);
     setResidentialRoutes(updated);
+    await AsyncStorage.setItem(STORAGE_KEYS.RESIDENTIAL_ROUTES, JSON.stringify(updated));
     await syncToBackend({ residentialRoutes: updated });
   }, [residentialRoutes, syncToBackend]);
 
   const addResidentialStop = useCallback(async (stop: ResidentialStop) => {
     const updated = [...residentialStops, stop];
     setResidentialStops(updated);
+    await AsyncStorage.setItem(STORAGE_KEYS.RESIDENTIAL_STOPS, JSON.stringify(updated));
     await syncToBackend({ residentialStops: updated });
   }, [residentialStops, syncToBackend]);
 
   const updateResidentialStop = useCallback(async (id: string, updates: Partial<ResidentialStop>) => {
     const updated = residentialStops.map(s => s.id === id ? { ...s, ...updates } : s);
     setResidentialStops(updated);
+    await AsyncStorage.setItem(STORAGE_KEYS.RESIDENTIAL_STOPS, JSON.stringify(updated));
     await syncToBackend({ residentialStops: updated });
   }, [residentialStops, syncToBackend]);
 
   const deleteResidentialStop = useCallback(async (id: string) => {
     const updated = residentialStops.filter(s => s.id !== id);
     setResidentialStops(updated);
+    await AsyncStorage.setItem(STORAGE_KEYS.RESIDENTIAL_STOPS, JSON.stringify(updated));
     await syncToBackend({ residentialStops: updated });
   }, [residentialStops, syncToBackend]);
 
   const addContainerRoute = useCallback(async (route: ContainerRoute) => {
     const updated = [...containerRoutes, route];
     setContainerRoutes(updated);
+    await AsyncStorage.setItem(STORAGE_KEYS.CONTAINER_ROUTES, JSON.stringify(updated));
     await syncToBackend({ containerRoutes: updated });
   }, [containerRoutes, syncToBackend]);
 
   const updateContainerRoute = useCallback(async (id: string, updates: Partial<ContainerRoute>) => {
     const updated = containerRoutes.map(r => r.id === id ? { ...r, ...updates } : r);
     setContainerRoutes(updated);
+    await AsyncStorage.setItem(STORAGE_KEYS.CONTAINER_ROUTES, JSON.stringify(updated));
     await syncToBackend({ containerRoutes: updated });
   }, [containerRoutes, syncToBackend]);
 
   const deleteContainerRoute = useCallback(async (id: string) => {
     const updated = containerRoutes.filter(r => r.id !== id);
     setContainerRoutes(updated);
+    await AsyncStorage.setItem(STORAGE_KEYS.CONTAINER_ROUTES, JSON.stringify(updated));
     await syncToBackend({ containerRoutes: updated });
   }, [containerRoutes, syncToBackend]);
 
