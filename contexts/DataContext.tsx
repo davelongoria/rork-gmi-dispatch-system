@@ -586,90 +586,105 @@ export const [DataProvider, useData] = createContextHook(() => {
   const addTruck = useCallback(async (truck: Truck) => {
     const updated = [...trucks, truck];
     setTrucks(updated);
+    await AsyncStorage.setItem(STORAGE_KEYS.TRUCKS, JSON.stringify(updated));
     await syncToBackend({ trucks: updated });
   }, [trucks, syncToBackend]);
 
   const updateTruck = useCallback(async (id: string, updates: Partial<Truck>) => {
     const updated = trucks.map(t => t.id === id ? { ...t, ...updates } : t);
     setTrucks(updated);
+    await AsyncStorage.setItem(STORAGE_KEYS.TRUCKS, JSON.stringify(updated));
     await syncToBackend({ trucks: updated });
   }, [trucks, syncToBackend]);
 
   const addCustomer = useCallback(async (customer: Customer) => {
     const updated = [...customers, customer];
     setCustomers(updated);
+    await AsyncStorage.setItem(STORAGE_KEYS.CUSTOMERS, JSON.stringify(updated));
     await syncToBackend({ customers: updated });
   }, [customers, syncToBackend]);
 
   const addJob = useCallback(async (job: Job) => {
     const updated = [...jobs, job];
     setJobs(updated);
+    await AsyncStorage.setItem(STORAGE_KEYS.JOBS, JSON.stringify(updated));
     await syncToBackend({ jobs: updated });
   }, [jobs, syncToBackend]);
 
   const updateJob = useCallback(async (id: string, updates: Partial<Job>) => {
     const updated = jobs.map(j => j.id === id ? { ...j, ...updates } : j);
     setJobs(updated);
+    await AsyncStorage.setItem(STORAGE_KEYS.JOBS, JSON.stringify(updated));
     await syncToBackend({ jobs: updated });
   }, [jobs, syncToBackend]);
 
   const addRoute = useCallback(async (route: Route) => {
     const updated = [...routes, route];
     setRoutes(updated);
+    await AsyncStorage.setItem(STORAGE_KEYS.ROUTES, JSON.stringify(updated));
     await syncToBackend({ routes: updated });
   }, [routes, syncToBackend]);
 
   const updateRoute = useCallback(async (id: string, updates: Partial<Route>) => {
     const updated = routes.map(r => r.id === id ? { ...r, ...updates } : r);
     setRoutes(updated);
+    await AsyncStorage.setItem(STORAGE_KEYS.ROUTES, JSON.stringify(updated));
     await syncToBackend({ routes: updated });
   }, [routes, syncToBackend]);
 
   const addTimeLog = useCallback(async (timeLog: TimeLog) => {
     const updated = [...timeLogs, timeLog];
     setTimeLogs(updated);
+    await AsyncStorage.setItem(STORAGE_KEYS.TIME_LOGS, JSON.stringify(updated));
     await syncToBackend({ timeLogs: updated });
   }, [timeLogs, syncToBackend]);
 
   const addDVIR = useCallback(async (dvir: DVIR) => {
     const updated = [...dvirs, dvir];
     setDvirs(updated);
+    await AsyncStorage.setItem(STORAGE_KEYS.DVIRS, JSON.stringify(updated));
     await syncToBackend({ dvirs: updated });
   }, [dvirs, syncToBackend]);
 
   const addFuelLog = useCallback(async (fuelLog: FuelLog) => {
     const updated = [...fuelLogs, fuelLog];
     setFuelLogs(updated);
+    await AsyncStorage.setItem(STORAGE_KEYS.FUEL_LOGS, JSON.stringify(updated));
     await syncToBackend({ fuelLogs: updated });
   }, [fuelLogs, syncToBackend]);
 
   const addDumpTicket = useCallback(async (dumpTicket: DumpTicket) => {
     const updated = [...dumpTickets, dumpTicket];
     setDumpTickets(updated);
+    await AsyncStorage.setItem(STORAGE_KEYS.DUMP_TICKETS, JSON.stringify(updated));
     await syncToBackend({ dumpTickets: updated });
   }, [dumpTickets, syncToBackend]);
 
   const addMessage = useCallback(async (message: Message) => {
     const updated = [...messages, message];
     setMessages(updated);
+    await AsyncStorage.setItem(STORAGE_KEYS.MESSAGES, JSON.stringify(updated));
     await syncToBackend({ messages: updated });
   }, [messages, syncToBackend]);
 
   const addGPSBreadcrumb = useCallback(async (breadcrumb: GPSBreadcrumb) => {
     const updated = [...gpsBreadcrumbs, breadcrumb];
     setGpsBreadcrumbs(updated);
+    await AsyncStorage.setItem(STORAGE_KEYS.GPS_BREADCRUMBS, JSON.stringify(updated));
     await syncToBackend({ gpsBreadcrumbs: updated });
   }, [gpsBreadcrumbs, syncToBackend]);
 
   const addDumpSite = useCallback(async (dumpSite: DumpSite) => {
     const updated = [...dumpSites, dumpSite];
     setDumpSites(updated);
+    await AsyncStorage.setItem(STORAGE_KEYS.DUMP_SITES, JSON.stringify(updated));
     await syncToBackend({ dumpSites: updated });
   }, [dumpSites, syncToBackend]);
 
   const addYard = useCallback(async (yard: Yard) => {
     const updated = [...yards, yard];
     setYards(updated);
+    await AsyncStorage.setItem(STORAGE_KEYS.YARDS, JSON.stringify(updated));
     await syncToBackend({ yards: updated });
   }, [yards, syncToBackend]);
 
@@ -683,42 +698,49 @@ export const [DataProvider, useData] = createContextHook(() => {
   const deleteTruck = useCallback(async (id: string) => {
     const updated = trucks.filter(t => t.id !== id);
     setTrucks(updated);
+    await AsyncStorage.setItem(STORAGE_KEYS.TRUCKS, JSON.stringify(updated));
     await syncToBackend({ trucks: updated });
   }, [trucks, syncToBackend]);
 
   const deleteCustomer = useCallback(async (id: string) => {
     const updated = customers.filter(c => c.id !== id);
     setCustomers(updated);
+    await AsyncStorage.setItem(STORAGE_KEYS.CUSTOMERS, JSON.stringify(updated));
     await syncToBackend({ customers: updated });
   }, [customers, syncToBackend]);
 
   const deleteJob = useCallback(async (id: string) => {
     const updated = jobs.filter(j => j.id !== id);
     setJobs(updated);
+    await AsyncStorage.setItem(STORAGE_KEYS.JOBS, JSON.stringify(updated));
     await syncToBackend({ jobs: updated });
   }, [jobs, syncToBackend]);
 
   const deleteRoute = useCallback(async (id: string) => {
     const updated = routes.filter(r => r.id !== id);
     setRoutes(updated);
+    await AsyncStorage.setItem(STORAGE_KEYS.ROUTES, JSON.stringify(updated));
     await syncToBackend({ routes: updated });
   }, [routes, syncToBackend]);
 
   const deleteDumpSite = useCallback(async (id: string) => {
     const updated = dumpSites.filter(d => d.id !== id);
     setDumpSites(updated);
+    await AsyncStorage.setItem(STORAGE_KEYS.DUMP_SITES, JSON.stringify(updated));
     await syncToBackend({ dumpSites: updated });
   }, [dumpSites, syncToBackend]);
 
   const deleteYard = useCallback(async (id: string) => {
     const updated = yards.filter(y => y.id !== id);
     setYards(updated);
+    await AsyncStorage.setItem(STORAGE_KEYS.YARDS, JSON.stringify(updated));
     await syncToBackend({ yards: updated });
   }, [yards, syncToBackend]);
 
   const addMileageLog = useCallback(async (mileageLog: MileageLog) => {
     const updated = [...mileageLogs, mileageLog];
     setMileageLogs(updated);
+    await AsyncStorage.setItem(STORAGE_KEYS.MILEAGE_LOGS, JSON.stringify(updated));
     await syncToBackend({ mileageLogs: updated });
   }, [mileageLogs, syncToBackend]);
 
@@ -731,60 +753,70 @@ export const [DataProvider, useData] = createContextHook(() => {
       updatedAt: new Date().toISOString(),
     };
     setDispatcherSettings(updated);
+    await AsyncStorage.setItem(STORAGE_KEYS.DISPATCHER_SETTINGS, JSON.stringify(updated));
     await syncToBackend({ dispatcherSettings: updated });
   }, [dispatcherSettings, syncToBackend]);
 
   const updateCustomer = useCallback(async (id: string, updates: Partial<Customer>) => {
     const updated = customers.map(c => c.id === id ? { ...c, ...updates } : c);
     setCustomers(updated);
+    await AsyncStorage.setItem(STORAGE_KEYS.CUSTOMERS, JSON.stringify(updated));
     await syncToBackend({ customers: updated });
   }, [customers, syncToBackend]);
 
   const updateDumpSite = useCallback(async (id: string, updates: Partial<DumpSite>) => {
     const updated = dumpSites.map(d => d.id === id ? { ...d, ...updates } : d);
     setDumpSites(updated);
+    await AsyncStorage.setItem(STORAGE_KEYS.DUMP_SITES, JSON.stringify(updated));
     await syncToBackend({ dumpSites: updated });
   }, [dumpSites, syncToBackend]);
 
   const updateYard = useCallback(async (id: string, updates: Partial<Yard>) => {
     const updated = yards.map(y => y.id === id ? { ...y, ...updates } : y);
     setYards(updated);
+    await AsyncStorage.setItem(STORAGE_KEYS.YARDS, JSON.stringify(updated));
     await syncToBackend({ yards: updated });
   }, [yards, syncToBackend]);
 
   const addReport = useCallback(async (report: Report) => {
     const updated = [...reports, report];
     setReports(updated);
+    await AsyncStorage.setItem(STORAGE_KEYS.REPORTS, JSON.stringify(updated));
     await syncToBackend({ reports: updated });
   }, [reports, syncToBackend]);
 
   const updateReport = useCallback(async (id: string, updates: Partial<Report>) => {
     const updated = reports.map(r => r.id === id ? { ...r, ...updates } : r);
     setReports(updated);
+    await AsyncStorage.setItem(STORAGE_KEYS.REPORTS, JSON.stringify(updated));
     await syncToBackend({ reports: updated });
   }, [reports, syncToBackend]);
 
   const deleteReport = useCallback(async (id: string) => {
     const updated = reports.filter(r => r.id !== id);
     setReports(updated);
+    await AsyncStorage.setItem(STORAGE_KEYS.REPORTS, JSON.stringify(updated));
     await syncToBackend({ reports: updated });
   }, [reports, syncToBackend]);
 
   const addRecurringJob = useCallback(async (recurringJob: RecurringJob) => {
     const updated = [...recurringJobs, recurringJob];
     setRecurringJobs(updated);
+    await AsyncStorage.setItem(STORAGE_KEYS.RECURRING_JOBS, JSON.stringify(updated));
     await syncToBackend({ recurringJobs: updated });
   }, [recurringJobs, syncToBackend]);
 
   const updateRecurringJob = useCallback(async (id: string, updates: Partial<RecurringJob>) => {
     const updated = recurringJobs.map(rj => rj.id === id ? { ...rj, ...updates } : rj);
     setRecurringJobs(updated);
+    await AsyncStorage.setItem(STORAGE_KEYS.RECURRING_JOBS, JSON.stringify(updated));
     await syncToBackend({ recurringJobs: updated });
   }, [recurringJobs, syncToBackend]);
 
   const deleteRecurringJob = useCallback(async (id: string) => {
     const updated = recurringJobs.filter(rj => rj.id !== id);
     setRecurringJobs(updated);
+    await AsyncStorage.setItem(STORAGE_KEYS.RECURRING_JOBS, JSON.stringify(updated));
     await syncToBackend({ recurringJobs: updated });
   }, [recurringJobs, syncToBackend]);
 
@@ -833,18 +865,21 @@ export const [DataProvider, useData] = createContextHook(() => {
   const addCompany = useCallback(async (company: Company) => {
     const updated = [...companies, company];
     setCompanies(updated);
+    await AsyncStorage.setItem(STORAGE_KEYS.COMPANIES, JSON.stringify(updated));
     await syncToBackend({ companies: updated });
   }, [companies, syncToBackend]);
 
   const updateCompany = useCallback(async (id: string, updates: Partial<Company>) => {
     const updated = companies.map(c => c.id === id ? { ...c, ...updates } : c);
     setCompanies(updated);
+    await AsyncStorage.setItem(STORAGE_KEYS.COMPANIES, JSON.stringify(updated));
     await syncToBackend({ companies: updated });
   }, [companies, syncToBackend]);
 
   const deleteCompany = useCallback(async (id: string) => {
     const updated = companies.filter(c => c.id !== id);
     setCompanies(updated);
+    await AsyncStorage.setItem(STORAGE_KEYS.COMPANIES, JSON.stringify(updated));
     await syncToBackend({ companies: updated });
   }, [companies, syncToBackend]);
 
@@ -983,18 +1018,21 @@ export const [DataProvider, useData] = createContextHook(() => {
   const addContainerJob = useCallback(async (job: ContainerJob) => {
     const updated = [...containerJobs, job];
     setContainerJobs(updated);
+    await AsyncStorage.setItem(STORAGE_KEYS.CONTAINER_JOBS, JSON.stringify(updated));
     await syncToBackend({ containerJobs: updated });
   }, [containerJobs, syncToBackend]);
 
   const updateContainerJob = useCallback(async (id: string, updates: Partial<ContainerJob>) => {
     const updated = containerJobs.map(j => j.id === id ? { ...j, ...updates } : j);
     setContainerJobs(updated);
+    await AsyncStorage.setItem(STORAGE_KEYS.CONTAINER_JOBS, JSON.stringify(updated));
     await syncToBackend({ containerJobs: updated });
   }, [containerJobs, syncToBackend]);
 
   const deleteContainerJob = useCallback(async (id: string) => {
     const updated = containerJobs.filter(j => j.id !== id);
     setContainerJobs(updated);
+    await AsyncStorage.setItem(STORAGE_KEYS.CONTAINER_JOBS, JSON.stringify(updated));
     await syncToBackend({ containerJobs: updated });
   }, [containerJobs, syncToBackend]);
 

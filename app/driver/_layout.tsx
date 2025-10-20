@@ -1,35 +1,17 @@
 import { Stack } from 'expo-router';
 import React from 'react';
-import { View, Image, Text, StyleSheet } from 'react-native';
+import { View, Image, StyleSheet } from 'react-native';
 import { useTheme } from '@/contexts/ThemeContext';
-import { useAuth } from '@/contexts/AuthContext';
-import { useData } from '@/contexts/DataContext';
-import { HAULING_COMPANIES } from '@/constants/haulingCompanies';
 
 export default function DriverLayout() {
   const { theme } = useTheme();
   const colors = theme.colors;
-  const { user } = useAuth();
-  const { drivers } = useData();
 
-  const driver = drivers.find(d => d.id === user?.id);
-  const company = HAULING_COMPANIES.find(c => c.id === driver?.haulingCompanyId);
-
-  const renderHeader = (title: string) => {
-    if (!company) {
-      const HeaderWithTitle = () => (
-        <View style={styles.headerContainer}>
-          <Text style={[styles.headerTitle, { color: colors.background }]}>{title}</Text>
-        </View>
-      );
-      HeaderWithTitle.displayName = 'HeaderWithTitle';
-      return HeaderWithTitle;
-    }
-    
+  const renderHeader = () => {
     const HeaderWithLogo = () => (
       <View style={styles.headerContainer}>
         <Image
-          source={{ uri: company.logo }}
+          source={{ uri: theme.logo }}
           style={styles.logo}
           resizeMode="contain"
         />
@@ -56,7 +38,7 @@ export default function DriverLayout() {
         options={{
           title: 'Driver Dashboard',
           headerShown: true,
-          headerTitle: renderHeader('Driver Dashboard'),
+          headerTitle: renderHeader(),
         }}
       />
       <Stack.Screen

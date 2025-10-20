@@ -112,11 +112,17 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
       
       if (driver) {
         console.log(`Found driver: ${driver.name}`);
-        if (driver.password) {
+        console.log(`Driver password set: ${driver.password ? 'Yes' : 'No'}`);
+        console.log(`Provided password: ${password}`);
+        
+        if (driver.password && driver.password.trim() !== '') {
           if (driver.password !== password) {
             console.log(`Password mismatch for driver ${driver.name}. Expected: ${driver.password}, Got: ${password}`);
             return false;
           }
+          console.log('Password matched!');
+        } else {
+          console.log('No password set for driver, allowing login');
         }
         
         const mockUser: User = {
@@ -129,6 +135,7 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
         };
         await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(mockUser));
         setUser(mockUser);
+        console.log('Login successful!');
         return true;
       }
       
