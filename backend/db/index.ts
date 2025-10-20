@@ -1,6 +1,17 @@
 import Database from 'better-sqlite3';
 import { join } from 'path';
 import { mkdirSync } from 'fs';
+import { 
+  sampleDrivers, 
+  sampleTrucks, 
+  sampleDumpSites, 
+  sampleYards, 
+  sampleCustomers,
+  sampleCommercialRoutes,
+  sampleResidentialRoutes,
+  sampleResidentialCustomers,
+  sampleResidentialStops
+} from '../../utils/sampleData';
 
 const dataDir = join(process.cwd(), 'data');
 try {
@@ -442,5 +453,176 @@ db.exec(`
   CREATE INDEX IF NOT EXISTS idx_residentialStops_routeId ON residentialStops(routeId);
   CREATE INDEX IF NOT EXISTS idx_containerJobs_routeId ON containerJobs(routeId);
 `);
+
+const driversCount = db.prepare('SELECT COUNT(*) as count FROM drivers').get() as { count: number };
+if (driversCount.count === 0) {
+  console.log('Seeding database with sample data...');
+  
+  const insertDriver = db.prepare(`
+    INSERT INTO drivers (id, name, phone, email, username, password, licenseNumber, assignedTruckId, active, qrToken, createdAt)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+  `);
+  
+  for (const driver of sampleDrivers) {
+    insertDriver.run(
+      driver.id,
+      driver.name,
+      driver.phone,
+      driver.email,
+      driver.username || null,
+      driver.password || null,
+      driver.licenseNumber || null,
+      driver.assignedTruckId || null,
+      driver.active ? 1 : 0,
+      driver.qrToken || null,
+      driver.createdAt
+    );
+  }
+  
+  const insertTruck = db.prepare(`
+    INSERT INTO trucks (id, unitNumber, vin, licensePlate, odometer, active, createdAt)
+    VALUES (?, ?, ?, ?, ?, ?, ?)
+  `);
+  
+  for (const truck of sampleTrucks) {
+    insertTruck.run(
+      truck.id,
+      truck.unitNumber,
+      truck.vin || null,
+      truck.licensePlate || null,
+      truck.odometer,
+      truck.active ? 1 : 0,
+      truck.createdAt
+    );
+  }
+  
+  const insertDumpSite = db.prepare(`
+    INSERT INTO dumpSites (id, name, address, latitude, longitude, acceptedMaterials, hours, contactName, contactPhone, active, createdAt)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+  `);
+  
+  for (const site of sampleDumpSites) {
+    insertDumpSite.run(
+      site.id,
+      site.name,
+      site.address,
+      site.latitude || null,
+      site.longitude || null,
+      JSON.stringify(site.acceptedMaterials),
+      site.hours || null,
+      site.contactName || null,
+      site.contactPhone || null,
+      site.active ? 1 : 0,
+      site.createdAt
+    );
+  }
+  
+  const insertYard = db.prepare(`
+    INSERT INTO yards (id, name, address, latitude, longitude, active, createdAt)
+    VALUES (?, ?, ?, ?, ?, ?, ?)
+  `);
+  
+  for (const yard of sampleYards) {
+    insertYard.run(
+      yard.id,
+      yard.name,
+      yard.address,
+      yard.latitude || null,
+      yard.longitude || null,
+      yard.active ? 1 : 0,
+      yard.createdAt
+    );
+  }
+  
+  const insertCustomer = db.prepare(`
+    INSERT INTO customers (id, name, address, phone, email, active, createdAt)
+    VALUES (?, ?, ?, ?, ?, ?, ?)
+  `);
+  
+  for (const customer of sampleCustomers) {
+    insertCustomer.run(
+      customer.id,
+      customer.name,
+      customer.address,
+      customer.phone || null,
+      customer.email || null,
+      customer.active ? 1 : 0,
+      customer.createdAt
+    );
+  }
+  
+  const insertCommercialRoute = db.prepare(`
+    INSERT INTO commercialRoutes (id, name, date, dayOfWeek, stopIds, routeType, status, createdAt)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+  `);
+  
+  for (const route of sampleCommercialRoutes) {
+    insertCommercialRoute.run(
+      route.id,
+      route.name,
+      route.date,
+      route.dayOfWeek,
+      JSON.stringify(route.stopIds || []),
+      route.routeType,
+      route.status,
+      route.createdAt
+    );
+  }
+  
+  const insertResidentialCustomer = db.prepare(`
+    INSERT INTO residentialCustomers (id, name, address, phone, serviceDay, active, createdAt)
+    VALUES (?, ?, ?, ?, ?, ?, ?)
+  `);
+  
+  for (const customer of sampleResidentialCustomers) {
+    insertResidentialCustomer.run(
+      customer.id,
+      customer.name,
+      customer.address,
+      customer.phone || null,
+      customer.serviceDay,
+      customer.active ? 1 : 0,
+      customer.createdAt
+    );
+  }
+  
+  const insertResidentialRoute = db.prepare(`
+    INSERT INTO residentialRoutes (id, name, dayOfWeek, date, customerIds, status, routeType, createdAt)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+  `);
+  
+  for (const route of sampleResidentialRoutes) {
+    insertResidentialRoute.run(
+      route.id,
+      route.name,
+      route.dayOfWeek,
+      route.date,
+      JSON.stringify(route.customerIds || []),
+      route.status,
+      route.routeType,
+      route.createdAt
+    );
+  }
+  
+  const insertResidentialStop = db.prepare(`
+    INSERT INTO residentialStops (id, customerId, customerName, address, serviceDay, status, active, createdAt)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+  `);
+  
+  for (const stop of sampleResidentialStops) {
+    insertResidentialStop.run(
+      stop.id,
+      stop.customerId,
+      stop.customerName,
+      stop.address,
+      stop.serviceDay,
+      stop.status,
+      stop.active ? 1 : 0,
+      stop.createdAt
+    );
+  }
+  
+  console.log('Database seeded with sample data successfully!');
+}
 
 export default db;
