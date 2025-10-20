@@ -11,17 +11,6 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [drivers, setDrivers] = useState<Driver[]>([]);
 
-  useEffect(() => {
-    loadUser();
-    loadDrivers();
-
-    const interval = setInterval(() => {
-      loadDrivers();
-    }, 2000);
-
-    return () => clearInterval(interval);
-  }, []);
-
   const loadUser = async () => {
     const timeout = setTimeout(() => {
       console.warn('Auth loading timeout, continuing anyway');
@@ -46,23 +35,43 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
     }
   };
 
-  const loadDrivers = async () => {
+  const loadDrivers = useCallback(async () => {
     try {
       const stored = await AsyncStorage.getItem(DRIVERS_STORAGE_KEY);
       if (stored && stored !== 'null' && stored !== 'undefined') {
         try {
-          setDrivers(JSON.parse(stored));
+          const parsed = JSON.parse(stored);
+          console.log('Loaded drivers:', parsed.length, 'drivers');
+          parsed.forEach((d: Driver) => {
+            console.log(`- ${d.name}: email=${d.email}, username=${d.username}, active=${d.active}`);
+          });
+          setDrivers(parsed);
         } catch (e) {
           console.error('Failed to parse drivers data:', e);
         }
+      } else {
+        console.log('No drivers found in storage');
       }
     } catch (error) {
       console.error('Failed to load drivers:', error);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    loadUser();
+    loadDrivers();
+
+    const interval = setInterval(() => {
+      loadDrivers();
+    }, 2000);
+
+    return () => clearInterval(interval);
+  }, [loadDrivers]);
 
   const login = useCallback(async (usernameOrEmail: string, password: string): Promise<boolean> => {
     try {
+      console.log(`Login attempt for: ${usernameOrEmail}`);
+      
       if (usernameOrEmail === 'dispatcher@gmi.com' || usernameOrEmail === 'dispatcher') {
         const mockUser: User = {
           id: 'disp-1',
@@ -77,16 +86,31 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
         return true;
       }
       
-      const driver = drivers.find(d => 
+      await loadDrivers();
+      
+      const stored = await AsyncStorage.getItem(DRIVERS_STORAGE_KEY);
+      let currentDrivers = drivers;
+      if (stored && stored !== 'null' && stored !== 'undefined') {
+        try {
+          currentDrivers = JSON.parse(stored);
+        } catch (e) {
+          console.error('Failed to parse drivers during login:', e);
+        }
+      }
+      
+      console.log(`Checking against ${currentDrivers.length} drivers`);
+      
+      const driver = currentDrivers.find((d: Driver) => 
         (d.email?.toLowerCase() === usernameOrEmail.toLowerCase() || 
          d.username?.toLowerCase() === usernameOrEmail.toLowerCase()) &&
         d.active
       );
       
       if (driver) {
+        console.log(`Found driver: ${driver.name}`);
         if (driver.password) {
           if (driver.password !== password) {
-            console.log(`Password mismatch for driver ${driver.name}`);
+            console.log(`Password mismatch for driver ${driver.name}. Expected: ${driver.password}, Got: ${password}`);
             return false;
           }
         }
@@ -105,12 +129,13 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
       }
       
       console.log(`No active driver found with email/username: ${usernameOrEmail}`);
+      console.log('Available drivers:', currentDrivers.map((d: Driver) => `${d.name} (${d.email}/${d.username})`).join(', '));
       return false;
     } catch (error) {
       console.error('Login failed:', error);
       return false;
     }
-  }, [drivers]);
+  }, [drivers, loadDrivers]);
 
   const loginWithQR = useCallback(async (qrToken: string): Promise<boolean> => {
     try {
