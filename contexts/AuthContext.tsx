@@ -86,19 +86,23 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
         return true;
       }
       
-      await loadDrivers();
-      
       const stored = await AsyncStorage.getItem(DRIVERS_STORAGE_KEY);
-      let currentDrivers = drivers;
+      let currentDrivers: Driver[] = [];
       if (stored && stored !== 'null' && stored !== 'undefined') {
         try {
           currentDrivers = JSON.parse(stored);
+          console.log(`Loaded ${currentDrivers.length} drivers from storage`);
         } catch (e) {
           console.error('Failed to parse drivers during login:', e);
         }
+      } else {
+        console.log('No drivers found in storage');
       }
       
       console.log(`Checking against ${currentDrivers.length} drivers`);
+      currentDrivers.forEach(d => {
+        console.log(`- ${d.name}: email=${d.email}, username=${d.username}, password=${d.password ? '***' : 'none'}, active=${d.active}`);
+      });
       
       const driver = currentDrivers.find((d: Driver) => 
         (d.email?.toLowerCase() === usernameOrEmail.toLowerCase() || 
@@ -135,7 +139,7 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
       console.error('Login failed:', error);
       return false;
     }
-  }, [drivers, loadDrivers]);
+  }, []);
 
   const loginWithQR = useCallback(async (qrToken: string): Promise<boolean> => {
     try {
