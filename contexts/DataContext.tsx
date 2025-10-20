@@ -223,17 +223,25 @@ export const [DataProvider, useData] = createContextHook(() => {
         try {
           const parsed = JSON.parse(driversData);
           if (Array.isArray(parsed)) {
+            console.log('Loaded drivers from storage:', parsed.length);
+            parsed.forEach((d: Driver) => {
+              console.log(`  - ${d.name}: ${d.email} / ${d.username}`);
+            });
             setDrivers(parsed);
           } else {
             console.error('Drivers data is not an array, using samples');
             setDrivers(sampleDrivers);
+            await AsyncStorage.setItem(STORAGE_KEYS.DRIVERS, JSON.stringify(sampleDrivers));
           }
         } catch (e) {
           console.error('Failed to parse drivers data:', e);
           setDrivers(sampleDrivers);
+          await AsyncStorage.setItem(STORAGE_KEYS.DRIVERS, JSON.stringify(sampleDrivers));
         }
       } else {
+        console.log('No drivers in storage, using samples with 4 drivers');
         setDrivers(sampleDrivers);
+        await AsyncStorage.setItem(STORAGE_KEYS.DRIVERS, JSON.stringify(sampleDrivers));
       }
       
       if (trucksData && trucksData !== 'null' && trucksData !== 'undefined') {
