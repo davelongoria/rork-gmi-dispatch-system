@@ -78,16 +78,16 @@ export const [DataProvider, useData] = createContextHook(() => {
   const [isSyncing, setIsSyncing] = useState<boolean>(false);
 
   const [backendAvailable, setBackendAvailable] = useState<boolean>(true);
+  const [hasTriedBackend, setHasTriedBackend] = useState<boolean>(false);
 
   const getAllQuery = trpc.data.getAll.useQuery(undefined, {
-    refetchInterval: 60_000,
+    refetchInterval: backendAvailable ? 60_000 : false,
     refetchOnWindowFocus: false,
-    retry: 2,
-    retryDelay: 1000,
+    retry: 0,
     staleTime: 30_000,
-    enabled: true,
-    refetchOnMount: true,
-    refetchOnReconnect: true,
+    enabled: !hasTriedBackend,
+    refetchOnMount: false,
+    refetchOnReconnect: false,
   });
   const syncMutation = trpc.data.sync.useMutation();
 
@@ -96,12 +96,14 @@ export const [DataProvider, useData] = createContextHook(() => {
   }, []);
 
   useEffect(() => {
-    if (getAllQuery.isError) {
+    if (getAllQuery.isError && !hasTriedBackend) {
       console.warn('Backend not available, using local data only');
       setBackendAvailable(false);
-    } else if (getAllQuery.data && !getAllQuery.isLoading && !getAllQuery.isFetching) {
+      setHasTriedBackend(true);
+    } else if (getAllQuery.data && !getAllQuery.isLoading && !getAllQuery.isFetching && !hasTriedBackend) {
       console.log('Backend data received, syncing to local storage');
       setBackendAvailable(true);
+      setHasTriedBackend(true);
       
       const backendData = getAllQuery.data;
       const hasCommercialRoutes = backendData.commercialRoutes && backendData.commercialRoutes.length > 0;
@@ -962,18 +964,22 @@ export const [DataProvider, useData] = createContextHook(() => {
 
   const forceRefreshFromBackend = useCallback(async () => {
     try {
+      setHasTriedBackend(false);
       setBackendAvailable(true);
       console.log('Attempting backend refresh...');
       const result = await getAllQuery.refetch();
       if (result.isError) {
         console.error('Force refresh failed:', result.error);
         setBackendAvailable(false);
+        setHasTriedBackend(true);
       } else {
         console.log('Backend refresh successful');
+        setHasTriedBackend(true);
       }
     } catch (error: any) {
       console.error('Force refresh error:', error?.message || error);
       setBackendAvailable(false);
+      setHasTriedBackend(true);
     }
   }, [getAllQuery]);
 

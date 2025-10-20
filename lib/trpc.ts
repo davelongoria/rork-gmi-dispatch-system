@@ -86,17 +86,13 @@ export const getTRPCClient = () => {
             clearTimeout(timeoutId);
 
             if (!response.ok) {
-              const text = await response.text();
-              console.error("tRPC error response:", text.substring(0, 200));
               throw new Error(`HTTP ${response.status}`);
             }
             return response;
           } catch (err: any) {
             if (err?.name === 'AbortError') {
-              console.error("Request timeout after 10s");
               throw new Error('Request timeout');
             }
-            console.error("tRPC fetch error:", err?.message || err);
             throw err;
           }
         },
