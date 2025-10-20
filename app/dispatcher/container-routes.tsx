@@ -178,12 +178,17 @@ export default function ContainerRoutesScreen() {
       return;
     }
 
+    const today = new Date();
+    const dateStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+
     await updateContainerRoute(routeId, {
       status: 'DISPATCHED',
       dispatchedAt: new Date().toISOString(),
+      date: dateStr,
     });
 
-    Alert.alert('Success', 'Route dispatched to driver');
+    console.log('Container route dispatched:', routeId, 'for date:', dateStr);
+    Alert.alert('Success', `Route dispatched to ${route.driverName} for today`);
   };
 
   const handleEditRoute = (routeId: string) => {
