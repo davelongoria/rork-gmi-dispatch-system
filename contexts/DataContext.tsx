@@ -561,12 +561,14 @@ export const [DataProvider, useData] = createContextHook(() => {
   const addDriver = useCallback(async (driver: Driver) => {
     const updated = [...drivers, driver];
     setDrivers(updated);
+    await AsyncStorage.setItem(STORAGE_KEYS.DRIVERS, JSON.stringify(updated));
     await syncToBackend({ drivers: updated });
   }, [drivers, syncToBackend]);
 
   const updateDriver = useCallback(async (id: string, updates: Partial<Driver>) => {
     const updated = drivers.map(d => d.id === id ? { ...d, ...updates } : d);
     setDrivers(updated);
+    await AsyncStorage.setItem(STORAGE_KEYS.DRIVERS, JSON.stringify(updated));
     await syncToBackend({ drivers: updated });
   }, [drivers, syncToBackend]);
 
@@ -663,6 +665,7 @@ export const [DataProvider, useData] = createContextHook(() => {
   const deleteDriver = useCallback(async (id: string) => {
     const updated = drivers.filter(d => d.id !== id);
     setDrivers(updated);
+    await AsyncStorage.setItem(STORAGE_KEYS.DRIVERS, JSON.stringify(updated));
     await syncToBackend({ drivers: updated });
   }, [drivers, syncToBackend]);
 

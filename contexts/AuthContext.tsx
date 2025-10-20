@@ -14,6 +14,12 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
   useEffect(() => {
     loadUser();
     loadDrivers();
+
+    const interval = setInterval(() => {
+      loadDrivers();
+    }, 2000);
+
+    return () => clearInterval(interval);
   }, []);
 
   const loadUser = async () => {
