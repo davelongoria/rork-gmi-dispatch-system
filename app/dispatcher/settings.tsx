@@ -265,7 +265,7 @@ export default function SettingsScreen() {
   return (
     <View style={[styles.container, { backgroundColor: colors.backgroundSecondary }]}>
       <View style={styles.header}>
-        <SettingsIcon size={24} color={colors.primary} />
+        <SettingsIcon size={24} color={colors.primary} style={{ marginRight: 12 }} />
         <Text style={[styles.headerTitle, { color: colors.text }]}>Settings</Text>
       </View>
 
@@ -304,7 +304,7 @@ export default function SettingsScreen() {
               Email address where reports will be sent
             </Text>
             <View style={[styles.inputContainer, { backgroundColor: colors.backgroundSecondary }]}>
-              <Mail size={20} color={colors.textSecondary} />
+              <Mail size={20} color={colors.textSecondary} style={{ marginRight: 8 }} />
               <TextInput
                 style={[styles.input, { color: colors.text }]}
                 placeholder="dispatcher@company.com"
@@ -341,21 +341,21 @@ export default function SettingsScreen() {
                 style={[styles.qrActionButton, { backgroundColor: colors.backgroundSecondary }]}
                 onPress={handleShareQR}
               >
-                <Send size={18} color={colors.primary} />
+                <Send size={18} color={colors.primary} style={{ marginRight: 6 }} />
                 <Text style={[styles.qrActionText, { color: colors.primary }]}>Share</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 style={[styles.qrActionButton, { backgroundColor: colors.backgroundSecondary }]}
                 onPress={handleDownloadQR}
               >
-                <Download size={18} color={colors.primary} />
+                <Download size={18} color={colors.primary} style={{ marginRight: 6 }} />
                 <Text style={[styles.qrActionText, { color: colors.primary }]}>Download</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 style={[styles.qrActionButton, { backgroundColor: colors.backgroundSecondary }]}
                 onPress={generateQRCode}
               >
-                <QrCode size={18} color={colors.warning} />
+                <QrCode size={18} color={colors.warning} style={{ marginRight: 6 }} />
                 <Text style={[styles.qrActionText, { color: colors.warning }]}>Regenerate</Text>
               </TouchableOpacity>
             </View>
@@ -365,7 +365,7 @@ export default function SettingsScreen() {
             style={[styles.generateButton, { backgroundColor: colors.primary }]}
             onPress={generateQRCode}
           >
-            <QrCode size={20} color={colors.background} />
+            <QrCode size={20} color={colors.background} style={{ marginRight: 8 }} />
             <Text style={[styles.generateButtonText, { color: colors.background }]}>Generate QR Code</Text>
           </TouchableOpacity>
         )}
@@ -384,7 +384,7 @@ export default function SettingsScreen() {
           </View>
 
           <TouchableOpacity style={[styles.saveButton, { backgroundColor: colors.primary }]} onPress={handleSave}>
-            <Save size={20} color={colors.background} />
+            <Save size={20} color={colors.background} style={{ marginRight: 8 }} />
             <Text style={[styles.saveButtonText, { color: colors.background }]}>Save Settings</Text>
           </TouchableOpacity>
         </ScrollView>
@@ -396,7 +396,7 @@ export default function SettingsScreen() {
               style={[styles.addButton, { backgroundColor: colors.primary }]}
               onPress={() => openCompanyModal()}
             >
-              <Plus size={20} color={colors.background} />
+              <Plus size={20} color={colors.background} style={{ marginRight: 6 }} />
               <Text style={[styles.addButtonText, { color: colors.background }]}>Add Company</Text>
             </TouchableOpacity>
           </View>
@@ -410,9 +410,9 @@ export default function SettingsScreen() {
                     <Text style={[styles.companyName, { color: colors.text }]}>{company.name}</Text>
                     <View style={styles.colorRow}>
                       <View style={[styles.colorBox, { backgroundColor: company.primaryColor }]} />
-                      <Text style={[styles.colorLabel, { color: colors.textSecondary }]}>Primary</Text>
-                      <View style={[styles.colorBox, { backgroundColor: company.secondaryColor || '#2C2C2E' }]} />
-                      <Text style={[styles.colorLabel, { color: colors.textSecondary }]}>Secondary</Text>
+                      <Text style={[styles.colorLabel, { color: colors.textSecondary, marginLeft: 8 }]}>Primary</Text>
+                      <View style={[styles.colorBox, { backgroundColor: company.secondaryColor || '#2C2C2E', marginLeft: 8 }]} />
+                      <Text style={[styles.colorLabel, { color: colors.textSecondary, marginLeft: 8 }]}>Secondary</Text>
                     </View>
                   </View>
                 </View>
@@ -421,14 +421,14 @@ export default function SettingsScreen() {
                     style={[styles.actionButton, { backgroundColor: colors.backgroundSecondary }]}
                     onPress={() => openCompanyModal(company)}
                   >
-                    <Edit2 size={16} color={colors.primary} />
+                    <Edit2 size={16} color={colors.primary} style={{ marginRight: 6 }} />
                     <Text style={[styles.actionButtonText, { color: colors.primary }]}>Edit</Text>
                   </TouchableOpacity>
                   <TouchableOpacity
                     style={[styles.actionButton, { backgroundColor: colors.backgroundSecondary }]}
                     onPress={() => handleDeleteCompany(company.id)}
                   >
-                    <Trash2 size={16} color={colors.error} />
+                    <Trash2 size={16} color={colors.error} style={{ marginRight: 6 }} />
                     <Text style={[styles.actionButtonText, { color: colors.error }]}>Delete</Text>
                   </TouchableOpacity>
                 </View>
@@ -513,7 +513,7 @@ export default function SettingsScreen() {
                       style={[styles.colorSelectButton, { backgroundColor: colors.backgroundSecondary, borderColor: colors.border }]}
                       onPress={() => setShowColorPicker({ field: 'primaryColor' })}
                     >
-                      <View style={[styles.colorPreview, { backgroundColor: companyForm.primaryColor }]} />
+                      <View style={[styles.colorPreview, { backgroundColor: companyForm.primaryColor, marginRight: 12 }]} />
                       <Text style={[styles.colorSelectText, { color: colors.text }]}>{companyForm.primaryColor}</Text>
                     </TouchableOpacity>
                   </View>
@@ -524,7 +524,7 @@ export default function SettingsScreen() {
                       style={[styles.colorSelectButton, { backgroundColor: colors.backgroundSecondary, borderColor: colors.border }]}
                       onPress={() => setShowColorPicker({ field: 'secondaryColor' })}
                     >
-                      <View style={[styles.colorPreview, { backgroundColor: companyForm.secondaryColor }]} />
+                      <View style={[styles.colorPreview, { backgroundColor: companyForm.secondaryColor, marginRight: 12 }]} />
                       <Text style={[styles.colorSelectText, { color: colors.text }]}>{companyForm.secondaryColor}</Text>
                     </TouchableOpacity>
                   </View>
@@ -535,7 +535,7 @@ export default function SettingsScreen() {
                       style={[styles.colorSelectButton, { backgroundColor: colors.backgroundSecondary, borderColor: colors.border }]}
                       onPress={() => setShowColorPicker({ field: 'accentColor' })}
                     >
-                      <View style={[styles.colorPreview, { backgroundColor: companyForm.accentColor }]} />
+                      <View style={[styles.colorPreview, { backgroundColor: companyForm.accentColor, marginRight: 12 }]} />
                       <Text style={[styles.colorSelectText, { color: colors.text }]}>{companyForm.accentColor}</Text>
                     </TouchableOpacity>
                   </View>
@@ -545,7 +545,7 @@ export default function SettingsScreen() {
                   style={[styles.modalButton, { backgroundColor: colors.primary }]}
                   onPress={handleSaveCompany}
                 >
-                  <Save size={20} color={colors.background} />
+                  <Save size={20} color={colors.background} style={{ marginRight: 8 }} />
                   <Text style={[styles.modalButtonText, { color: colors.background }]}>Save Company</Text>
                 </TouchableOpacity>
               </View>
@@ -573,7 +573,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     padding: 16,
-    gap: 12,
   },
   headerTitle: {
     fontSize: 24,
@@ -600,7 +599,6 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     paddingHorizontal: 12,
     height: 48,
-    gap: 8,
   },
   input: {
     flex: 1,
@@ -613,7 +611,6 @@ const styles = StyleSheet.create({
     padding: 16,
     borderRadius: 12,
     marginTop: 8,
-    gap: 8,
   },
   saveButtonText: {
     fontSize: 16,
@@ -630,7 +627,6 @@ const styles = StyleSheet.create({
   },
   qrActions: {
     flexDirection: 'row',
-    gap: 12,
     marginTop: 16,
     flexWrap: 'wrap',
     justifyContent: 'center',
@@ -641,7 +637,7 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     paddingHorizontal: 16,
     borderRadius: 8,
-    gap: 6,
+    marginHorizontal: 6,
   },
   qrActionText: {
     fontSize: 14,
@@ -653,7 +649,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     padding: 14,
     borderRadius: 8,
-    gap: 8,
     marginTop: 8,
   },
   generateButtonText: {
@@ -692,7 +687,6 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
     paddingHorizontal: 24,
     borderRadius: 12,
-    gap: 8,
     borderWidth: 2,
   },
   syncNavButtonText: {
@@ -724,7 +718,6 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     paddingHorizontal: 16,
     borderRadius: 8,
-    gap: 6,
   },
   addButtonText: {
     fontSize: 14,
@@ -757,7 +750,6 @@ const styles = StyleSheet.create({
   colorRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
   },
   colorBox: {
     width: 24,
@@ -769,7 +761,6 @@ const styles = StyleSheet.create({
   },
   companyActions: {
     flexDirection: 'row',
-    gap: 8,
   },
   actionButton: {
     flexDirection: 'row',
@@ -777,7 +768,7 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     paddingHorizontal: 12,
     borderRadius: 8,
-    gap: 6,
+    marginRight: 8,
   },
   actionButtonText: {
     fontSize: 13,
@@ -864,7 +855,6 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     paddingHorizontal: 12,
     borderWidth: 1,
-    gap: 12,
   },
   colorSelectText: {
     fontSize: 16,
@@ -881,7 +871,6 @@ const styles = StyleSheet.create({
     maxHeight: 500,
   },
   colorGrid: {
-    gap: 12,
     padding: 4,
   },
   colorOption: {
@@ -909,7 +898,6 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
     borderRadius: 12,
     marginTop: 24,
-    gap: 8,
   },
   modalButtonText: {
     fontSize: 16,
@@ -943,9 +931,9 @@ function SyncDataContent() {
         style={[styles.syncNavButton, { backgroundColor: colors.card, borderColor: colors.primary }]}
         onPress={() => router.push('/dispatcher/sync-data')}
       >
-        <Database size={20} color={colors.primary} />
+        <Database size={20} color={colors.primary} style={{ marginRight: 8 }} />
         <Text style={[styles.syncNavButtonText, { color: colors.primary }]}>Open Data Sync</Text>
-        <RefreshCw size={20} color={colors.primary} />
+        <RefreshCw size={20} color={colors.primary} style={{ marginLeft: 8 }} />
       </TouchableOpacity>
       <Text style={[styles.syncDescription, { color: colors.textSecondary }]}>
         Upload and download data between devices to keep everything in sync
