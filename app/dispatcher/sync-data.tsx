@@ -11,7 +11,7 @@ import {
 } from 'react-native';
 import { Stack } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { Upload, Download, RefreshCw, Info } from 'lucide-react-native';
+import { Upload, Download, RefreshCw, Info, Save } from 'lucide-react-native';
 import { trpc } from '@/lib/trpc';
 import { useData } from '@/contexts/DataContext';
 import Colors from '@/constants/colors';
@@ -49,6 +49,8 @@ export default function SyncDataScreen() {
 
   const syncMutation = trpc.data.sync.useMutation();
   const getAllQuery = trpc.data.getAll.useQuery();
+  const exportAsDefaultsMutation = trpc.data.exportAsDefaults.useMutation();
+  const [isExporting, setIsExporting] = useState<boolean>(false);
 
   useEffect(() => {
     loadLastSync();
@@ -305,6 +307,36 @@ export default function SyncDataScreen() {
     );
   };
 
+  const handleExportAsDefaults = async () => {
+    Alert.alert(
+      'Export as Defaults',
+      'This will save the current database data as the default sample data. New installations will use these values.\n\nAre you sure?',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Export',
+          style: 'default',
+          onPress: async () => {
+            try {
+              setIsExporting(true);
+              const result = await exportAsDefaultsMutation.mutateAsync();
+              Alert.alert(
+                'Success',
+                `Sample data updated successfully!\n\nExported:\n- Drivers: ${result.counts.drivers}\n- Trucks: ${result.counts.trucks}\n- Dump Sites: ${result.counts.dumpSites}\n- Yards: ${result.counts.yards}\n- Customers: ${result.counts.customers}`,
+              );
+            } catch (error) {
+              console.error('Export error:', error);
+              const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+              Alert.alert('Error', 'Failed to export as defaults: ' + errorMessage);
+            } finally {
+              setIsExporting(false);
+            }
+          }
+        }
+      ]
+    );
+  };
+
   return (
     <View style={styles.container}>
       <Stack.Screen
@@ -382,6 +414,22 @@ export default function SyncDataScreen() {
           </Text>
         </TouchableOpacity>
 
+        <TouchableOpacity
+          style={[styles.actionButton, styles.exportButton, (isExporting || !backendAvailable) && styles.buttonDisabled]}
+          onPress={handleExportAsDefaults}
+          disabled={isUploading || isDownloading || isExporting || !backendAvailable}
+        >
+          {isExporting ? (
+            <ActivityIndicator color="#fff" />
+          ) : (
+            <Save color="#fff" size={24} />
+          )}
+          <Text style={styles.buttonText}>Export as Default Data</Text>
+          <Text style={styles.buttonSubtext}>
+            Save current data as app defaults
+          </Text>
+        </TouchableOpacity>
+
         {uploadLog.length > 0 && (
           <View style={styles.logCard}>
             <Text style={styles.logTitle}>Upload Log:</Text>
@@ -456,6 +504,9 @@ const styles = StyleSheet.create({
   },
   downloadButton: {
     backgroundColor: '#2196F3',
+  },
+  exportButton: {
+    backgroundColor: '#FF9800',
   },
   buttonDisabled: {
     opacity: 0.5,
