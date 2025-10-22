@@ -51,10 +51,20 @@ export default function ReportsScreen() {
     jobs,
     routes,
     dumpSites,
+    commercialRoutes,
+    commercialStops,
+    residentialRoutes,
+    residentialStops,
+    containerRoutes,
   } = useData();
 
   const [generating, setGenerating] = useState<string | null>(null);
   const [viewingReport, setViewingReport] = useState<Report | null>(null);
+  const [previewDriverId, setPreviewDriverId] = useState<string | null>(null);
+  const [previewDate, setPreviewDate] = useState<string>(new Date().toISOString().split('T')[0]);
+  const [previewModalVisible, setPreviewModalVisible] = useState<boolean>(false);
+  const [previewType, setPreviewType] = useState<'DRIVER_DAY' | 'COMMERCIAL' | 'RESIDENTIAL' | 'CONTAINER' | null>(null);
+  const [previewRouteId, setPreviewRouteId] = useState<string | null>(null);
   const [editingReport, setEditingReport] = useState<Report | null>(null);
   const [editName, setEditName] = useState<string>('');
   const [editDescription, setEditDescription] = useState<string>('');
@@ -552,23 +562,424 @@ ${Platform.OS === 'web' ? '\n\nCSV Data:\n' + report.csvData : ''}
     ]);
   };
 
+  const renderDriverDayPreview = () => {
+    if (!previewDriverId) return null;
+
+    const driver = drivers.find(d => d.id === previewDriverId);
+    if (!driver) return null;
+
+    const driverTimeLogs = timeLogs.filter(log => {
+      const logDate = new Date(log.timestamp).toISOString().split('T')[0];
+      return log.driverId === previewDriverId && logDate === previewDate;
+    });
+
+    const clockIn = driverTimeLogs.find(log => log.type === 'CLOCK_IN');
+    const clockOut = driverTimeLogs.find(log => log.type === 'CLOCK_OUT');
+    const lunchStart = driverTimeLogs.find(log => log.type === 'LUNCH_START');
+    const lunchEnd = driverTimeLogs.find(log => log.type === 'LUNCH_END');
+
+    const driverDVIRs = dvirs.filter(d => {
+      const dvirDate = new Date(d.timestamp).toISOString().split('T')[0];
+      return d.driverId === previewDriverId && dvirDate === previewDate;
+    });
+
+    const preTrip = driverDVIRs.find(d => d.type === 'PRE_TRIP');
+    const postTrip = driverDVIRs.find(d => d.type === 'POST_TRIP');
+
+    const driverFuelLogs = fuelLogs.filter(f => {
+      const fuelDate = new Date(f.date).toISOString().split('T')[0];
+      return f.driverId === previewDriverId && fuelDate === previewDate;
+    });
+
+    const driverMileageLogs = mileageLogs.filter(m => {
+      const mileageDate = new Date(m.timestamp).toISOString().split('T')[0];
+      return m.driverId === previewDriverId && mileageDate === previewDate;
+    }).sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
+
+    const driverRoutes = [...routes, ...commercialRoutes, ...residentialRoutes, ...containerRoutes].filter(r => {
+      const routeDate = r.date;
+      return r.driverId === previewDriverId && routeDate === previewDate;
+    });
+
+    const allJobs: any[] = [];
+    const allStops: any[] = [];
+
+    driverRoutes.forEach((route: any) => {
+      if (route.jobIds) {
+        route.jobIds.forEach((jId: string) => {
+          const job = jobs.find(j => j.id === jId);
+          if (job) allJobs.push(job);
+        });
+      }
+      if (route.stopIds) {
+        route.stopIds.forEach((sId: string) => {
+          const stop = commercialStops.find(s => s.id === sId);
+          if (stop) allStops.push(stop);
+        });
+      }
+      if (route.customerIds) {
+        route.customerIds.forEach((cId: string) => {
+          const stop = residentialStops.find(s => s.customerId === cId);
+          if (stop) allStops.push(stop);
+        });
+      }
+    });
+
+    const startMileage = driverMileageLogs[0];
+    const endMileage = driverMileageLogs[driverMileageLogs.length - 1];
+
+    return (
+      <ScrollView style={styles.previewContainer}>
+        <Text style={styles.previewTitle}>Driver Day Report Preview</Text>
+        <Text style={styles.previewSubtitle}>{driver.name} - {previewDate}</Text>
+
+        <View style={styles.previewSection}>
+          <Text style={styles.previewSectionTitle}>Time & Attendance</Text>
+          <View style={styles.previewRow}>
+            <Text style={styles.previewLabel}>Clock In:</Text>
+            <Text style={styles.previewValue}>
+              {clockIn ? new Date(clockIn.timestamp).toLocaleTimeString() : 'Not logged'}
+            </Text>
+          </View>
+          <View style={styles.previewRow}>
+            <Text style={styles.previewLabel}>Clock Out:</Text>
+            <Text style={styles.previewValue}>
+              {clockOut ? new Date(clockOut.timestamp).toLocaleTimeString() : 'Not logged'}
+            </Text>
+          </View>
+          <View style={styles.previewRow}>
+            <Text style={styles.previewLabel}>Lunch Break:</Text>
+            <Text style={styles.previewValue}>
+              {lunchStart && lunchEnd
+                ? `${new Date(lunchStart.timestamp).toLocaleTimeString()} - ${new Date(lunchEnd.timestamp).toLocaleTimeString()}`
+                : lunchStart
+                ? 'Started but not ended'
+                : 'No lunch taken'}
+            </Text>
+          </View>
+          {lunchStart && lunchEnd && (
+            <View style={styles.previewRow}>
+              <Text style={styles.previewLabel}>Lunch Duration:</Text>
+              <Text style={styles.previewValue}>
+                {Math.floor((new Date(lunchEnd.timestamp).getTime() - new Date(lunchStart.timestamp).getTime()) / 60000)} minutes
+              </Text>
+            </View>
+          )}
+        </View>
+
+        <View style={styles.previewSection}>
+          <Text style={styles.previewSectionTitle}>Mileage & Fuel</Text>
+          <View style={styles.previewRow}>
+            <Text style={styles.previewLabel}>Start Mileage:</Text>
+            <Text style={styles.previewValue}>
+              {startMileage ? `${startMileage.odometer} (${startMileage.state || 'N/A'})` : 'Not logged'}
+            </Text>
+          </View>
+          <View style={styles.previewRow}>
+            <Text style={styles.previewLabel}>End Mileage:</Text>
+            <Text style={styles.previewValue}>
+              {endMileage ? `${endMileage.odometer} (${endMileage.state || 'N/A'})` : 'Not logged'}
+            </Text>
+          </View>
+          <View style={styles.previewRow}>
+            <Text style={styles.previewLabel}>Total Miles:</Text>
+            <Text style={styles.previewValue}>
+              {startMileage && endMileage ? endMileage.odometer - startMileage.odometer : 'N/A'}
+            </Text>
+          </View>
+          <View style={styles.previewRow}>
+            <Text style={styles.previewLabel}>Fuel Added:</Text>
+            <Text style={styles.previewValue}>
+              {driverFuelLogs.length > 0
+                ? driverFuelLogs.map(f => `${f.gallons}gal in ${f.state || 'N/A'}`).join(', ')
+                : 'No fuel logged'}
+            </Text>
+          </View>
+        </View>
+
+        <View style={styles.previewSection}>
+          <Text style={styles.previewSectionTitle}>Vehicle Inspections (DVIR)</Text>
+          <View style={styles.previewRow}>
+            <Text style={styles.previewLabel}>Pre-Trip:</Text>
+            <Text style={styles.previewValue}>
+              {preTrip ? `Yes - ${preTrip.safeToOperate ? 'Safe' : 'Unsafe'}` : 'No'}
+            </Text>
+          </View>
+          {preTrip && preTrip.defects.length > 0 && (
+            <View style={styles.previewRow}>
+              <Text style={styles.previewLabel}>Pre-Trip Defects:</Text>
+              <Text style={styles.previewValue}>
+                {preTrip.defects.map(d => `${d.component}: ${d.issue}`).join('; ')}
+              </Text>
+            </View>
+          )}
+          <View style={styles.previewRow}>
+            <Text style={styles.previewLabel}>Post-Trip:</Text>
+            <Text style={styles.previewValue}>
+              {postTrip ? `Yes - ${postTrip.safeToOperate ? 'Safe' : 'Unsafe'}` : 'No'}
+            </Text>
+          </View>
+          {postTrip && postTrip.defects.length > 0 && (
+            <View style={styles.previewRow}>
+              <Text style={styles.previewLabel}>Post-Trip Defects:</Text>
+              <Text style={styles.previewValue}>
+                {postTrip.defects.map(d => `${d.component}: ${d.issue}`).join('; ')}
+              </Text>
+            </View>
+          )}
+          {(preTrip?.defects.length || postTrip?.defects.length) ? (
+            <View style={styles.previewRow}>
+              <Text style={styles.previewLabel}>Sent to Mechanic:</Text>
+              <Text style={styles.previewValue}>Manual process - check DVIR records</Text>
+            </View>
+          ) : null}
+        </View>
+
+        <View style={styles.previewSection}>
+          <Text style={styles.previewSectionTitle}>Jobs / Stops</Text>
+          {allJobs.length === 0 && allStops.length === 0 && (
+            <Text style={styles.previewValue}>No jobs or stops completed</Text>
+          )}
+          {allJobs.map((job: any, idx) => {
+            const jobMileage = driverMileageLogs.filter(m => m.jobId === job.id);
+            const jobStart = jobMileage[0];
+            const jobEnd = jobMileage[jobMileage.length - 1];
+            const dumpTicket = dumpTickets.find(t => t.jobId === job.id);
+
+            return (
+              <View key={job.id} style={styles.jobCard}>
+                <Text style={styles.jobTitle}>Job #{idx + 1}: {job.address}</Text>
+                <View style={styles.previewRow}>
+                  <Text style={styles.previewLabel}>Start Time:</Text>
+                  <Text style={styles.previewValue}>
+                    {job.startedAt ? new Date(job.startedAt).toLocaleTimeString() : 'N/A'}
+                  </Text>
+                </View>
+                <View style={styles.previewRow}>
+                  <Text style={styles.previewLabel}>End Time:</Text>
+                  <Text style={styles.previewValue}>
+                    {job.completedAt ? new Date(job.completedAt).toLocaleTimeString() : 'N/A'}
+                  </Text>
+                </View>
+                {job.startedAt && job.completedAt && (
+                  <View style={styles.previewRow}>
+                    <Text style={styles.previewLabel}>Duration:</Text>
+                    <Text style={styles.previewValue}>
+                      {Math.floor((new Date(job.completedAt).getTime() - new Date(job.startedAt).getTime()) / 60000)} minutes
+                    </Text>
+                  </View>
+                )}
+                <View style={styles.previewRow}>
+                  <Text style={styles.previewLabel}>Start Mileage:</Text>
+                  <Text style={styles.previewValue}>{jobStart?.odometer || 'N/A'}</Text>
+                </View>
+                <View style={styles.previewRow}>
+                  <Text style={styles.previewLabel}>End Mileage:</Text>
+                  <Text style={styles.previewValue}>{jobEnd?.odometer || 'N/A'}</Text>
+                </View>
+                {dumpTicket && (
+                  <View style={styles.previewRow}>
+                    <Text style={styles.previewLabel}>Dump Ticket:</Text>
+                    <Text style={styles.previewValue}>
+                      #{dumpTicket.ticketNumber || 'N/A'} - {dumpTicket.netWeight || 0} lbs
+                    </Text>
+                  </View>
+                )}
+              </View>
+            );
+          })}
+          {allStops.map((stop: any, idx) => (
+            <View key={stop.id} style={styles.jobCard}>
+              <Text style={styles.jobTitle}>Stop #{idx + 1}: {stop.address}</Text>
+              <View style={styles.previewRow}>
+                <Text style={styles.previewLabel}>Status:</Text>
+                <Text style={styles.previewValue}>{stop.status}</Text>
+              </View>
+              <View style={styles.previewRow}>
+                <Text style={styles.previewLabel}>Completed:</Text>
+                <Text style={styles.previewValue}>
+                  {stop.completedAt ? new Date(stop.completedAt).toLocaleTimeString() : 'Not completed'}
+                </Text>
+              </View>
+              {'notOutReason' in stop && stop.notOutReason && (
+                <View style={styles.previewRow}>
+                  <Text style={styles.previewLabel}>Issue:</Text>
+                  <Text style={styles.previewValue}>{stop.notOutReason}</Text>
+                </View>
+              )}
+            </View>
+          ))}
+        </View>
+      </ScrollView>
+    );
+  };
+
+  const renderCommercialRoutePreview = () => {
+    if (!previewRouteId) return null;
+
+    const route = commercialRoutes.find(r => r.id === previewRouteId);
+    if (!route) return null;
+
+    const routeStops = route.stopIds.map((sId: string) => commercialStops.find(s => s.id === sId)).filter((s: any) => s !== undefined);
+    const completedStops = routeStops.filter((s: any) => s.status === 'COMPLETED');
+    const issueStops = routeStops.filter((s: any) => ['NOT_OUT', 'BLOCKED', 'SKIPPED'].includes(s.status));
+
+    const routeTimeLogs = timeLogs.filter(log => {
+      const logDate = new Date(log.timestamp).toISOString().split('T')[0];
+      return log.driverId === route.driverId && logDate === route.date;
+    });
+
+    const clockIn = routeTimeLogs.find(log => log.type === 'CLOCK_IN');
+    const clockOut = routeTimeLogs.find(log => log.type === 'CLOCK_OUT');
+    const lunchStart = routeTimeLogs.find(log => log.type === 'LUNCH_START');
+    const lunchEnd = routeTimeLogs.find(log => log.type === 'LUNCH_END');
+
+    const routeDVIRs = dvirs.filter(d => {
+      const dvirDate = new Date(d.timestamp).toISOString().split('T')[0];
+      return d.driverId === route.driverId && dvirDate === route.date;
+    });
+
+    const preTrip = routeDVIRs.find(d => d.type === 'PRE_TRIP');
+    const postTrip = routeDVIRs.find(d => d.type === 'POST_TRIP');
+
+    const routeFuelLogs = fuelLogs.filter(f => {
+      const fuelDate = new Date(f.date).toISOString().split('T')[0];
+      return f.driverId === route.driverId && fuelDate === route.date;
+    });
+
+    return (
+      <ScrollView style={styles.previewContainer}>
+        <Text style={styles.previewTitle}>Commercial Route Report Preview</Text>
+        <Text style={styles.previewSubtitle}>{route.name} - {route.date}</Text>
+
+        <View style={styles.previewSection}>
+          <Text style={styles.previewSectionTitle}>Time & Attendance</Text>
+          <View style={styles.previewRow}>
+            <Text style={styles.previewLabel}>Clock In:</Text>
+            <Text style={styles.previewValue}>
+              {clockIn ? new Date(clockIn.timestamp).toLocaleTimeString() : 'Not logged'}
+            </Text>
+          </View>
+          <View style={styles.previewRow}>
+            <Text style={styles.previewLabel}>Route Start:</Text>
+            <Text style={styles.previewValue}>
+              {route.startedAt ? new Date(route.startedAt).toLocaleTimeString() : 'Not started'}
+            </Text>
+          </View>
+          <View style={styles.previewRow}>
+            <Text style={styles.previewLabel}>Route End:</Text>
+            <Text style={styles.previewValue}>
+              {route.completedAt ? new Date(route.completedAt).toLocaleTimeString() : 'Not completed'}
+            </Text>
+          </View>
+          <View style={styles.previewRow}>
+            <Text style={styles.previewLabel}>Lunch:</Text>
+            <Text style={styles.previewValue}>
+              {lunchStart && lunchEnd
+                ? `${new Date(lunchStart.timestamp).toLocaleTimeString()} - ${new Date(lunchEnd.timestamp).toLocaleTimeString()}`
+                : 'No lunch taken'}
+            </Text>
+          </View>
+          <View style={styles.previewRow}>
+            <Text style={styles.previewLabel}>Clock Out:</Text>
+            <Text style={styles.previewValue}>
+              {clockOut ? new Date(clockOut.timestamp).toLocaleTimeString() : 'Not logged'}
+            </Text>
+          </View>
+        </View>
+
+        <View style={styles.previewSection}>
+          <Text style={styles.previewSectionTitle}>Vehicle & Mileage</Text>
+          <View style={styles.previewRow}>
+            <Text style={styles.previewLabel}>Pre-Trip:</Text>
+            <Text style={styles.previewValue}>
+              {preTrip ? `${preTrip.safeToOperate ? 'Safe' : 'Unsafe'} (${preTrip.defects.length} defects)` : 'Not done'}
+            </Text>
+          </View>
+          <View style={styles.previewRow}>
+            <Text style={styles.previewLabel}>Post-Trip:</Text>
+            <Text style={styles.previewValue}>
+              {postTrip ? `${postTrip.safeToOperate ? 'Safe' : 'Unsafe'} (${postTrip.defects.length} defects)` : 'Not done'}
+            </Text>
+          </View>
+          <View style={styles.previewRow}>
+            <Text style={styles.previewLabel}>Start Mileage:</Text>
+            <Text style={styles.previewValue}>{route.startMileage || 'Not logged'}</Text>
+          </View>
+          <View style={styles.previewRow}>
+            <Text style={styles.previewLabel}>End Mileage:</Text>
+            <Text style={styles.previewValue}>{route.endMileage || 'Not logged'}</Text>
+          </View>
+          <View style={styles.previewRow}>
+            <Text style={styles.previewLabel}>Fuel:</Text>
+            <Text style={styles.previewValue}>
+              {routeFuelLogs.length > 0
+                ? routeFuelLogs.map(f => `${f.gallons}gal`).join(', ')
+                : 'No fuel logged'}
+            </Text>
+          </View>
+        </View>
+
+        <View style={styles.previewSection}>
+          <Text style={styles.previewSectionTitle}>Stops Completion</Text>
+          <View style={styles.previewRow}>
+            <Text style={styles.previewLabel}>Total Stops:</Text>
+            <Text style={styles.previewValue}>{routeStops.length}</Text>
+          </View>
+          <View style={styles.previewRow}>
+            <Text style={styles.previewLabel}>Completed:</Text>
+            <Text style={styles.previewValue}>
+              {completedStops.length} of {routeStops.length}
+            </Text>
+          </View>
+          {issueStops.length > 0 && (
+            <View style={styles.issuesContainer}>
+              <Text style={styles.issuesTitle}>Issues:</Text>
+              {issueStops.map((stop: any) => (
+                <View key={stop.id} style={styles.issueItem}>
+                  <Text style={styles.issueAddress}>{stop.address}</Text>
+                  <Text style={styles.issueStatus}>
+                    Status: {stop.status}
+                    {stop.notOutReason && ` - ${stop.notOutReason}`}
+                    {stop.blockedReason && ` - ${stop.blockedReason}`}
+                    {stop.issueNotes && ` - ${stop.issueNotes}`}
+                  </Text>
+                </View>
+              ))}
+            </View>
+          )}
+        </View>
+      </ScrollView>
+    );
+  };
+
   const reportCards = [
     {
-      id: 'daily',
-      title: 'Daily Activity Report',
-      description: 'Complete daily summary with jobs, mileage, times, states, weights, and dump sites',
+      id: 'driver-day',
+      title: 'Driver Day Report',
+      description: 'Detailed driver activity: clock times, lunch, mileage, fuel, DVIR, and jobs with preview',
       icon: Calendar,
-      count: jobs.filter(j => {
-        if (!j.completedAt && !j.startedAt) return false;
-        const jobDate = j.completedAt || j.startedAt;
-        if (!jobDate) return false;
-        const jobTime = new Date(jobDate).getTime();
-        const startTime = new Date(startDate).getTime();
-        const endTime = new Date(endDate).getTime() + 86400000;
-        return jobTime >= startTime && jobTime < endTime;
-      }).length,
-      color: colors.warning,
-      onGenerate: generateDailyReport,
+      count: drivers.length,
+      color: colors.accent,
+      onGenerate: () => {
+        setPreviewType('DRIVER_DAY');
+        setPreviewDriverId(drivers[0]?.id || null);
+        setPreviewDate(new Date().toISOString().split('T')[0]);
+        setPreviewModalVisible(true);
+      },
+    },
+    {
+      id: 'commercial',
+      title: 'Commercial Route Report',
+      description: 'Complete route details: times, mileage, fuel, DVIR, stops completion, and issues',
+      icon: Truck,
+      count: commercialRoutes.length,
+      color: colors.primary,
+      onGenerate: () => {
+        setPreviewType('COMMERCIAL');
+        setPreviewRouteId(commercialRoutes[0]?.id || null);
+        setPreviewModalVisible(true);
+      },
     },
     {
       id: 'fuel',
@@ -799,6 +1210,84 @@ ${Platform.OS === 'web' ? '\n\nCSV Data:\n' + report.csvData : ''}
                 <Text style={styles.csvText}>{viewingReport?.csvData?.substring(0, 1000)}</Text>
               </ScrollView>
             </ScrollView>
+          </View>
+        </View>
+      </Modal>
+
+      <Modal visible={previewModalVisible} animationType="slide" transparent>
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Report Preview</Text>
+              <TouchableOpacity onPress={() => setPreviewModalVisible(false)}>
+                <X size={24} color={colors.text} />
+              </TouchableOpacity>
+            </View>
+            {previewType === 'DRIVER_DAY' && (
+              <View style={styles.modalBody}>
+                <Text style={styles.modalLabel}>Select Driver</Text>
+                <ScrollView horizontal style={styles.driverPicker}>
+                  {drivers.map(d => (
+                    <TouchableOpacity
+                      key={d.id}
+                      style={[
+                        styles.driverChip,
+                        previewDriverId === d.id && styles.driverChipSelected,
+                      ]}
+                      onPress={() => setPreviewDriverId(d.id)}
+                    >
+                      <Text
+                        style={[
+                          styles.driverChipText,
+                          previewDriverId === d.id && styles.driverChipTextSelected,
+                        ]}
+                      >
+                        {d.name}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </ScrollView>
+
+                <Text style={styles.modalLabel}>Select Date</Text>
+                <TextInput
+                  style={styles.modalInput}
+                  value={previewDate}
+                  onChangeText={setPreviewDate}
+                  placeholder="YYYY-MM-DD"
+                  placeholderTextColor={colors.textSecondary}
+                />
+
+                {renderDriverDayPreview()}
+              </View>
+            )}
+            {previewType === 'COMMERCIAL' && (
+              <View style={styles.modalBody}>
+                <Text style={styles.modalLabel}>Select Route</Text>
+                <ScrollView horizontal style={styles.driverPicker}>
+                  {commercialRoutes.map(r => (
+                    <TouchableOpacity
+                      key={r.id}
+                      style={[
+                        styles.driverChip,
+                        previewRouteId === r.id && styles.driverChipSelected,
+                      ]}
+                      onPress={() => setPreviewRouteId(r.id)}
+                    >
+                      <Text
+                        style={[
+                          styles.driverChipText,
+                          previewRouteId === r.id && styles.driverChipTextSelected,
+                        ]}
+                      >
+                        {r.name}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </ScrollView>
+
+                {renderCommercialRoutePreview()}
+              </View>
+            )}
           </View>
         </View>
       </Modal>
@@ -1112,5 +1601,119 @@ const createStyles = (colors: any) => StyleSheet.create({
     fontSize: 16,
     fontWeight: '600' as const,
     color: colors.background,
+  },
+  driverPicker: {
+    marginBottom: 16,
+  },
+  driverChip: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
+    backgroundColor: colors.backgroundSecondary,
+    marginRight: 8,
+    borderWidth: 2,
+    borderColor: colors.backgroundSecondary,
+  },
+  driverChipSelected: {
+    backgroundColor: colors.primary,
+    borderColor: colors.primary,
+  },
+  driverChipText: {
+    fontSize: 14,
+    color: colors.text,
+    fontWeight: '600' as const,
+  },
+  driverChipTextSelected: {
+    color: colors.background,
+  },
+  previewContainer: {
+    maxHeight: 400,
+  },
+  previewTitle: {
+    fontSize: 18,
+    fontWeight: '700' as const,
+    color: colors.text,
+    marginBottom: 4,
+  },
+  previewSubtitle: {
+    fontSize: 14,
+    color: colors.textSecondary,
+    marginBottom: 16,
+  },
+  previewSection: {
+    backgroundColor: colors.backgroundSecondary,
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 12,
+  },
+  previewSectionTitle: {
+    fontSize: 16,
+    fontWeight: '600' as const,
+    color: colors.text,
+    marginBottom: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
+    paddingBottom: 8,
+  },
+  previewRow: {
+    flexDirection: 'row' as const,
+    justifyContent: 'space-between' as const,
+    paddingVertical: 6,
+  },
+  previewLabel: {
+    fontSize: 14,
+    fontWeight: '600' as const,
+    color: colors.text,
+    flex: 1,
+  },
+  previewValue: {
+    fontSize: 14,
+    color: colors.textSecondary,
+    flex: 2,
+    textAlign: 'right' as const,
+  },
+  jobCard: {
+    backgroundColor: colors.background,
+    borderRadius: 8,
+    padding: 12,
+    marginTop: 8,
+    borderLeftWidth: 3,
+    borderLeftColor: colors.primary,
+  },
+  jobTitle: {
+    fontSize: 14,
+    fontWeight: '600' as const,
+    color: colors.text,
+    marginBottom: 8,
+  },
+  issuesContainer: {
+    marginTop: 12,
+    paddingTop: 12,
+    borderTopWidth: 1,
+    borderTopColor: colors.border,
+  },
+  issuesTitle: {
+    fontSize: 14,
+    fontWeight: '600' as const,
+    color: colors.error,
+    marginBottom: 8,
+  },
+  issueItem: {
+    backgroundColor: colors.background,
+    borderRadius: 8,
+    padding: 12,
+    marginBottom: 8,
+    borderLeftWidth: 3,
+    borderLeftColor: colors.error,
+  },
+  issueAddress: {
+    fontSize: 13,
+    fontWeight: '600' as const,
+    color: colors.text,
+    marginBottom: 4,
+  },
+  issueStatus: {
+    fontSize: 12,
+    color: colors.textSecondary,
   },
 });
