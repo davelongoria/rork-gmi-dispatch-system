@@ -17,7 +17,7 @@ import { useData } from '@/contexts/DataContext';
 import { useRouter } from 'expo-router';
 import { useTheme } from '@/contexts/ThemeContext';
 import { Settings as SettingsIcon, Mail, Save, QrCode, Download, Send, RefreshCw, Database, Plus, Edit2, Trash2, X, Building2 } from 'lucide-react-native';
-import QRCode from 'react-native-qrcode-svg';
+import QRCodeSVG from 'react-native-qrcode-svg';
 import * as FileSystem from 'expo-file-system';
 import type { Company } from '@/types';
 
@@ -328,12 +328,12 @@ export default function SettingsScreen() {
         {qrToken ? (
           <View style={styles.qrContainer}>
             <View style={[styles.qrCodeWrapper, { backgroundColor: colors.card, borderColor: colors.border }]}>
-              <QRCode
+              <QRCodeSVG
                 value={qrToken}
                 size={200}
                 color={colors.text}
                 backgroundColor={colors.card}
-                getRef={(ref) => (qrRef.current = ref)}
+                getRef={(ref: any) => (qrRef.current = ref)}
               />
             </View>
             <View style={styles.qrActions}>
