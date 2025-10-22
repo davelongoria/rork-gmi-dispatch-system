@@ -3,6 +3,7 @@ import hiRoute from "./routes/example/hi/route";
 import { syncDataProcedure } from "./routes/data/sync/route";
 import { getAllDataProcedure } from "./routes/data/get-all/route";
 import { exportAsDefaultsProcedure } from "./routes/data/export-as-defaults/route";
+import { resetDatabaseProcedure } from "./routes/data/reset-database/route";
 
 export const appRouter = createTRPCRouter({
   example: createTRPCRouter({
@@ -12,6 +13,7 @@ export const appRouter = createTRPCRouter({
     sync: syncDataProcedure,
     getAll: getAllDataProcedure,
     exportAsDefaults: exportAsDefaultsProcedure,
+    resetDatabase: resetDatabaseProcedure,
   }),
 });
 

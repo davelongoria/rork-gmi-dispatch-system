@@ -11,7 +11,7 @@ import {
 } from 'react-native';
 import { Stack } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { Upload, Download, RefreshCw, Info, Save } from 'lucide-react-native';
+import { Upload, Download, RefreshCw, Info, Save, Trash2 } from 'lucide-react-native';
 import { trpc } from '@/lib/trpc';
 import { useData } from '@/contexts/DataContext';
 import Colors from '@/constants/colors';
@@ -50,7 +50,9 @@ export default function SyncDataScreen() {
   const syncMutation = trpc.data.sync.useMutation();
   const getAllQuery = trpc.data.getAll.useQuery();
   const exportAsDefaultsMutation = trpc.data.exportAsDefaults.useMutation();
+  const resetDatabaseMutation = trpc.data.resetDatabase.useMutation();
   const [isExporting, setIsExporting] = useState<boolean>(false);
+  const [isResetting, setIsResetting] = useState<boolean>(false);
 
   useEffect(() => {
     loadLastSync();
@@ -337,6 +339,52 @@ export default function SyncDataScreen() {
     );
   };
 
+  const handleResetDatabase = async () => {
+    Alert.alert(
+      'Reset Backend Database',
+      'This will DELETE the backend database file and restart it with the default sample data from utils/sampleData.ts.\n\nWARNING: This will erase all backend data! Make sure you\'ve exported your data first if needed.\n\nAre you sure?',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Reset',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              setIsResetting(true);
+              const result = await resetDatabaseMutation.mutateAsync();
+              if (result.success) {
+                Alert.alert(
+                  'Success',
+                  'Backend database has been reset. Please refresh the page to reload with default data.',
+                  [
+                    {
+                      text: 'Refresh Now',
+                      onPress: () => {
+                        if (Platform.OS === 'web') {
+                          window.location.reload();
+                        } else {
+                          Alert.alert('Please restart the app');
+                        }
+                      }
+                    }
+                  ]
+                );
+              } else {
+                Alert.alert('Error', result.message);
+              }
+            } catch (error) {
+              console.error('Reset error:', error);
+              const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+              Alert.alert('Error', 'Failed to reset database: ' + errorMessage);
+            } finally {
+              setIsResetting(false);
+            }
+          }
+        }
+      ]
+    );
+  };
+
   return (
     <View style={styles.container}>
       <Stack.Screen
@@ -430,6 +478,22 @@ export default function SyncDataScreen() {
           </Text>
         </TouchableOpacity>
 
+        <TouchableOpacity
+          style={[styles.actionButton, styles.resetButton, (isResetting || !backendAvailable) && styles.buttonDisabled]}
+          onPress={handleResetDatabase}
+          disabled={isUploading || isDownloading || isExporting || isResetting || !backendAvailable}
+        >
+          {isResetting ? (
+            <ActivityIndicator color="#fff" />
+          ) : (
+            <Trash2 color="#fff" size={24} />
+          )}
+          <Text style={styles.buttonText}>Reset Backend Database</Text>
+          <Text style={styles.buttonSubtext}>
+            Delete backend DB and reseed with defaults
+          </Text>
+        </TouchableOpacity>
+
         {uploadLog.length > 0 && (
           <View style={styles.logCard}>
             <Text style={styles.logTitle}>Upload Log:</Text>
@@ -507,6 +571,9 @@ const styles = StyleSheet.create({
   },
   exportButton: {
     backgroundColor: '#FF9800',
+  },
+  resetButton: {
+    backgroundColor: '#F44336',
   },
   buttonDisabled: {
     opacity: 0.5,
