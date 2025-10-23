@@ -81,11 +81,11 @@ export const [DataProvider, useData] = createContextHook(() => {
   const [hasTriedBackend, setHasTriedBackend] = useState<boolean>(false);
 
   const getAllQuery = trpc.data.getAll.useQuery(undefined, {
-    refetchInterval: backendAvailable ? 60_000 : false,
+    refetchInterval: false,
     refetchOnWindowFocus: false,
     retry: 0,
-    staleTime: 30_000,
-    enabled: !hasTriedBackend,
+    staleTime: Infinity,
+    enabled: false,
     refetchOnMount: false,
     refetchOnReconnect: false,
   });
@@ -184,7 +184,7 @@ export const [DataProvider, useData] = createContextHook(() => {
     const timeout = setTimeout(() => {
       console.warn('Data loading timeout, continuing anyway');
       setIsLoading(false);
-    }, 400);
+    }, 5000);
 
     try {
       const [
@@ -223,23 +223,16 @@ export const [DataProvider, useData] = createContextHook(() => {
         try {
           const parsed = JSON.parse(driversData);
           if (Array.isArray(parsed)) {
-            console.log('Loaded drivers from storage:', parsed.length);
-            parsed.forEach((d: Driver) => {
-              console.log(`  - ${d.name}: ${d.email} / ${d.username}`);
-            });
             setDrivers(parsed);
           } else {
-            console.error('Drivers data is not an array, using samples');
             setDrivers(sampleDrivers);
             await AsyncStorage.setItem(STORAGE_KEYS.DRIVERS, JSON.stringify(sampleDrivers));
           }
         } catch (e) {
-          console.error('Failed to parse drivers data:', e);
           setDrivers(sampleDrivers);
           await AsyncStorage.setItem(STORAGE_KEYS.DRIVERS, JSON.stringify(sampleDrivers));
         }
       } else {
-        console.log('No drivers in storage, using samples with 4 drivers');
         setDrivers(sampleDrivers);
         await AsyncStorage.setItem(STORAGE_KEYS.DRIVERS, JSON.stringify(sampleDrivers));
       }
@@ -1057,7 +1050,7 @@ export const [DataProvider, useData] = createContextHook(() => {
     }
   }, [getAllQuery]);
 
-  return useMemo(() => ({
+  return {
     drivers,
     trucks,
     dumpSites,
@@ -1146,23 +1139,5 @@ export const [DataProvider, useData] = createContextHook(() => {
     addContainerJob,
     updateContainerJob,
     deleteContainerJob,
-  }), [
-    drivers, trucks, dumpSites, yards, customers, jobs, routes,
-    timeLogs, dvirs, fuelLogs, dumpTickets, messages, gpsBreadcrumbs, mileageLogs, dispatcherSettings, reports, recurringJobs, commercialRoutes, commercialStops, companies, residentialCustomers, residentialRoutes, residentialStops, containerRoutes, containerJobs,
-    isLoading, isSyncing, backendAvailable,
-    forceRefreshFromBackend,
-    addDriver, updateDriver, deleteDriver, addTruck, updateTruck, deleteTruck,
-    addCustomer, updateCustomer, deleteCustomer, addJob, updateJob, deleteJob,
-    addRoute, updateRoute, deleteRoute, addTimeLog, addDVIR, addFuelLog,
-    addDumpTicket, addMessage, addGPSBreadcrumb, addDumpSite, updateDumpSite,
-    deleteDumpSite, addYard, updateYard, deleteYard, addMileageLog, updateDispatcherSettings,
-    addReport, updateReport, deleteReport, addRecurringJob, updateRecurringJob, deleteRecurringJob,
-    addCommercialRoute, updateCommercialRoute, deleteCommercialRoute, addCommercialStop, updateCommercialStop, deleteCommercialStop,
-    addCompany, updateCompany, deleteCompany,
-    addResidentialCustomer, updateResidentialCustomer, deleteResidentialCustomer,
-    addResidentialRoute, updateResidentialRoute, deleteResidentialRoute,
-    addResidentialStop, updateResidentialStop, deleteResidentialStop,
-    addContainerRoute, updateContainerRoute, deleteContainerRoute,
-    addContainerJob, updateContainerJob, deleteContainerJob
-  ]);
+  };
 });

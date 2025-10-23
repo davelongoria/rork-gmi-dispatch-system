@@ -1,6 +1,6 @@
 import createContextHook from '@nkzw/create-context-hook';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { THEMES, CompanyTheme } from '@/constants/themes';
 import type { Company } from '@/types';
 
@@ -85,40 +85,32 @@ export const [ThemeProvider, useTheme] = createContextHook(() => {
     }
   }, []);
 
-  const availableCompanies = useMemo(() => {
-    const builtInCompanies = Object.values(THEMES).map(t => ({
-      id: t.id,
-      name: t.name,
-      logo: t.logo,
-      primaryColor: t.colors.primary,
-      secondaryColor: t.colors.secondary,
-      accentColor: t.colors.accent,
-      active: true,
-      createdAt: new Date().toISOString(),
-    }));
-    return [...builtInCompanies, ...companies.filter(c => c.active)];
-  }, [companies]);
+  const builtInCompanies = Object.values(THEMES).map(t => ({
+    id: t.id,
+    name: t.name,
+    logo: t.logo,
+    primaryColor: t.colors.primary,
+    secondaryColor: t.colors.secondary,
+    accentColor: t.colors.accent,
+    active: true,
+    createdAt: new Date().toISOString(),
+  }));
+  const availableCompanies = [...builtInCompanies, ...companies.filter(c => c.active)];
 
-  const selectedCompany = useMemo(() => {
-    return availableCompanies.find(c => c.id === selectedCompanyId) || availableCompanies[0];
-  }, [availableCompanies, selectedCompanyId]);
+  const selectedCompany = availableCompanies.find(c => c.id === selectedCompanyId) || availableCompanies[0];
 
-  const theme: CompanyTheme = useMemo(() => {
-    if (!selectedCompany) {
-      return THEMES.gmi;
-    }
-    
+  let theme: CompanyTheme = THEMES.gmi;
+  if (selectedCompany) {
     if (selectedCompany.id === 'gmi') {
-      return THEMES.gmi;
+      theme = THEMES.gmi;
+    } else if (selectedCompany.id === 'region') {
+      theme = THEMES.region;
+    } else {
+      theme = companyToTheme(selectedCompany);
     }
-    if (selectedCompany.id === 'region') {
-      return THEMES.region;
-    }
-    
-    return companyToTheme(selectedCompany);
-  }, [selectedCompany]);
+  }
 
-  return useMemo(() => ({
+  return {
     selectedCompanyId,
     selectedCompany,
     availableCompanies,
@@ -126,5 +118,5 @@ export const [ThemeProvider, useTheme] = createContextHook(() => {
     isLoading,
     selectCompany,
     clearCompanySelection,
-  }), [selectedCompanyId, selectedCompany, availableCompanies, theme, isLoading, selectCompany, clearCompanySelection]);
+  };
 });

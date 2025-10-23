@@ -1,6 +1,6 @@
 import createContextHook from '@nkzw/create-context-hook';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import type { User, Driver } from '@/types';
 
 const STORAGE_KEY = '@gmi_auth_user';
@@ -15,7 +15,7 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
     const timeout = setTimeout(() => {
       console.warn('Auth loading timeout, continuing anyway');
       setIsLoading(false);
-    }, 300);
+    }, 3000);
 
     try {
       const stored = await AsyncStorage.getItem(STORAGE_KEY);
@@ -41,19 +41,11 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
       if (stored && stored !== 'null' && stored !== 'undefined') {
         try {
           const parsed = JSON.parse(stored);
-          console.log('Loaded drivers:', parsed.length, 'drivers');
-          parsed.forEach((d: Driver) => {
-            console.log(`- ${d.name}: email=${d.email}, username=${d.username}, active=${d.active}`);
-          });
           setDrivers(parsed);
         } catch (e) {
-          console.error('Failed to parse drivers data:', e);
         }
-      } else {
-        console.log('No drivers found in storage');
       }
     } catch (error) {
-      console.error('Failed to load drivers:', error);
     }
   }, []);
 
@@ -63,14 +55,13 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
 
     const interval = setInterval(() => {
       loadDrivers();
-    }, 2000);
+    }, 5000);
 
     return () => clearInterval(interval);
   }, [loadDrivers]);
 
   const login = useCallback(async (usernameOrEmail: string, password: string): Promise<boolean> => {
     try {
-      console.log(`Login attempt for: ${usernameOrEmail}`);
       
       if (usernameOrEmail === 'dispatcher@gmi.com' || usernameOrEmail === 'dispatcher') {
         const mockUser: User = {
@@ -91,18 +82,9 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
       if (stored && stored !== 'null' && stored !== 'undefined') {
         try {
           currentDrivers = JSON.parse(stored);
-          console.log(`Loaded ${currentDrivers.length} drivers from storage`);
         } catch (e) {
-          console.error('Failed to parse drivers during login:', e);
         }
-      } else {
-        console.log('No drivers found in storage');
       }
-      
-      console.log(`Checking against ${currentDrivers.length} drivers`);
-      currentDrivers.forEach(d => {
-        console.log(`- ${d.name}: email=${d.email}, username=${d.username}, password=${d.password ? '***' : 'none'}, active=${d.active}`);
-      });
       
       const driver = currentDrivers.find((d: Driver) => 
         (d.email?.toLowerCase() === usernameOrEmail.toLowerCase() || 
@@ -111,18 +93,11 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
       );
       
       if (driver) {
-        console.log(`Found driver: ${driver.name}`);
-        console.log(`Driver password set: ${driver.password ? 'Yes' : 'No'}`);
-        console.log(`Provided password: ${password}`);
         
         if (driver.password && driver.password.trim() !== '') {
           if (driver.password !== password) {
-            console.log(`Password mismatch for driver ${driver.name}. Expected: ${driver.password}, Got: ${password}`);
             return false;
           }
-          console.log('Password matched!');
-        } else {
-          console.log('No password set for driver, allowing login');
         }
         
         const mockUser: User = {
@@ -135,15 +110,11 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
         };
         await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(mockUser));
         setUser(mockUser);
-        console.log('Login successful!');
         return true;
       }
       
-      console.log(`No active driver found with email/username: ${usernameOrEmail}`);
-      console.log('Available drivers:', currentDrivers.map((d: Driver) => `${d.name} (${d.email}/${d.username})`).join(', '));
       return false;
     } catch (error) {
-      console.error('Login failed:', error);
       return false;
     }
   }, []);
@@ -169,7 +140,6 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
               return true;
             }
           } catch (e) {
-            console.error('Failed to parse dispatcher settings:', e);
           }
         }
       }
@@ -191,7 +161,6 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
       
       return false;
     } catch (error) {
-      console.error('QR Login failed:', error);
       return false;
     }
   }, [drivers]);
@@ -201,11 +170,10 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
       await AsyncStorage.removeItem(STORAGE_KEY);
       setUser(null);
     } catch (error) {
-      console.error('Logout failed:', error);
     }
   }, []);
 
-  return useMemo(() => ({
+  return {
     user,
     isLoading,
     isAuthenticated: !!user,
@@ -215,5 +183,5 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
     login,
     loginWithQR,
     logout,
-  }), [user, isLoading, login, loginWithQR, logout]);
+  };
 });
