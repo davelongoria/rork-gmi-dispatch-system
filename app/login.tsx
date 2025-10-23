@@ -30,7 +30,22 @@ export default function LoginScreen() {
   const { theme, selectedCompanyId, isLoading: themeLoading, clearCompanySelection } = useTheme();
   const router = useRouter();
 
-  const colors = theme.colors;
+  const colors = theme?.colors || {
+    primary: '#007AFF',
+    secondary: '#2C2C2E',
+    accent: '#007AFF',
+    success: '#34C759',
+    error: '#FF3B30',
+    danger: '#FF3B30',
+    warning: '#FFA500',
+    background: '#FFFFFF',
+    backgroundSecondary: '#F2F2F7',
+    text: '#000000',
+    textSecondary: '#8E8E93',
+    border: '#E5E5EA',
+    card: '#FFFFFF',
+    shadow: 'rgba(0, 0, 0, 0.1)',
+  };
 
   useEffect(() => {
     if (themeLoading) {
@@ -110,15 +125,17 @@ export default function LoginScreen() {
           </TouchableOpacity>
           
           <View style={styles.logoContainer}>
-            <Image
-              source={{ uri: theme.logo }}
-              style={styles.logo}
-              resizeMode="contain"
-              onLoad={() => setLogoLoaded(true)}
-              onError={() => setLogoLoaded(false)}
-            />
+            {theme?.logo && (
+              <Image
+                source={{ uri: theme.logo }}
+                style={styles.logo}
+                resizeMode="contain"
+                onLoad={() => setLogoLoaded(true)}
+                onError={() => setLogoLoaded(false)}
+              />
+            )}
           </View>
-          {!logoLoaded && <Text style={[styles.title, { color: colors.primary }]}>{theme.name}</Text>}
+          {(!theme?.logo || !logoLoaded) && <Text style={[styles.title, { color: colors.primary }]}>{theme?.name || 'Login'}</Text>}
           <Text style={[styles.subtitle, { color: colors.textSecondary }]}>Driver & Dispatch System</Text>
         </View>
 
