@@ -79,6 +79,14 @@ export interface Customer {
   createdAt: string;
 }
 
+export interface CardOnFile {
+  name: string;
+  number: string;
+  expiry: string;
+  cvc: string;
+  brand: 'VISA' | 'MASTERCARD' | 'AMEX' | 'DISCOVER';
+}
+
 export interface Job {
   id: string;
   customerId: string;
@@ -112,6 +120,11 @@ export interface Job {
   startMileage?: number;
   endMileage?: number;
   startedAt?: string;
+  // Job site specific billing/contact overrides
+  jobSiteBillingAddress?: string;
+  jobSiteContactEmail?: string;
+  jobSiteContactPhone?: string;
+  cardOnFile?: CardOnFile;
   createdAt: string;
 }
 
@@ -303,6 +316,11 @@ export interface RecurringJob {
   notes?: string;
   dumpSiteId?: string;
   projectName?: string;
+  // Job site specific billing/contact overrides
+  jobSiteBillingAddress?: string;
+  jobSiteContactEmail?: string;
+  jobSiteContactPhone?: string;
+  cardOnFile?: CardOnFile;
   createdAt: string;
 }
 

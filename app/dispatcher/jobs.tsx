@@ -12,8 +12,8 @@ import {
 } from 'react-native';
 import { useData } from '@/contexts/DataContext';
 import { useTheme } from '@/contexts/ThemeContext';
-import { Plus, Package, MapPin, Calendar, X, User, Trash2, Edit, Save, RefreshCw, Folder } from 'lucide-react-native';
-import type { Job, JobType, RecurringJob } from '@/types';
+import { Plus, Package, MapPin, Calendar, X, User, Trash2, Edit, Save, RefreshCw, Folder, CreditCard } from 'lucide-react-native';
+import type { Job, JobType, RecurringJob, CardOnFile } from '@/types';
 
 export default function JobsScreen() {
   const { 
@@ -43,9 +43,25 @@ export default function JobsScreen() {
   const [containerSize, setContainerSize] = useState<string>('');
   const [material, setMaterial] = useState<string>('');
   const [notes, setNotes] = useState<string>('');
+  const [jobSiteBillingAddress, setJobSiteBillingAddress] = useState<string>('');
+  const [jobSiteContactEmail, setJobSiteContactEmail] = useState<string>('');
+  const [jobSiteContactPhone, setJobSiteContactPhone] = useState<string>('');
+  const [cardName, setCardName] = useState<string>('');
+  const [cardNumber, setCardNumber] = useState<string>('');
+  const [cardExpiry, setCardExpiry] = useState<string>('');
+  const [cardCvc, setCardCvc] = useState<string>('');
+  const [cardBrand, setCardBrand] = useState<CardOnFile['brand']>('VISA');
   const [serviceDate, setServiceDate] = useState<string>(new Date().toISOString().split('T')[0]);
   const [selectedDumpSite, setSelectedDumpSite] = useState<string>('');
   const [projectName, setProjectName] = useState<string>('');
+  const [rJobSiteBillingAddress, setRJobSiteBillingAddress] = useState<string>('');
+  const [rJobSiteContactEmail, setRJobSiteContactEmail] = useState<string>('');
+  const [rJobSiteContactPhone, setRJobSiteContactPhone] = useState<string>('');
+  const [rCardName, setRCardName] = useState<string>('');
+  const [rCardNumber, setRCardNumber] = useState<string>('');
+  const [rCardExpiry, setRCardExpiry] = useState<string>('');
+  const [rCardCvc, setRCardCvc] = useState<string>('');
+  const [rCardBrand, setRCardBrand] = useState<CardOnFile['brand']>('VISA');
   const [showRecurringJobs, setShowRecurringJobs] = useState<boolean>(false);
 
   const unassignedJobs = jobs.filter(j => !j.routeId && j.status === 'PLANNED');
@@ -61,6 +77,14 @@ export default function JobsScreen() {
     setNotes('');
     setServiceDate(new Date().toISOString().split('T')[0]);
     setSelectedDumpSite('');
+    setJobSiteBillingAddress('');
+    setJobSiteContactEmail('');
+    setJobSiteContactPhone('');
+    setCardName('');
+    setCardNumber('');
+    setCardExpiry('');
+    setCardCvc('');
+    setCardBrand('VISA');
     setModalVisible(true);
   };
 
@@ -74,6 +98,14 @@ export default function JobsScreen() {
     setNotes(job.notes || '');
     setServiceDate(job.serviceDate);
     setSelectedDumpSite(job.dumpSiteId || '');
+    setJobSiteBillingAddress(job.jobSiteBillingAddress || '');
+    setJobSiteContactEmail(job.jobSiteContactEmail || '');
+    setJobSiteContactPhone(job.jobSiteContactPhone || '');
+    setCardName(job.cardOnFile?.name || '');
+    setCardNumber(job.cardOnFile?.number || '');
+    setCardExpiry(job.cardOnFile?.expiry || '');
+    setCardCvc(job.cardOnFile?.cvc || '');
+    setCardBrand(job.cardOnFile?.brand || 'VISA');
     setModalVisible(true);
   };
 
@@ -114,6 +146,10 @@ export default function JobsScreen() {
         serviceDate,
         notes,
         dumpSiteId: selectedDumpSite || undefined,
+        jobSiteBillingAddress: jobSiteBillingAddress || undefined,
+        jobSiteContactEmail: jobSiteContactEmail || undefined,
+        jobSiteContactPhone: jobSiteContactPhone || undefined,
+        cardOnFile: cardNumber ? { name: cardName, number: cardNumber, expiry: cardExpiry, cvc: cardCvc, brand: cardBrand } : undefined,
       });
       Alert.alert('Success', 'Job updated successfully');
     } else {
@@ -128,6 +164,10 @@ export default function JobsScreen() {
         serviceDate,
         notes,
         dumpSiteId: selectedDumpSite || undefined,
+        jobSiteBillingAddress: jobSiteBillingAddress || undefined,
+        jobSiteContactEmail: jobSiteContactEmail || undefined,
+        jobSiteContactPhone: jobSiteContactPhone || undefined,
+        cardOnFile: cardNumber ? { name: cardName, number: cardNumber, expiry: cardExpiry, cvc: cardCvc, brand: cardBrand } : undefined,
         status: 'PLANNED',
         createdAt: new Date().toISOString(),
       };
@@ -147,6 +187,14 @@ export default function JobsScreen() {
     setNotes('');
     setProjectName('');
     setSelectedDumpSite('');
+    setRJobSiteBillingAddress('');
+    setRJobSiteContactEmail('');
+    setRJobSiteContactPhone('');
+    setRCardName('');
+    setRCardNumber('');
+    setRCardExpiry('');
+    setRCardCvc('');
+    setRCardBrand('VISA');
     setRecurringModalVisible(true);
   };
 
@@ -160,6 +208,14 @@ export default function JobsScreen() {
     setNotes(recurringJob.notes || '');
     setProjectName(recurringJob.projectName || '');
     setSelectedDumpSite(recurringJob.dumpSiteId || '');
+    setRJobSiteBillingAddress(recurringJob.jobSiteBillingAddress || '');
+    setRJobSiteContactEmail(recurringJob.jobSiteContactEmail || '');
+    setRJobSiteContactPhone(recurringJob.jobSiteContactPhone || '');
+    setRCardName(recurringJob.cardOnFile?.name || '');
+    setRCardNumber(recurringJob.cardOnFile?.number || '');
+    setRCardExpiry(recurringJob.cardOnFile?.expiry || '');
+    setRCardCvc(recurringJob.cardOnFile?.cvc || '');
+    setRCardBrand(recurringJob.cardOnFile?.brand || 'VISA');
     setRecurringModalVisible(true);
   };
 
@@ -182,6 +238,10 @@ export default function JobsScreen() {
         notes,
         projectName,
         dumpSiteId: selectedDumpSite || undefined,
+        jobSiteBillingAddress: rJobSiteBillingAddress || undefined,
+        jobSiteContactEmail: rJobSiteContactEmail || undefined,
+        jobSiteContactPhone: rJobSiteContactPhone || undefined,
+        cardOnFile: rCardNumber ? { name: rCardName, number: rCardNumber, expiry: rCardExpiry, cvc: rCardCvc, brand: rCardBrand } : undefined,
       });
       Alert.alert('Success', 'Recurring job updated successfully');
     } else {
@@ -196,6 +256,10 @@ export default function JobsScreen() {
         notes,
         projectName,
         dumpSiteId: selectedDumpSite || undefined,
+        jobSiteBillingAddress: rJobSiteBillingAddress || undefined,
+        jobSiteContactEmail: rJobSiteContactEmail || undefined,
+        jobSiteContactPhone: rJobSiteContactPhone || undefined,
+        cardOnFile: rCardNumber ? { name: rCardName, number: rCardNumber, expiry: rCardExpiry, cvc: rCardCvc, brand: rCardBrand } : undefined,
         createdAt: new Date().toISOString(),
       };
       await addRecurringJob(newRecurringJob);
@@ -613,6 +677,36 @@ export default function JobsScreen() {
                 placeholderTextColor={Colors.textSecondary}
               />
 
+              <Text style={[styles.label, { marginTop: 24 }]}>Job Site Billing Address</Text>
+              <TextInput
+                style={styles.input}
+                value={jobSiteBillingAddress}
+                onChangeText={setJobSiteBillingAddress}
+                placeholder="Optional billing address for this job site"
+                placeholderTextColor={Colors.textSecondary}
+              />
+
+              <Text style={styles.label}>Job Site Contact Email</Text>
+              <TextInput
+                style={styles.input}
+                value={jobSiteContactEmail}
+                onChangeText={setJobSiteContactEmail}
+                placeholder="email@example.com"
+                placeholderTextColor={Colors.textSecondary}
+                autoCapitalize="none"
+                keyboardType="email-address"
+              />
+
+              <Text style={styles.label}>Job Site Contact Phone</Text>
+              <TextInput
+                style={styles.input}
+                value={jobSiteContactPhone}
+                onChangeText={setJobSiteContactPhone}
+                placeholder="555-0100"
+                placeholderTextColor={Colors.textSecondary}
+                keyboardType="phone-pad"
+              />
+
               <Text style={styles.label}>Dump Site (Optional)</Text>
               <View style={styles.dumpSiteSelector}>
                 <TouchableOpacity
@@ -668,6 +762,67 @@ export default function JobsScreen() {
                 multiline
                 numberOfLines={3}
               />
+
+
+              <View style={styles.cardHeaderRow}>
+                <CreditCard size={18} color={Colors.primary} />
+                <Text style={[styles.label, { marginTop: 0 }]}>Card on File (Optional)</Text>
+              </View>
+
+              <View style={styles.cardBrandRow}>
+                {(['VISA','MASTERCARD','AMEX','DISCOVER'] as CardOnFile['brand'][]).map(brand => (
+                  <TouchableOpacity
+                    key={brand}
+                    style={[styles.brandChip, cardBrand === brand && styles.brandChipActive]}
+                    onPress={() => setCardBrand(brand)}
+                  >
+                    <Text style={[styles.brandChipText, cardBrand === brand && styles.brandChipTextActive]}>{brand}</Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+
+              <Text style={styles.label}>Name on Card</Text>
+              <TextInput
+                style={styles.input}
+                value={cardName}
+                onChangeText={setCardName}
+                placeholder="Full name"
+                placeholderTextColor={Colors.textSecondary}
+              />
+
+              <Text style={styles.label}>Card Number</Text>
+              <TextInput
+                style={styles.input}
+                value={cardNumber}
+                onChangeText={setCardNumber}
+                placeholder="1234 5678 9012 3456"
+                placeholderTextColor={Colors.textSecondary}
+                keyboardType="number-pad"
+              />
+
+              <View style={{ flexDirection: 'row', gap: 12 }}>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.label}>Expiry</Text>
+                  <TextInput
+                    style={styles.input}
+                    value={cardExpiry}
+                    onChangeText={setCardExpiry}
+                    placeholder="MM/YY"
+                    placeholderTextColor={Colors.textSecondary}
+                  />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.label}>Security Code</Text>
+                  <TextInput
+                    style={styles.input}
+                    value={cardCvc}
+                    onChangeText={setCardCvc}
+                    placeholder="CVC"
+                    placeholderTextColor={Colors.textSecondary}
+                    keyboardType="number-pad"
+                  />
+                </View>
+              </View>
 
               <View style={styles.buttonRow}>
                 <TouchableOpacity
@@ -799,6 +954,36 @@ export default function JobsScreen() {
                 placeholderTextColor={Colors.textSecondary}
               />
 
+              <Text style={[styles.label, { marginTop: 24 }]}>Job Site Billing Address</Text>
+              <TextInput
+                style={styles.input}
+                value={rJobSiteBillingAddress}
+                onChangeText={setRJobSiteBillingAddress}
+                placeholder="Optional billing address for this job site"
+                placeholderTextColor={Colors.textSecondary}
+              />
+
+              <Text style={styles.label}>Job Site Contact Email</Text>
+              <TextInput
+                style={styles.input}
+                value={rJobSiteContactEmail}
+                onChangeText={setRJobSiteContactEmail}
+                placeholder="email@example.com"
+                placeholderTextColor={Colors.textSecondary}
+                autoCapitalize="none"
+                keyboardType="email-address"
+              />
+
+              <Text style={styles.label}>Job Site Contact Phone</Text>
+              <TextInput
+                style={styles.input}
+                value={rJobSiteContactPhone}
+                onChangeText={setRJobSiteContactPhone}
+                placeholder="555-0100"
+                placeholderTextColor={Colors.textSecondary}
+                keyboardType="phone-pad"
+              />
+
               <Text style={styles.label}>Dump Site (Optional)</Text>
               <View style={styles.dumpSiteSelector}>
                 <TouchableOpacity
@@ -854,6 +1039,67 @@ export default function JobsScreen() {
                 multiline
                 numberOfLines={3}
               />
+
+
+              <View style={styles.cardHeaderRow}>
+                <CreditCard size={18} color={Colors.primary} />
+                <Text style={[styles.label, { marginTop: 0 }]}>Card on File (Optional)</Text>
+              </View>
+
+              <View style={styles.cardBrandRow}>
+                {(['VISA','MASTERCARD','AMEX','DISCOVER'] as CardOnFile['brand'][]).map(brand => (
+                  <TouchableOpacity
+                    key={brand}
+                    style={[styles.brandChip, rCardBrand === brand && styles.brandChipActive]}
+                    onPress={() => setRCardBrand(brand)}
+                  >
+                    <Text style={[styles.brandChipText, rCardBrand === brand && styles.brandChipTextActive]}>{brand}</Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+
+              <Text style={styles.label}>Name on Card</Text>
+              <TextInput
+                style={styles.input}
+                value={rCardName}
+                onChangeText={setRCardName}
+                placeholder="Full name"
+                placeholderTextColor={Colors.textSecondary}
+              />
+
+              <Text style={styles.label}>Card Number</Text>
+              <TextInput
+                style={styles.input}
+                value={rCardNumber}
+                onChangeText={setRCardNumber}
+                placeholder="1234 5678 9012 3456"
+                placeholderTextColor={Colors.textSecondary}
+                keyboardType="number-pad"
+              />
+
+              <View style={{ flexDirection: 'row', gap: 12 }}>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.label}>Expiry</Text>
+                  <TextInput
+                    style={styles.input}
+                    value={rCardExpiry}
+                    onChangeText={setRCardExpiry}
+                    placeholder="MM/YY"
+                    placeholderTextColor={Colors.textSecondary}
+                  />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.label}>Security Code</Text>
+                  <TextInput
+                    style={styles.input}
+                    value={rCardCvc}
+                    onChangeText={setRCardCvc}
+                    placeholder="CVC"
+                    placeholderTextColor={Colors.textSecondary}
+                    keyboardType="number-pad"
+                  />
+                </View>
+              </View>
 
               <View style={styles.buttonRow}>
                 <TouchableOpacity
@@ -1048,6 +1294,39 @@ const createStyles = (Colors: any) => StyleSheet.create({
     borderRadius: 12,
     marginBottom: 16,
     gap: 12,
+  },
+  cardHeaderRow: {
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    gap: 8,
+    marginTop: 12,
+    marginBottom: 8,
+  },
+  cardBrandRow: {
+    flexDirection: 'row' as const,
+    flexWrap: 'wrap' as const,
+    gap: 8,
+    marginBottom: 8,
+  },
+  brandChip: {
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 16,
+    backgroundColor: Colors.backgroundSecondary,
+    borderWidth: 1,
+    borderColor: Colors.border,
+  },
+  brandChipActive: {
+    backgroundColor: Colors.primary,
+    borderColor: Colors.primary,
+  },
+  brandChipText: {
+    fontSize: 12,
+    fontWeight: '600' as const,
+    color: Colors.text,
+  },
+  brandChipTextActive: {
+    color: Colors.background,
   },
   infoText: {
     flex: 1,
