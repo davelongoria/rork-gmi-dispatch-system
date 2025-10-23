@@ -76,7 +76,7 @@ export const getTRPCClient = () => {
         fetch: async (url, options) => {
           try {
             const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 3000);
+            const timeoutId = setTimeout(() => controller.abort(), 2000);
 
             const response = await fetch(url, {
               ...options,

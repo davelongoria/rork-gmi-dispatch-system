@@ -93,35 +93,51 @@ export const [DataProvider, useData] = createContextHook(() => {
 
   useEffect(() => {
     loadLocalData();
+    
+    const tryBackend = async () => {
+      if (!hasTriedBackend) {
+        console.log('Attempting to connect to backend...');
+        try {
+          const result = await getAllQuery.refetch();
+          if (result.isSuccess && result.data) {
+            console.log('Backend connection successful');
+            setBackendAvailable(true);
+            setHasTriedBackend(true);
+            
+            const backendData = result.data;
+            const hasCommercialRoutes = backendData.commercialRoutes && backendData.commercialRoutes.length > 0;
+            const hasResidentialRoutes = backendData.residentialRoutes && backendData.residentialRoutes.length > 0;
+            const hasResidentialCustomers = backendData.residentialCustomers && backendData.residentialCustomers.length > 0;
+            const hasResidentialStops = backendData.residentialStops && backendData.residentialStops.length > 0;
+            
+            const dataToUpdate = {
+              ...backendData,
+              commercialRoutes: hasCommercialRoutes ? backendData.commercialRoutes : sampleCommercialRoutes,
+              residentialRoutes: hasResidentialRoutes ? backendData.residentialRoutes : sampleResidentialRoutes,
+              residentialCustomers: hasResidentialCustomers ? backendData.residentialCustomers : sampleResidentialCustomers,
+              residentialStops: hasResidentialStops ? backendData.residentialStops : sampleResidentialStops,
+            };
+            
+            updateFromBackend(dataToUpdate);
+          } else {
+            console.warn('Backend not available, using local data only');
+            setBackendAvailable(false);
+            setHasTriedBackend(true);
+          }
+        } catch (error) {
+          console.warn('Backend connection failed, using local data only:', error);
+          setBackendAvailable(false);
+          setHasTriedBackend(true);
+        }
+      }
+    };
+    
+    const timeout = setTimeout(() => {
+      tryBackend();
+    }, 500);
+    
+    return () => clearTimeout(timeout);
   }, []);
-
-  useEffect(() => {
-    if (getAllQuery.isError && !hasTriedBackend) {
-      console.warn('Backend not available, using local data only');
-      setBackendAvailable(false);
-      setHasTriedBackend(true);
-    } else if (getAllQuery.data && !getAllQuery.isLoading && !getAllQuery.isFetching && !hasTriedBackend) {
-      console.log('Backend data received, syncing to local storage');
-      setBackendAvailable(true);
-      setHasTriedBackend(true);
-      
-      const backendData = getAllQuery.data;
-      const hasCommercialRoutes = backendData.commercialRoutes && backendData.commercialRoutes.length > 0;
-      const hasResidentialRoutes = backendData.residentialRoutes && backendData.residentialRoutes.length > 0;
-      const hasResidentialCustomers = backendData.residentialCustomers && backendData.residentialCustomers.length > 0;
-      const hasResidentialStops = backendData.residentialStops && backendData.residentialStops.length > 0;
-      
-      const dataToUpdate = {
-        ...backendData,
-        commercialRoutes: hasCommercialRoutes ? backendData.commercialRoutes : sampleCommercialRoutes,
-        residentialRoutes: hasResidentialRoutes ? backendData.residentialRoutes : sampleResidentialRoutes,
-        residentialCustomers: hasResidentialCustomers ? backendData.residentialCustomers : sampleResidentialCustomers,
-        residentialStops: hasResidentialStops ? backendData.residentialStops : sampleResidentialStops,
-      };
-      
-      updateFromBackend(dataToUpdate);
-    }
-  }, [getAllQuery.data, getAllQuery.isLoading, getAllQuery.isFetching, getAllQuery.isError]);
 
   const updateFromBackend = async (data: any) => {
     setDrivers(data.drivers || []);
