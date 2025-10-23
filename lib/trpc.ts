@@ -9,12 +9,19 @@ export const trpc = createTRPCReact<AppRouter>();
 
 const normalize = (u: string) => u.replace(/\/$/, "");
 
-const pickProtocol = (host: string) => {
-  const h = host.toLowerCase();
-  if (h.includes(":443") || h.includes("https") || h.includes("ngrok") || h.includes("exp.direct") || h.includes("trycloudflare") || h.endsWith(".dev")) {
-    return "https://";
+const pickProtocol = (hostOrHostPort: string) => {
+  const h = hostOrHostPort.toLowerCase();
+  if (
+    h.includes(':443') ||
+    h.startsWith('https') ||
+    h.includes('ngrok') ||
+    h.includes('exp.direct') ||
+    h.includes('trycloudflare') ||
+    h.endsWith('.dev')
+  ) {
+    return 'https://';
   }
-  return "http://";
+  return 'http://';
 };
 
 const getBaseUrl = (): string => {
@@ -36,9 +43,9 @@ const getBaseUrl = (): string => {
     console.log('Expo Go hostUri:', hostUri);
     
     if (hostUri) {
-      const host = hostUri.split("/")[0].split(":")[0];
-      const protocol = pickProtocol(host);
-      const inferred = `${protocol}${host}:8081`;
+      const hostPort = hostUri.split("/")[0];
+      const protocol = pickProtocol(hostPort);
+      const inferred = `${protocol}${hostPort}`;
       console.log('Inferred backend URL:', inferred);
       return normalize(inferred);
     }
@@ -47,7 +54,7 @@ const getBaseUrl = (): string => {
   }
 
   console.warn('Could not determine backend URL');
-  return "";
+  return "/";
 };
 
 let cachedClient: ReturnType<typeof trpc.createClient> | null = null;
@@ -58,19 +65,10 @@ export const getTRPCClient = () => {
   const baseUrl = getBaseUrl();
   
   if (!baseUrl) {
-    console.warn("No backend URL found. tRPC will not work.");
-    cachedClient = trpc.createClient({
-      links: [
-        httpLink({
-          url: "http://localhost:8081/api/trpc",
-          transformer: superjson,
-        }),
-      ],
-    });
-    return cachedClient;
+    console.warn('No backend URL found. Falling back to relative /api/trpc');
   }
 
-  const apiUrl = `${baseUrl}/api/trpc`;
+  const apiUrl = `${normalize(baseUrl)}/api/trpc`;
   console.log('tRPC API URL:', apiUrl);
 
   cachedClient = trpc.createClient({
