@@ -97,12 +97,12 @@ export const [DataProvider, useData] = createContextHook(() => {
     const tryBackend = async () => {
       if (!hasTriedBackend) {
         console.log('Attempting to connect to backend...');
+        setHasTriedBackend(true);
         try {
           const result = await getAllQuery.refetch();
           if (result.isSuccess && result.data) {
             console.log('Backend connection successful');
             setBackendAvailable(true);
-            setHasTriedBackend(true);
             
             const backendData = result.data;
             const hasCommercialRoutes = backendData.commercialRoutes && backendData.commercialRoutes.length > 0;
@@ -122,19 +122,17 @@ export const [DataProvider, useData] = createContextHook(() => {
           } else {
             console.warn('Backend not available, using local data only');
             setBackendAvailable(false);
-            setHasTriedBackend(true);
           }
         } catch (error) {
           console.warn('Backend connection failed, using local data only:', error);
           setBackendAvailable(false);
-          setHasTriedBackend(true);
         }
       }
     };
     
     const timeout = setTimeout(() => {
       tryBackend();
-    }, 500);
+    }, 1500);
     
     return () => clearTimeout(timeout);
   }, []);
@@ -200,7 +198,7 @@ export const [DataProvider, useData] = createContextHook(() => {
     const timeout = setTimeout(() => {
       console.warn('Data loading timeout, continuing anyway');
       setIsLoading(false);
-    }, 3000);
+    }, 8000);
 
     try {
       const [

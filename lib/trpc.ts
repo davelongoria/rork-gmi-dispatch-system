@@ -22,26 +22,31 @@ const getBaseUrl = (): string => {
     const envUrl = process.env.EXPO_PUBLIC_TOOLKIT_URL || (Constants as any)?.expoConfig?.extra?.EXPO_PUBLIC_TOOLKIT_URL;
     
     if (envUrl && typeof envUrl === "string" && envUrl.startsWith("http")) {
+      console.log('Using env URL:', envUrl);
       return normalize(envUrl);
     }
 
     if (Platform.OS === "web" && typeof window !== "undefined") {
       const origin = window.location.origin;
+      console.log('Using web origin:', origin);
       return normalize(origin);
     }
 
     const hostUri = (Constants as any)?.expoGoConfig?.hostUri as string | undefined;
+    console.log('Expo Go hostUri:', hostUri);
     
     if (hostUri) {
       const host = hostUri.split("/")[0].split(":")[0];
       const protocol = pickProtocol(host);
-      const inferred = `${protocol}${host}`;
+      const inferred = `${protocol}${host}:8081`;
+      console.log('Inferred backend URL:', inferred);
       return normalize(inferred);
     }
   } catch (e) {
     console.error("Error while resolving base URL:", e);
   }
 
+  console.warn('Could not determine backend URL');
   return "";
 };
 
@@ -76,7 +81,7 @@ export const getTRPCClient = () => {
         fetch: async (url, options) => {
           try {
             const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 2000);
+            const timeoutId = setTimeout(() => controller.abort(), 10000);
 
             const response = await fetch(url, {
               ...options,
