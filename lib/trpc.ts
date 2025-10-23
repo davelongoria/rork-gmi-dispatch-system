@@ -76,7 +76,7 @@ export const getTRPCClient = () => {
         fetch: async (url, options) => {
           try {
             const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 10000);
+            const timeoutId = setTimeout(() => controller.abort(), 3000);
 
             const response = await fetch(url, {
               ...options,
@@ -91,8 +91,10 @@ export const getTRPCClient = () => {
             return response;
           } catch (err: any) {
             if (err?.name === 'AbortError') {
+              console.warn('Backend request timeout - app will work offline');
               throw new Error('Request timeout');
             }
+            console.warn('Backend request failed:', err?.message);
             throw err;
           }
         },

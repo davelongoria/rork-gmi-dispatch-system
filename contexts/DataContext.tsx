@@ -77,7 +77,7 @@ export const [DataProvider, useData] = createContextHook(() => {
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [isSyncing, setIsSyncing] = useState<boolean>(false);
 
-  const [backendAvailable, setBackendAvailable] = useState<boolean>(true);
+  const [backendAvailable, setBackendAvailable] = useState<boolean>(false);
   const [hasTriedBackend, setHasTriedBackend] = useState<boolean>(false);
 
   const getAllQuery = trpc.data.getAll.useQuery(undefined, {
@@ -184,7 +184,7 @@ export const [DataProvider, useData] = createContextHook(() => {
     const timeout = setTimeout(() => {
       console.warn('Data loading timeout, continuing anyway');
       setIsLoading(false);
-    }, 5000);
+    }, 3000);
 
     try {
       const [

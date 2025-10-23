@@ -15,7 +15,7 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
     const timeout = setTimeout(() => {
       console.warn('Auth loading timeout, continuing anyway');
       setIsLoading(false);
-    }, 3000);
+    }, 2000);
 
     try {
       const stored = await AsyncStorage.getItem(STORAGE_KEY);
