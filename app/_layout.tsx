@@ -2,7 +2,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import React, { useEffect, useState } from "react";
-import { View, ActivityIndicator, Text, StyleSheet } from "react-native";
+import { View, ActivityIndicator, Text, StyleSheet, Platform } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { DataProvider } from "@/contexts/DataContext";
@@ -10,6 +10,7 @@ import { ThemeProvider } from "@/contexts/ThemeContext";
 import Colors from "@/constants/colors";
 import { trpc, getTRPCClient } from "@/lib/trpc";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
+import * as ScreenOrientation from "expo-screen-orientation";
 
 SplashScreen.preventAutoHideAsync();
 
@@ -42,12 +43,26 @@ function AppContent() {
   const [isReady, setIsReady] = useState(false);
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setIsReady(true);
-      SplashScreen.hideAsync().catch(() => {});
-    }, 100);
-
-    return () => clearTimeout(timer);
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const run = async () => {
+      if (Platform.OS !== 'web') {
+        try {
+          await ScreenOrientation.unlockAsync();
+        } catch (e) {
+          console.log('ScreenOrientation unlock error', e);
+        }
+      } else {
+        console.log('Web platform, orientation control limited');
+      }
+      timer = setTimeout(() => {
+        setIsReady(true);
+        SplashScreen.hideAsync().catch(() => {});
+      }, 100);
+    };
+    run();
+    return () => {
+      if (timer) clearTimeout(timer);
+    };
   }, []);
 
   if (!isReady) {
