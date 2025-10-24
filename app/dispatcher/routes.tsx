@@ -154,6 +154,19 @@ export default function RoutesScreen() {
   };
 
   const handleDispatchRoute = async (route: Route) => {
+    if (!route.driverId || !route.truckId) {
+      Alert.alert('Error', 'Please assign a driver and truck before dispatching');
+      return;
+    }
+
+    if (route.jobIds.length === 0) {
+      Alert.alert('Error', 'Please add jobs to the route before dispatching');
+      return;
+    }
+
+    const today = new Date();
+    const dateStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+
     Alert.alert(
       'Dispatch Route',
       `Dispatch route to ${route.driverName}?`,
@@ -165,7 +178,9 @@ export default function RoutesScreen() {
             await updateRoute(route.id, {
               status: 'DISPATCHED',
               dispatchedAt: new Date().toISOString(),
+              date: dateStr,
             });
+            console.log('Route dispatched:', route.id, 'for date:', dateStr);
             Alert.alert('Success', 'Route dispatched successfully');
           },
         },

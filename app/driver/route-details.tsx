@@ -95,6 +95,11 @@ export default function RouteDetailsScreen() {
   }
 
   const handleStartRoute = async () => {
+    if (route.status !== 'DISPATCHED') {
+      Alert.alert('Error', 'This route has not been dispatched yet. Please contact dispatch.');
+      return;
+    }
+
     Alert.alert(
       'Start Route',
       'Are you ready to start this route?',
@@ -107,6 +112,7 @@ export default function RouteDetailsScreen() {
               status: 'IN_PROGRESS',
               startedAt: new Date().toISOString(),
             });
+            console.log('Route started:', route.id, 'Status changed to IN_PROGRESS');
             Alert.alert('Success', 'Route started');
           },
         },
