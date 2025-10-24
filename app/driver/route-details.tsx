@@ -1274,6 +1274,8 @@ export default function RouteDetailsScreen() {
                       setShowOdometerModal(false);
                       setJobForOdometer(null);
                       setSelectedJobForAction(null);
+                      setShowJobActionModal(false);
+                      Alert.alert('Success', 'Job completed successfully');
                     }
 
                     setOdometerAction(null);
