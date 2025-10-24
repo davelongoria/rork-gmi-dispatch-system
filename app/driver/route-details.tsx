@@ -254,48 +254,72 @@ export default function RouteDetailsScreen() {
   const handleCompleteJob = async () => {
     if (!selectedJobForAction) return;
     
-    Alert.prompt(
-      'Complete Job',
-      'Enter current odometer reading:',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Complete',
-          onPress: async (odometerText) => {
-            const odometer = odometerText ? parseFloat(odometerText) : undefined;
-            
-            await updateJob(selectedJobForAction.id, {
-              status: 'COMPLETED',
-              completedAt: new Date().toISOString(),
-              completedByDriverId: user?.id,
-              endMileage: odometer,
-            });
-
-            if (odometer && route?.truckId) {
-              await addMileageLog({
-                id: `ml_${Date.now()}`,
-                driverId: user?.id || '',
-                driverName: user?.name,
-                truckId: route.truckId,
-                truckUnitNumber: route.truckUnitNumber,
-                timestamp: new Date().toISOString(),
-                odometer,
-                jobId: selectedJobForAction.id,
-                routeId: route.id,
-                createdAt: new Date().toISOString(),
+    if (Platform.OS === 'ios') {
+      Alert.prompt(
+        'Complete Job',
+        'Enter current odometer reading:',
+        [
+          { text: 'Cancel', style: 'cancel' },
+          {
+            text: 'Complete',
+            onPress: async (odometerText) => {
+              const odometer = odometerText ? parseFloat(odometerText) : undefined;
+              
+              await updateJob(selectedJobForAction.id, {
+                status: 'COMPLETED',
+                completedAt: new Date().toISOString(),
+                completedByDriverId: user?.id,
+                endMileage: odometer,
               });
-            }
-            
-            setShowJobActionModal(false);
-            setSelectedJobForAction(null);
-            Alert.alert('Success', 'Job completed');
+
+              if (odometer && route?.truckId) {
+                await addMileageLog({
+                  id: `ml_${Date.now()}`,
+                  driverId: user?.id || '',
+                  driverName: user?.name,
+                  truckId: route.truckId,
+                  truckUnitNumber: route.truckUnitNumber,
+                  timestamp: new Date().toISOString(),
+                  odometer,
+                  jobId: selectedJobForAction.id,
+                  routeId: route.id,
+                  createdAt: new Date().toISOString(),
+                });
+              }
+              
+              setShowJobActionModal(false);
+              setSelectedJobForAction(null);
+              Alert.alert('Success', 'Job completed');
+            },
           },
-        },
-      ],
-      'plain-text',
-      '',
-      'numeric'
-    );
+        ],
+        'plain-text',
+        '',
+        'numeric'
+      );
+    } else {
+      Alert.alert(
+        'Complete Job',
+        'Mark this job as complete?',
+        [
+          { text: 'Cancel', style: 'cancel' },
+          {
+            text: 'Complete',
+            onPress: async () => {
+              await updateJob(selectedJobForAction.id, {
+                status: 'COMPLETED',
+                completedAt: new Date().toISOString(),
+                completedByDriverId: user?.id,
+              });
+              
+              setShowJobActionModal(false);
+              setSelectedJobForAction(null);
+              Alert.alert('Success', 'Job completed');
+            },
+          },
+        ]
+      );
+    }
   };
 
   const handleReturnToCustomer = async () => {
@@ -337,45 +361,65 @@ export default function RouteDetailsScreen() {
       return;
     }
 
-    Alert.prompt(
-      'Start Job',
-      'Enter current odometer reading:',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Start',
-          onPress: async (odometerText) => {
-            const odometer = odometerText ? parseFloat(odometerText) : undefined;
-            
-            await updateJob(job.id, {
-              status: 'IN_PROGRESS',
-              startedAt: new Date().toISOString(),
-              startMileage: odometer,
-            });
-
-            if (odometer && route?.truckId) {
-              await addMileageLog({
-                id: `ml_${Date.now()}`,
-                driverId: user?.id || '',
-                driverName: user?.name,
-                truckId: route.truckId,
-                truckUnitNumber: route.truckUnitNumber,
-                timestamp: new Date().toISOString(),
-                odometer,
-                jobId: job.id,
-                routeId: route.id,
-                createdAt: new Date().toISOString(),
+    if (Platform.OS === 'ios') {
+      Alert.prompt(
+        'Start Job',
+        'Enter current odometer reading:',
+        [
+          { text: 'Cancel', style: 'cancel' },
+          {
+            text: 'Start',
+            onPress: async (odometerText) => {
+              const odometer = odometerText ? parseFloat(odometerText) : undefined;
+              
+              await updateJob(job.id, {
+                status: 'IN_PROGRESS',
+                startedAt: new Date().toISOString(),
+                startMileage: odometer,
               });
-            }
 
-            Alert.alert('Job Started', 'You can now navigate to the job location.');
+              if (odometer && route?.truckId) {
+                await addMileageLog({
+                  id: `ml_${Date.now()}`,
+                  driverId: user?.id || '',
+                  driverName: user?.name,
+                  truckId: route.truckId,
+                  truckUnitNumber: route.truckUnitNumber,
+                  timestamp: new Date().toISOString(),
+                  odometer,
+                  jobId: job.id,
+                  routeId: route.id,
+                  createdAt: new Date().toISOString(),
+                });
+              }
+
+              Alert.alert('Job Started', 'You can now navigate to the job location.');
+            },
           },
-        },
-      ],
-      'plain-text',
-      '',
-      'numeric'
-    );
+        ],
+        'plain-text',
+        '',
+        'numeric'
+      );
+    } else {
+      Alert.alert(
+        'Start Job',
+        'Start this job?',
+        [
+          { text: 'Cancel', style: 'cancel' },
+          {
+            text: 'Start',
+            onPress: async () => {
+              await updateJob(job.id, {
+                status: 'IN_PROGRESS',
+                startedAt: new Date().toISOString(),
+              });
+              Alert.alert('Job Started', 'You can now navigate to the job location.');
+            },
+          },
+        ]
+      );
+    }
   };
 
   const handleResumeJob = async (job: Job) => {
@@ -413,51 +457,23 @@ export default function RouteDetailsScreen() {
         },
         {
           text: 'No',
-          onPress: () => {
-            Alert.prompt(
-              'Suspend Location',
-              'Enter address or location where job is suspended:',
-              [
-                { text: 'Cancel', style: 'cancel' },
-                {
-                  text: 'Next',
-                  onPress: (location) => {
-                    Alert.prompt(
-                      'Suspension Notes',
-                      'Enter any additional notes (optional):',
-                      [
-                        { text: 'Cancel', style: 'cancel' },
-                        {
-                          text: 'Suspend',
-                          onPress: async (notes) => {
-                            await updateJob(job.id, {
-                              status: 'SUSPENDED',
-                              suspendedReason: `Suspended by ${user?.name || 'Driver'} on ${new Date().toLocaleDateString()}`,
-                              willCompleteToday: false,
-                              routeId: undefined,
-                              suspendedBy: user?.id,
-                              suspendedByDriverName: user?.name,
-                              suspendedDate: new Date().toISOString(),
-                              suspendedLocation: location || undefined,
-                              suspendedNotes: notes || undefined,
-                            });
-                            
-                            if (route) {
-                              const updatedJobIds = route.jobIds.filter(jId => jId !== job.id);
-                              await updateRoute(route.id, { jobIds: updatedJobIds });
-                            }
-                            
-                            Alert.alert('Load Suspended', 'Job returned to dispatcher for reassignment.');
-                          },
-                        },
-                      ],
-                      'plain-text'
-                    );
-                  },
-                },
-              ],
-              'plain-text'
-            );
+          onPress: async () => {
+            await updateJob(job.id, {
+              status: 'SUSPENDED',
+              suspendedReason: `Suspended by ${user?.name || 'Driver'} on ${new Date().toLocaleDateString()}`,
+              willCompleteToday: false,
+              routeId: undefined,
+              suspendedBy: user?.id,
+              suspendedByDriverName: user?.name,
+              suspendedDate: new Date().toISOString(),
+            });
+            
+            if (route) {
+              const updatedJobIds = route.jobIds.filter(jId => jId !== job.id);
+              await updateRoute(route.id, { jobIds: updatedJobIds });
+            }
+            
+            Alert.alert('Load Suspended', 'Job returned to dispatcher for reassignment.');
           },
         },
         { text: 'Cancel', style: 'cancel' },
@@ -473,29 +489,54 @@ export default function RouteDetailsScreen() {
   const handleDryRun = async () => {
     if (!selectedJobForArrival) return;
 
-    Alert.prompt(
-      'Dry Run',
-      'Enter notes for dry run (container empty or not present):',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Complete as Dry Run',
-          onPress: async (notes) => {
-            await updateJob(selectedJobForArrival.id, {
-              status: 'COMPLETED',
-              completedAt: new Date().toISOString(),
-              completedByDriverId: user?.id,
-              isDryRun: true,
-              dryRunNotes: notes || 'Container empty or not present',
-            });
-            setShowArrivedAtCustomerModal(false);
-            setSelectedJobForArrival(null);
-            Alert.alert('Success', 'Job completed as dry run');
+    if (Platform.OS === 'ios') {
+      Alert.prompt(
+        'Dry Run',
+        'Enter notes for dry run (container empty or not present):',
+        [
+          { text: 'Cancel', style: 'cancel' },
+          {
+            text: 'Complete as Dry Run',
+            onPress: async (notes) => {
+              await updateJob(selectedJobForArrival.id, {
+                status: 'COMPLETED',
+                completedAt: new Date().toISOString(),
+                completedByDriverId: user?.id,
+                isDryRun: true,
+                dryRunNotes: notes || 'Container empty or not present',
+              });
+              setShowArrivedAtCustomerModal(false);
+              setSelectedJobForArrival(null);
+              Alert.alert('Success', 'Job completed as dry run');
+            },
           },
-        },
-      ],
-      'plain-text'
-    );
+        ],
+        'plain-text'
+      );
+    } else {
+      Alert.alert(
+        'Dry Run',
+        'Mark this job as a dry run? (Container empty or not present)',
+        [
+          { text: 'Cancel', style: 'cancel' },
+          {
+            text: 'Complete as Dry Run',
+            onPress: async () => {
+              await updateJob(selectedJobForArrival.id, {
+                status: 'COMPLETED',
+                completedAt: new Date().toISOString(),
+                completedByDriverId: user?.id,
+                isDryRun: true,
+                dryRunNotes: 'Container empty or not present',
+              });
+              setShowArrivedAtCustomerModal(false);
+              setSelectedJobForArrival(null);
+              Alert.alert('Success', 'Job completed as dry run');
+            },
+          },
+        ]
+      );
+    }
   };
 
   const handleChangeContainerSize = (job: Job) => {
