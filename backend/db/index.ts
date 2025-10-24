@@ -310,11 +310,10 @@ db.exec(`
   CREATE TABLE IF NOT EXISTS companies (
     id TEXT PRIMARY KEY,
     name TEXT NOT NULL,
-    address TEXT NOT NULL,
-    phone TEXT,
-    email TEXT,
-    billingAddress TEXT,
-    notes TEXT,
+    logo TEXT NOT NULL,
+    primaryColor TEXT NOT NULL,
+    secondaryColor TEXT,
+    accentColor TEXT,
     active INTEGER NOT NULL DEFAULT 1,
     createdAt TEXT NOT NULL,
     updatedAt TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP

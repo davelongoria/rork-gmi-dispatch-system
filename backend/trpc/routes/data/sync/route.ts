@@ -317,13 +317,13 @@ export const syncDataProcedure = publicProcedure
     if (input.companies) {
       const stmt = db.prepare(`
         INSERT OR REPLACE INTO companies 
-        (id, name, address, phone, email, billingAddress, notes, active, createdAt, updatedAt)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        (id, name, logo, primaryColor, secondaryColor, accentColor, active, createdAt, updatedAt)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
       `);
       for (const company of input.companies) {
         stmt.run(
-          company.id, company.name, company.address, company.phone || null,
-          company.email || null, company.billingAddress || null, company.notes || null,
+          company.id, company.name, company.logo || '', company.primaryColor || '#000000',
+          company.secondaryColor || null, company.accentColor || null,
           company.active ? 1 : 0, company.createdAt, now
         );
       }
