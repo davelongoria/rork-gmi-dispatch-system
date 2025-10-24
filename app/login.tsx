@@ -201,8 +201,8 @@ export default function LoginScreen() {
                   style={[styles.button, styles.buttonSecondary, { marginTop: 16, backgroundColor: colors.backgroundSecondary }]}
                   onPress={() => setShowQRScanner(false)}
                 >
-                  <KeyRound size={20} color={colors.text} style={{ marginRight: 8 }} />
-                  <Text style={[styles.buttonSecondaryText, { color: colors.text }]}>Use Email & Password</Text>
+                  <KeyRound size={20} color={colors.text} />
+                  <Text style={[styles.buttonSecondaryText, { color: colors.text, marginLeft: 8 }]}>Use Email & Password</Text>
                 </TouchableOpacity>
               </View>
             )}
@@ -255,8 +255,8 @@ export default function LoginScreen() {
                 style={[styles.button, styles.buttonSecondary, { marginTop: 12, backgroundColor: colors.backgroundSecondary }]}
                 onPress={() => setShowQRScanner(true)}
               >
-                <QrCode size={20} color={colors.text} style={{ marginRight: 8 }} />
-                <Text style={[styles.buttonSecondaryText, { color: colors.text }]}>Scan QR Code</Text>
+                <QrCode size={20} color={colors.text} />
+                <Text style={[styles.buttonSecondaryText, { color: colors.text, marginLeft: 8 }]}>Scan QR Code</Text>
               </TouchableOpacity>
             )}
 
