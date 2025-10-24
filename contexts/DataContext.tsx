@@ -837,6 +837,7 @@ export const [DataProvider, useData] = createContextHook(() => {
   const updateCommercialRoute = useCallback(async (id: string, updates: Partial<CommercialRoute>) => {
     const updated = commercialRoutes.map(r => r.id === id ? { ...r, ...updates } : r);
     setCommercialRoutes(updated);
+    console.log('Updated commercial route:', id, updates, 'New status:', updated.find(r => r.id === id)?.status);
     await AsyncStorage.setItem(STORAGE_KEYS.COMMERCIAL_ROUTES, JSON.stringify(updated));
     await syncToBackend({ commercialRoutes: updated });
   }, [commercialRoutes, syncToBackend]);
@@ -844,6 +845,7 @@ export const [DataProvider, useData] = createContextHook(() => {
   const deleteCommercialRoute = useCallback(async (id: string) => {
     const updated = commercialRoutes.filter(r => r.id !== id);
     setCommercialRoutes(updated);
+    console.log('Deleted commercial route:', id, 'Remaining routes:', updated.length);
     await AsyncStorage.setItem(STORAGE_KEYS.COMMERCIAL_ROUTES, JSON.stringify(updated));
     await syncToBackend({ commercialRoutes: updated });
   }, [commercialRoutes, syncToBackend]);
@@ -969,6 +971,7 @@ export const [DataProvider, useData] = createContextHook(() => {
   const updateResidentialRoute = useCallback(async (id: string, updates: Partial<ResidentialRoute>) => {
     const updated = residentialRoutes.map(r => r.id === id ? { ...r, ...updates } : r);
     setResidentialRoutes(updated);
+    console.log('Updated residential route:', id, updates, 'New status:', updated.find(r => r.id === id)?.status);
     await AsyncStorage.setItem(STORAGE_KEYS.RESIDENTIAL_ROUTES, JSON.stringify(updated));
     await syncToBackend({ residentialRoutes: updated });
   }, [residentialRoutes, syncToBackend]);
@@ -976,6 +979,7 @@ export const [DataProvider, useData] = createContextHook(() => {
   const deleteResidentialRoute = useCallback(async (id: string) => {
     const updated = residentialRoutes.filter(r => r.id !== id);
     setResidentialRoutes(updated);
+    console.log('Deleted residential route:', id, 'Remaining routes:', updated.length);
     await AsyncStorage.setItem(STORAGE_KEYS.RESIDENTIAL_ROUTES, JSON.stringify(updated));
     await syncToBackend({ residentialRoutes: updated });
   }, [residentialRoutes, syncToBackend]);
@@ -1011,6 +1015,7 @@ export const [DataProvider, useData] = createContextHook(() => {
   const updateContainerRoute = useCallback(async (id: string, updates: Partial<ContainerRoute>) => {
     const updated = containerRoutes.map(r => r.id === id ? { ...r, ...updates } : r);
     setContainerRoutes(updated);
+    console.log('Updated container route:', id, updates, 'New status:', updated.find(r => r.id === id)?.status);
     await AsyncStorage.setItem(STORAGE_KEYS.CONTAINER_ROUTES, JSON.stringify(updated));
     await syncToBackend({ containerRoutes: updated });
   }, [containerRoutes, syncToBackend]);
@@ -1018,6 +1023,7 @@ export const [DataProvider, useData] = createContextHook(() => {
   const deleteContainerRoute = useCallback(async (id: string) => {
     const updated = containerRoutes.filter(r => r.id !== id);
     setContainerRoutes(updated);
+    console.log('Deleted container route:', id, 'Remaining routes:', updated.length);
     await AsyncStorage.setItem(STORAGE_KEYS.CONTAINER_ROUTES, JSON.stringify(updated));
     await syncToBackend({ containerRoutes: updated });
   }, [containerRoutes, syncToBackend]);
