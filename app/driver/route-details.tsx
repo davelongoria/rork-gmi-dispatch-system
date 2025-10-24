@@ -16,6 +16,7 @@ import { useLocalSearchParams, Stack, router } from 'expo-router';
 import { useAuth } from '@/contexts/AuthContext';
 import { useData } from '@/contexts/DataContext';
 import Colors from '@/constants/colors';
+import { US_STATES } from '@/constants/states';
 import {
   MapPin,
   Navigation,
@@ -67,6 +68,7 @@ export default function RouteDetailsScreen() {
   const [jobForOdometer, setJobForOdometer] = useState<Job | null>(null);
   const [showYardSelectionModal, setShowYardSelectionModal] = useState<boolean>(false);
   const [selectedYardId, setSelectedYardId] = useState<string>('');
+  const [odometerState, setOdometerState] = useState<string>('');
 
   useEffect(() => {
     if (route) {
@@ -107,6 +109,7 @@ export default function RouteDetailsScreen() {
     }
 
     setOdometerReading('');
+    setOdometerState('');
     setOdometerAction('start-route');
     setShowOdometerModal(true);
   };
@@ -247,6 +250,7 @@ export default function RouteDetailsScreen() {
     
     setShowJobActionModal(false);
     setOdometerReading('');
+    setOdometerState('');
     setOdometerAction('complete-job');
     setJobForOdometer(selectedJobForAction);
     setShowOdometerModal(true);
@@ -298,6 +302,7 @@ export default function RouteDetailsScreen() {
     }
 
     setOdometerReading('');
+    setOdometerState('');
     setOdometerAction('start-job');
     setJobForOdometer(job);
     setShowOdometerModal(true);
@@ -1153,6 +1158,29 @@ export default function RouteDetailsScreen() {
                 autoFocus
               />
 
+              <Text style={[styles.inputLabel, { marginTop: 16 }]}>State</Text>
+              <ScrollView style={styles.stateScrollView} contentContainerStyle={styles.stateGrid}>
+                {US_STATES.map((state) => (
+                  <TouchableOpacity
+                    key={state.code}
+                    style={[
+                      styles.stateButton,
+                      odometerState === state.code && styles.stateButtonSelected,
+                    ]}
+                    onPress={() => setOdometerState(state.code)}
+                  >
+                    <Text
+                      style={[
+                        styles.stateButtonText,
+                        odometerState === state.code && styles.stateButtonTextSelected,
+                      ]}
+                    >
+                      {state.code}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </ScrollView>
+
               <View style={styles.buttonRow}>
                 <TouchableOpacity
                   style={[styles.button, styles.buttonSecondary]}
@@ -1163,6 +1191,11 @@ export default function RouteDetailsScreen() {
                 <TouchableOpacity
                   style={[styles.button, styles.buttonPrimary]}
                   onPress={async () => {
+                    if (!odometerState) {
+                      Alert.alert('Required', 'Please select a state');
+                      return;
+                    }
+
                     const odometer = odometerReading ? parseFloat(odometerReading) : undefined;
 
                     if (odometerAction === 'start-route') {
@@ -1180,6 +1213,7 @@ export default function RouteDetailsScreen() {
                           truckUnitNumber: route.truckUnitNumber,
                           timestamp: new Date().toISOString(),
                           odometer,
+                          state: odometerState,
                           routeId: route.id,
                           createdAt: new Date().toISOString(),
                         });
@@ -1203,6 +1237,7 @@ export default function RouteDetailsScreen() {
                           truckUnitNumber: route.truckUnitNumber,
                           timestamp: new Date().toISOString(),
                           odometer,
+                          state: odometerState,
                           jobId: jobForOdometer.id,
                           routeId: route.id,
                           createdAt: new Date().toISOString(),
@@ -1229,6 +1264,7 @@ export default function RouteDetailsScreen() {
                           truckUnitNumber: route.truckUnitNumber,
                           timestamp: new Date().toISOString(),
                           odometer,
+                          state: odometerState,
                           jobId: jobForOdometer.id,
                           routeId: route.id,
                           createdAt: new Date().toISOString(),
@@ -1822,6 +1858,38 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: Colors.textSecondary,
     marginTop: 4,
+  },
+  stateScrollView: {
+    maxHeight: 200,
+    marginBottom: 16,
+  },
+  stateGrid: {
+    flexDirection: 'row' as const,
+    flexWrap: 'wrap' as const,
+    gap: 8,
+    paddingBottom: 8,
+  },
+  stateButton: {
+    width: 56,
+    height: 40,
+    backgroundColor: Colors.backgroundSecondary,
+    borderRadius: 8,
+    justifyContent: 'center' as const,
+    alignItems: 'center' as const,
+    borderWidth: 2,
+    borderColor: Colors.border,
+  },
+  stateButtonSelected: {
+    backgroundColor: Colors.primary,
+    borderColor: Colors.primary,
+  },
+  stateButtonText: {
+    fontSize: 14,
+    fontWeight: '600' as const,
+    color: Colors.text,
+  },
+  stateButtonTextSelected: {
+    color: Colors.background,
   },
   routeActionsContainer: {
     gap: 12,
