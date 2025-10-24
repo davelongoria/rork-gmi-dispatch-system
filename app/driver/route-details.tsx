@@ -61,6 +61,12 @@ export default function RouteDetailsScreen() {
   const [selectedDumpSiteId, setSelectedDumpSiteId] = useState<string>('');
   const [showAddressEditModal, setShowAddressEditModal] = useState<boolean>(false);
   const [newAddress, setNewAddress] = useState<string>('');
+  const [showOdometerModal, setShowOdometerModal] = useState<boolean>(false);
+  const [odometerReading, setOdometerReading] = useState<string>('');
+  const [odometerAction, setOdometerAction] = useState<'start-route' | 'start-job' | 'complete-job' | null>(null);
+  const [jobForOdometer, setJobForOdometer] = useState<Job | null>(null);
+  const [showYardSelectionModal, setShowYardSelectionModal] = useState<boolean>(false);
+  const [selectedYardId, setSelectedYardId] = useState<string>('');
 
   useEffect(() => {
     if (route) {
@@ -100,24 +106,9 @@ export default function RouteDetailsScreen() {
       return;
     }
 
-    Alert.alert(
-      'Start Route',
-      'Are you ready to start this route?',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Start',
-          onPress: async () => {
-            await updateRoute(route.id, {
-              status: 'IN_PROGRESS',
-              startedAt: new Date().toISOString(),
-            });
-            console.log('Route started:', route.id, 'Status changed to IN_PROGRESS');
-            Alert.alert('Success', 'Route started');
-          },
-        },
-      ]
-    );
+    setOdometerReading('');
+    setOdometerAction('start-route');
+    setShowOdometerModal(true);
   };
 
   const handleCompleteRoute = async () => {
@@ -254,58 +245,11 @@ export default function RouteDetailsScreen() {
   const handleCompleteJob = async () => {
     if (!selectedJobForAction) return;
     
-    if (Platform.OS === 'ios') {
-      Alert.prompt(
-        'Complete Job',
-        'Enter current odometer reading:',
-        [
-          { text: 'Cancel', style: 'cancel' },
-          {
-            text: 'Complete',
-            onPress: async (odometerText) => {
-              const odometer = odometerText ? parseFloat(odometerText) : undefined;
-              
-              await updateJob(selectedJobForAction.id, {
-                status: 'COMPLETED',
-                completedAt: new Date().toISOString(),
-                completedByDriverId: user?.id,
-                endMileage: odometer,
-              });
-
-              if (odometer && route?.truckId) {
-                await addMileageLog({
-                  id: `ml_${Date.now()}`,
-                  driverId: user?.id || '',
-                  driverName: user?.name,
-                  truckId: route.truckId,
-                  truckUnitNumber: route.truckUnitNumber,
-                  timestamp: new Date().toISOString(),
-                  odometer,
-                  jobId: selectedJobForAction.id,
-                  routeId: route.id,
-                  createdAt: new Date().toISOString(),
-                });
-              }
-              
-              setShowJobActionModal(false);
-              setSelectedJobForAction(null);
-            },
-          },
-        ],
-        'plain-text',
-        '',
-        'numeric'
-      );
-    } else {
-      await updateJob(selectedJobForAction.id, {
-        status: 'COMPLETED',
-        completedAt: new Date().toISOString(),
-        completedByDriverId: user?.id,
-      });
-      
-      setShowJobActionModal(false);
-      setSelectedJobForAction(null);
-    }
+    setShowJobActionModal(false);
+    setOdometerReading('');
+    setOdometerAction('complete-job');
+    setJobForOdometer(selectedJobForAction);
+    setShowOdometerModal(true);
   };
 
   const handleReturnToCustomer = async () => {
@@ -324,19 +268,25 @@ export default function RouteDetailsScreen() {
   const handleReturnToDropYard = async () => {
     if (!selectedJobForAction) return;
     
-    const yardStart = route?.yardStartId ? yards.find(y => y.id === route.yardStartId) : null;
     setShowJobActionModal(false);
     
-    if (!yardStart) {
-      Alert.alert('Error', 'No drop yard assigned');
+    const activeYards = yards.filter(y => y.active);
+    
+    if (activeYards.length === 0) {
+      Alert.alert('Error', 'No active yards available');
       return;
     }
     
-    const address = encodeURIComponent(yardStart.address);
-    if (Platform.OS === 'ios') {
-      Linking.openURL(`maps://maps.apple.com/?daddr=${address}`);
+    if (activeYards.length === 1) {
+      const address = encodeURIComponent(activeYards[0].address);
+      if (Platform.OS === 'ios') {
+        Linking.openURL(`maps://maps.apple.com/?daddr=${address}`);
+      } else {
+        Linking.openURL(`google.navigation:q=${address}`);
+      }
     } else {
-      Linking.openURL(`google.navigation:q=${address}`);
+      setSelectedYardId(route?.yardStartId || activeYards[0].id);
+      setShowYardSelectionModal(true);
     }
   };
 
@@ -347,65 +297,10 @@ export default function RouteDetailsScreen() {
       return;
     }
 
-    if (Platform.OS === 'ios') {
-      Alert.prompt(
-        'Start Job',
-        'Enter current odometer reading:',
-        [
-          { text: 'Cancel', style: 'cancel' },
-          {
-            text: 'Start',
-            onPress: async (odometerText) => {
-              const odometer = odometerText ? parseFloat(odometerText) : undefined;
-              
-              await updateJob(job.id, {
-                status: 'IN_PROGRESS',
-                startedAt: new Date().toISOString(),
-                startMileage: odometer,
-              });
-
-              if (odometer && route?.truckId) {
-                await addMileageLog({
-                  id: `ml_${Date.now()}`,
-                  driverId: user?.id || '',
-                  driverName: user?.name,
-                  truckId: route.truckId,
-                  truckUnitNumber: route.truckUnitNumber,
-                  timestamp: new Date().toISOString(),
-                  odometer,
-                  jobId: job.id,
-                  routeId: route.id,
-                  createdAt: new Date().toISOString(),
-                });
-              }
-
-              Alert.alert('Job Started', 'You can now navigate to the job location.');
-            },
-          },
-        ],
-        'plain-text',
-        '',
-        'numeric'
-      );
-    } else {
-      Alert.alert(
-        'Start Job',
-        'Start this job?',
-        [
-          { text: 'Cancel', style: 'cancel' },
-          {
-            text: 'Start',
-            onPress: async () => {
-              await updateJob(job.id, {
-                status: 'IN_PROGRESS',
-                startedAt: new Date().toISOString(),
-              });
-              Alert.alert('Job Started', 'You can now navigate to the job location.');
-            },
-          },
-        ]
-      );
-    }
+    setOdometerReading('');
+    setOdometerAction('start-job');
+    setJobForOdometer(job);
+    setShowOdometerModal(true);
   };
 
   const handleResumeJob = async (job: Job) => {
@@ -475,54 +370,16 @@ export default function RouteDetailsScreen() {
   const handleDryRun = async () => {
     if (!selectedJobForArrival) return;
 
-    if (Platform.OS === 'ios') {
-      Alert.prompt(
-        'Dry Run',
-        'Enter notes for dry run (container empty or not present):',
-        [
-          { text: 'Cancel', style: 'cancel' },
-          {
-            text: 'Complete as Dry Run',
-            onPress: async (notes) => {
-              await updateJob(selectedJobForArrival.id, {
-                status: 'COMPLETED',
-                completedAt: new Date().toISOString(),
-                completedByDriverId: user?.id,
-                isDryRun: true,
-                dryRunNotes: notes || 'Container empty or not present',
-              });
-              setShowArrivedAtCustomerModal(false);
-              setSelectedJobForArrival(null);
-              Alert.alert('Success', 'Job completed as dry run');
-            },
-          },
-        ],
-        'plain-text'
-      );
-    } else {
-      Alert.alert(
-        'Dry Run',
-        'Mark this job as a dry run? (Container empty or not present)',
-        [
-          { text: 'Cancel', style: 'cancel' },
-          {
-            text: 'Complete as Dry Run',
-            onPress: async () => {
-              await updateJob(selectedJobForArrival.id, {
-                status: 'COMPLETED',
-                completedAt: new Date().toISOString(),
-                completedByDriverId: user?.id,
-                isDryRun: true,
-                dryRunNotes: 'Container empty or not present',
-              });
-              setShowArrivedAtCustomerModal(false);
-              setSelectedJobForArrival(null);
-              Alert.alert('Success', 'Job completed as dry run');
-            },
-          },
-        ]
-      );
-    }
+    await updateJob(selectedJobForArrival.id, {
+      status: 'COMPLETED',
+      completedAt: new Date().toISOString(),
+      completedByDriverId: user?.id,
+      isDryRun: true,
+      dryRunNotes: 'Container empty or not present',
+    });
+    setShowArrivedAtCustomerModal(false);
+    setSelectedJobForArrival(null);
+    Alert.alert('Success', 'Job completed as dry run');
   };
 
   const handleChangeContainerSize = (job: Job) => {
@@ -1254,6 +1111,199 @@ export default function RouteDetailsScreen() {
                 </TouchableOpacity>
               </View>
             </View>
+          </View>
+        </View>
+      </Modal>
+
+      <Modal
+        visible={showOdometerModal}
+        animationType="slide"
+        transparent={true}
+        onRequestClose={() => setShowOdometerModal(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Odometer Reading</Text>
+              <TouchableOpacity onPress={() => setShowOdometerModal(false)}>
+                <X size={24} color={Colors.text} />
+              </TouchableOpacity>
+            </View>
+
+            <View style={styles.form}>
+              <Text style={styles.inputLabel}>Current Odometer Reading</Text>
+              <TextInput
+                style={styles.input}
+                value={odometerReading}
+                onChangeText={setOdometerReading}
+                placeholder="Enter odometer reading"
+                placeholderTextColor={Colors.textSecondary}
+                keyboardType="numeric"
+                autoFocus
+              />
+
+              <View style={styles.buttonRow}>
+                <TouchableOpacity
+                  style={[styles.button, styles.buttonSecondary]}
+                  onPress={() => setShowOdometerModal(false)}
+                >
+                  <Text style={styles.buttonSecondaryText}>Cancel</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[styles.button, styles.buttonPrimary]}
+                  onPress={async () => {
+                    const odometer = odometerReading ? parseFloat(odometerReading) : undefined;
+
+                    if (odometerAction === 'start-route') {
+                      await updateRoute(route.id, {
+                        status: 'IN_PROGRESS',
+                        startedAt: new Date().toISOString(),
+                      });
+
+                      if (odometer && route.truckId) {
+                        await addMileageLog({
+                          id: `ml_${Date.now()}`,
+                          driverId: user?.id || '',
+                          driverName: user?.name,
+                          truckId: route.truckId,
+                          truckUnitNumber: route.truckUnitNumber,
+                          timestamp: new Date().toISOString(),
+                          odometer,
+                          routeId: route.id,
+                          createdAt: new Date().toISOString(),
+                        });
+                      }
+
+                      setShowOdometerModal(false);
+                      Alert.alert('Success', 'Route started');
+                    } else if (odometerAction === 'start-job' && jobForOdometer) {
+                      await updateJob(jobForOdometer.id, {
+                        status: 'IN_PROGRESS',
+                        startedAt: new Date().toISOString(),
+                        startMileage: odometer,
+                      });
+
+                      if (odometer && route.truckId) {
+                        await addMileageLog({
+                          id: `ml_${Date.now()}`,
+                          driverId: user?.id || '',
+                          driverName: user?.name,
+                          truckId: route.truckId,
+                          truckUnitNumber: route.truckUnitNumber,
+                          timestamp: new Date().toISOString(),
+                          odometer,
+                          jobId: jobForOdometer.id,
+                          routeId: route.id,
+                          createdAt: new Date().toISOString(),
+                        });
+                      }
+
+                      setShowOdometerModal(false);
+                      setJobForOdometer(null);
+                      Alert.alert('Job Started', 'You can now navigate to the job location.');
+                    } else if (odometerAction === 'complete-job' && jobForOdometer) {
+                      await updateJob(jobForOdometer.id, {
+                        status: 'COMPLETED',
+                        completedAt: new Date().toISOString(),
+                        completedByDriverId: user?.id,
+                        endMileage: odometer,
+                      });
+
+                      if (odometer && route.truckId) {
+                        await addMileageLog({
+                          id: `ml_${Date.now()}`,
+                          driverId: user?.id || '',
+                          driverName: user?.name,
+                          truckId: route.truckId,
+                          truckUnitNumber: route.truckUnitNumber,
+                          timestamp: new Date().toISOString(),
+                          odometer,
+                          jobId: jobForOdometer.id,
+                          routeId: route.id,
+                          createdAt: new Date().toISOString(),
+                        });
+                      }
+
+                      setShowOdometerModal(false);
+                      setJobForOdometer(null);
+                      setSelectedJobForAction(null);
+                    }
+
+                    setOdometerAction(null);
+                  }}
+                >
+                  <Text style={styles.buttonPrimaryText}>Submit</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
+      <Modal
+        visible={showYardSelectionModal}
+        animationType="slide"
+        transparent={true}
+        onRequestClose={() => setShowYardSelectionModal(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Select Drop Yard</Text>
+              <TouchableOpacity onPress={() => setShowYardSelectionModal(false)}>
+                <X size={24} color={Colors.text} />
+              </TouchableOpacity>
+            </View>
+
+            <ScrollView style={styles.form}>
+              <Text style={styles.inputLabel}>Choose a yard to navigate to:</Text>
+              {yards.filter(y => y.active).map(yard => (
+                <TouchableOpacity
+                  key={yard.id}
+                  style={[
+                    styles.selectionItem,
+                    selectedYardId === yard.id && styles.selectionItemSelected,
+                  ]}
+                  onPress={() => setSelectedYardId(yard.id)}
+                >
+                  <Text
+                    style={[
+                      styles.selectionText,
+                      selectedYardId === yard.id && styles.selectionTextSelected,
+                    ]}
+                  >
+                    {yard.name}
+                  </Text>
+                  <Text style={styles.selectionSubtext}>{yard.address}</Text>
+                </TouchableOpacity>
+              ))}
+
+              <View style={styles.buttonRow}>
+                <TouchableOpacity
+                  style={[styles.button, styles.buttonSecondary]}
+                  onPress={() => setShowYardSelectionModal(false)}
+                >
+                  <Text style={styles.buttonSecondaryText}>Cancel</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[styles.button, styles.buttonPrimary]}
+                  onPress={() => {
+                    const selectedYard = yards.find(y => y.id === selectedYardId);
+                    if (selectedYard) {
+                      const address = encodeURIComponent(selectedYard.address);
+                      if (Platform.OS === 'ios') {
+                        Linking.openURL(`maps://maps.apple.com/?daddr=${address}`);
+                      } else {
+                        Linking.openURL(`google.navigation:q=${address}`);
+                      }
+                      setShowYardSelectionModal(false);
+                    }
+                  }}
+                >
+                  <Text style={styles.buttonPrimaryText}>Navigate</Text>
+                </TouchableOpacity>
+              </View>
+            </ScrollView>
           </View>
         </View>
       </Modal>

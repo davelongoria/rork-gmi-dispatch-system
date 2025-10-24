@@ -6,6 +6,8 @@ import {
   ScrollView,
   TouchableOpacity,
   Alert,
+  Modal,
+  TextInput,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useAuth } from '@/contexts/AuthContext';
@@ -21,19 +23,23 @@ import {
   Square,
   ArrowRight,
   MessageCircle,
+  X,
 } from 'lucide-react-native';
 import * as Location from 'expo-location';
 import type { TimeLog } from '@/types';
 
 export default function DriverDashboard() {
   const { user, logout } = useAuth();
-  const { timeLogs, routes, commercialRoutes, residentialRoutes, containerRoutes, addTimeLog, dvirs, fuelLogs, dumpTickets, jobs } = useData();
+  const { timeLogs, routes, commercialRoutes, residentialRoutes, containerRoutes, addTimeLog, dvirs, fuelLogs, dumpTickets, jobs, addMileageLog, trucks } = useData();
   const { theme } = useTheme();
   const colors = theme.colors;
   const router = useRouter();
   const [isClockedIn, setIsClockedIn] = useState<boolean>(false);
   const [isOnLunch, setIsOnLunch] = useState<boolean>(false);
   const [currentShiftStart, setCurrentShiftStart] = useState<string | null>(null);
+  const [showOdometerModal, setShowOdometerModal] = useState<boolean>(false);
+  const [odometerReading, setOdometerReading] = useState<string>('');
+  const [odometerAction, setOdometerAction] = useState<'clock-in' | 'clock-out' | null>(null);
 
   useEffect(() => {
     const userTimeLogs = timeLogs.filter(log => log.driverId === user?.id);
@@ -75,21 +81,9 @@ export default function DriverDashboard() {
   };
 
   const handleClockIn = async () => {
-    const location = await getLocation();
-    const timeLog: TimeLog = {
-      id: `timelog-${Date.now()}`,
-      driverId: user?.id || '',
-      driverName: user?.name,
-      type: 'CLOCK_IN',
-      timestamp: new Date().toISOString(),
-      latitude: location.latitude,
-      longitude: location.longitude,
-      createdAt: new Date().toISOString(),
-    };
-    await addTimeLog(timeLog);
-    setIsClockedIn(true);
-    setCurrentShiftStart(timeLog.timestamp);
-    Alert.alert('Success', 'Clocked in successfully');
+    setOdometerReading('');
+    setOdometerAction('clock-in');
+    setShowOdometerModal(true);
   };
 
   const handleClockOut = async () => {
@@ -146,22 +140,9 @@ export default function DriverDashboard() {
         {
           text: 'Clock Out',
           onPress: async () => {
-            const location = await getLocation();
-            const timeLog: TimeLog = {
-              id: `timelog-${Date.now()}`,
-              driverId: user?.id || '',
-              driverName: user?.name,
-              type: 'CLOCK_OUT',
-              timestamp: new Date().toISOString(),
-              latitude: location.latitude,
-              longitude: location.longitude,
-              createdAt: new Date().toISOString(),
-            };
-            await addTimeLog(timeLog);
-            setIsClockedIn(false);
-            setIsOnLunch(false);
-            setCurrentShiftStart(null);
-            Alert.alert('Success', 'Clocked out successfully');
+            setOdometerReading('');
+            setOdometerAction('clock-out');
+            setShowOdometerModal(true);
           },
         },
       ]
@@ -696,6 +677,118 @@ export default function DriverDashboard() {
           </View>
         )}
       </ScrollView>
+
+      <Modal
+        visible={showOdometerModal}
+        animationType="slide"
+        transparent={true}
+        onRequestClose={() => setShowOdometerModal(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Odometer Reading</Text>
+              <TouchableOpacity onPress={() => setShowOdometerModal(false)}>
+                <X size={24} color={colors.text} />
+              </TouchableOpacity>
+            </View>
+
+            <View style={styles.form}>
+              <Text style={styles.inputLabel}>Current Odometer Reading</Text>
+              <TextInput
+                style={styles.input}
+                value={odometerReading}
+                onChangeText={setOdometerReading}
+                placeholder="Enter odometer reading"
+                placeholderTextColor={colors.textSecondary}
+                keyboardType="numeric"
+                autoFocus
+              />
+
+              <View style={styles.buttonRow}>
+                <TouchableOpacity
+                  style={[styles.button, styles.buttonSecondary]}
+                  onPress={() => setShowOdometerModal(false)}
+                >
+                  <Text style={styles.buttonSecondaryText}>Cancel</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[styles.button, styles.buttonPrimary]}
+                  onPress={async () => {
+                    const odometer = odometerReading ? parseFloat(odometerReading) : undefined;
+                    const location = await getLocation();
+
+                    if (odometerAction === 'clock-in') {
+                      const timeLog: TimeLog = {
+                        id: `timelog-${Date.now()}`,
+                        driverId: user?.id || '',
+                        driverName: user?.name,
+                        type: 'CLOCK_IN',
+                        timestamp: new Date().toISOString(),
+                        latitude: location.latitude,
+                        longitude: location.longitude,
+                        createdAt: new Date().toISOString(),
+                      };
+                      await addTimeLog(timeLog);
+                      setIsClockedIn(true);
+                      setCurrentShiftStart(timeLog.timestamp);
+                      
+                      setShowOdometerModal(false);
+                      Alert.alert('Success', 'Clocked in successfully');
+                    } else if (odometerAction === 'clock-out') {
+                      const timeLog: TimeLog = {
+                        id: `timelog-${Date.now()}`,
+                        driverId: user?.id || '',
+                        driverName: user?.name,
+                        type: 'CLOCK_OUT',
+                        timestamp: new Date().toISOString(),
+                        latitude: location.latitude,
+                        longitude: location.longitude,
+                        createdAt: new Date().toISOString(),
+                      };
+                      await addTimeLog(timeLog);
+
+                      if (odometer) {
+                        const todayRoutes = routes.filter(r => {
+                          const today = new Date().toISOString().split('T')[0];
+                          return r.date === today && r.driverId === user?.id && r.truckId;
+                        });
+                        
+                        if (todayRoutes.length > 0 && todayRoutes[0].truckId) {
+                          const truck = trucks.find(t => t.id === todayRoutes[0].truckId);
+                          if (truck) {
+                            await addMileageLog({
+                              id: `ml_${Date.now()}`,
+                              driverId: user?.id || '',
+                              driverName: user?.name,
+                              truckId: truck.id,
+                              truckUnitNumber: truck.unitNumber,
+                              timestamp: new Date().toISOString(),
+                              odometer,
+                              createdAt: new Date().toISOString(),
+                            });
+                          }
+                        }
+                      }
+
+                      setIsClockedIn(false);
+                      setIsOnLunch(false);
+                      setCurrentShiftStart(null);
+                      
+                      setShowOdometerModal(false);
+                      Alert.alert('Success', 'Clocked out successfully');
+                    }
+
+                    setOdometerAction(null);
+                  }}
+                >
+                  <Text style={styles.buttonPrimaryText}>Submit</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -920,5 +1013,73 @@ const createStyles = (colors: any) => StyleSheet.create({
     color: colors.error,
     fontWeight: '600' as const,
     marginTop: 4,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'flex-end' as const,
+  },
+  modalContent: {
+    backgroundColor: colors.background,
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    maxHeight: '90%',
+  },
+  modalHeader: {
+    flexDirection: 'row' as const,
+    justifyContent: 'space-between' as const,
+    alignItems: 'center' as const,
+    padding: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.backgroundSecondary,
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: '700' as const,
+    color: colors.text,
+  },
+  form: {
+    padding: 20,
+  },
+  inputLabel: {
+    fontSize: 14,
+    fontWeight: '600' as const,
+    color: colors.text,
+    marginBottom: 8,
+  },
+  input: {
+    backgroundColor: colors.backgroundSecondary,
+    borderRadius: 8,
+    padding: 12,
+    fontSize: 16,
+    color: colors.text,
+  },
+  buttonRow: {
+    flexDirection: 'row' as const,
+    gap: 12,
+    marginTop: 24,
+  },
+  button: {
+    flex: 1,
+    height: 48,
+    borderRadius: 12,
+    justifyContent: 'center' as const,
+    alignItems: 'center' as const,
+  },
+  buttonPrimary: {
+    backgroundColor: colors.primary,
+  },
+  buttonPrimaryText: {
+    fontSize: 16,
+    fontWeight: '600' as const,
+    color: colors.background,
+  },
+  buttonSecondary: {
+    backgroundColor: colors.backgroundSecondary,
+  },
+  buttonSecondaryText: {
+    fontSize: 16,
+    fontWeight: '600' as const,
+    color: colors.text,
   },
 });
