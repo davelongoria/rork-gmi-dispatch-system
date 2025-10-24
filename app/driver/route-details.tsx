@@ -766,9 +766,20 @@ export default function RouteDetailsScreen() {
                 )}
 
                 {job.status === 'AT_DUMP' && (
-                  <View style={styles.atDumpBanner}>
-                    <TruckIcon size={16} color='#FF9500' />
-                    <Text style={styles.atDumpText}>At dump site - awaiting next action</Text>
+                  <View>
+                    <View style={styles.atDumpBanner}>
+                      <TruckIcon size={16} color='#FF9500' />
+                      <Text style={styles.atDumpText}>At dump site - awaiting next action</Text>
+                    </View>
+                    <TouchableOpacity
+                      style={styles.nextActionButton}
+                      onPress={() => {
+                        setSelectedJobForAction(job);
+                        setShowJobActionModal(true);
+                      }}
+                    >
+                      <Text style={styles.nextActionButtonText}>Choose Next Action</Text>
+                    </TouchableOpacity>
                   </View>
                 )}
 
@@ -1860,5 +1871,17 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600' as const,
     color: Colors.success,
+  },
+  nextActionButton: {
+    backgroundColor: '#FF9500',
+    padding: 12,
+    borderRadius: 8,
+    alignItems: 'center' as const,
+    marginTop: 8,
+  },
+  nextActionButtonText: {
+    fontSize: 14,
+    fontWeight: '600' as const,
+    color: Colors.background,
   },
 });
