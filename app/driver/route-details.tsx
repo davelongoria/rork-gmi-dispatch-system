@@ -289,7 +289,6 @@ export default function RouteDetailsScreen() {
               
               setShowJobActionModal(false);
               setSelectedJobForAction(null);
-              Alert.alert('Success', 'Job completed');
             },
           },
         ],
@@ -298,27 +297,14 @@ export default function RouteDetailsScreen() {
         'numeric'
       );
     } else {
-      Alert.alert(
-        'Complete Job',
-        'Mark this job as complete?',
-        [
-          { text: 'Cancel', style: 'cancel' },
-          {
-            text: 'Complete',
-            onPress: async () => {
-              await updateJob(selectedJobForAction.id, {
-                status: 'COMPLETED',
-                completedAt: new Date().toISOString(),
-                completedByDriverId: user?.id,
-              });
-              
-              setShowJobActionModal(false);
-              setSelectedJobForAction(null);
-              Alert.alert('Success', 'Job completed');
-            },
-          },
-        ]
-      );
+      await updateJob(selectedJobForAction.id, {
+        status: 'COMPLETED',
+        completedAt: new Date().toISOString(),
+        completedByDriverId: user?.id,
+      });
+      
+      setShowJobActionModal(false);
+      setSelectedJobForAction(null);
     }
   };
 
