@@ -63,6 +63,9 @@ export default function JobsScreen() {
   const [rCardCvc, setRCardCvc] = useState<string>('');
   const [rCardBrand, setRCardBrand] = useState<CardOnFile['brand']>('VISA');
   const [showRecurringJobs, setShowRecurringJobs] = useState<boolean>(false);
+  const [createFromTemplateModal, setCreateFromTemplateModal] = useState<boolean>(false);
+  const [selectedRecurringJob, setSelectedRecurringJob] = useState<RecurringJob | null>(null);
+  const [templateServiceDate, setTemplateServiceDate] = useState<string>(new Date().toISOString().split('T')[0]);
 
   const unassignedJobs = jobs.filter(j => !j.routeId && j.status === 'PLANNED');
   const suspendedJobs = jobs.filter(j => j.status === 'SUSPENDED' && !j.willCompleteToday);
@@ -287,39 +290,37 @@ export default function JobsScreen() {
   };
 
   const handleCreateJobFromRecurring = (recurringJob: RecurringJob) => {
-    Alert.prompt(
-      'Create Job from Template',
-      'Enter service date (YYYY-MM-DD):',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Create',
-          onPress: async (inputDate) => {
-            const date = inputDate || new Date().toISOString().split('T')[0];
-            
-            const newJob: Job = {
-              id: `job-${Date.now()}`,
-              customerId: recurringJob.customerId,
-              customerName: recurringJob.customerName,
-              type: recurringJob.type,
-              containerSize: recurringJob.containerSize,
-              material: recurringJob.material,
-              address: recurringJob.address,
-              serviceDate: date,
-              notes: recurringJob.notes,
-              dumpSiteId: recurringJob.dumpSiteId,
-              status: 'PLANNED',
-              createdAt: new Date().toISOString(),
-            };
-            
-            await addJob(newJob);
-            Alert.alert('Success', 'Job created from template');
-          },
-        },
-      ],
-      'plain-text',
-      new Date().toISOString().split('T')[0]
-    );
+    setSelectedRecurringJob(recurringJob);
+    setTemplateServiceDate(new Date().toISOString().split('T')[0]);
+    setCreateFromTemplateModal(true);
+  };
+
+  const handleConfirmCreateFromTemplate = async () => {
+    if (!selectedRecurringJob) return;
+    
+    const newJob: Job = {
+      id: `job-${Date.now()}`,
+      customerId: selectedRecurringJob.customerId,
+      customerName: selectedRecurringJob.customerName,
+      type: selectedRecurringJob.type,
+      containerSize: selectedRecurringJob.containerSize,
+      material: selectedRecurringJob.material,
+      address: selectedRecurringJob.address,
+      serviceDate: templateServiceDate,
+      notes: selectedRecurringJob.notes,
+      dumpSiteId: selectedRecurringJob.dumpSiteId,
+      jobSiteBillingAddress: selectedRecurringJob.jobSiteBillingAddress,
+      jobSiteContactEmail: selectedRecurringJob.jobSiteContactEmail,
+      jobSiteContactPhone: selectedRecurringJob.jobSiteContactPhone,
+      cardOnFile: selectedRecurringJob.cardOnFile,
+      status: 'PLANNED',
+      createdAt: new Date().toISOString(),
+    };
+    
+    await addJob(newJob);
+    setCreateFromTemplateModal(false);
+    setSelectedRecurringJob(null);
+    Alert.alert('Success', 'Job created from template');
   };
 
   const getJobTypeColor = (type: JobType) => {
@@ -1122,6 +1123,61 @@ export default function JobsScreen() {
           </View>
         </View>
       </Modal>
+
+      <Modal
+        visible={createFromTemplateModal}
+        animationType="slide"
+        transparent
+        onRequestClose={() => setCreateFromTemplateModal(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Create Job from Template</Text>
+              <TouchableOpacity onPress={() => setCreateFromTemplateModal(false)}>
+                <X size={24} color={Colors.text} />
+              </TouchableOpacity>
+            </View>
+
+            <View style={styles.form}>
+              {selectedRecurringJob && (
+                <View style={styles.templateInfoBox}>
+                  <Text style={styles.templateInfoTitle}>{selectedRecurringJob.customerName}</Text>
+                  <Text style={styles.templateInfoText}>{selectedRecurringJob.address}</Text>
+                  <Text style={styles.templateInfoText}>
+                    {getJobTypeLabel(selectedRecurringJob.type)}
+                    {selectedRecurringJob.containerSize && ` - ${selectedRecurringJob.containerSize}`}
+                  </Text>
+                </View>
+              )}
+
+              <Text style={styles.label}>Service Date</Text>
+              <TextInput
+                style={styles.input}
+                value={templateServiceDate}
+                onChangeText={setTemplateServiceDate}
+                placeholder="YYYY-MM-DD"
+                placeholderTextColor={Colors.textSecondary}
+              />
+
+              <View style={styles.buttonRow}>
+                <TouchableOpacity
+                  style={[styles.button, styles.buttonSecondary]}
+                  onPress={() => setCreateFromTemplateModal(false)}
+                >
+                  <Text style={styles.buttonSecondaryText}>Cancel</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[styles.button, styles.buttonPrimary]}
+                  onPress={handleConfirmCreateFromTemplate}
+                >
+                  <Text style={styles.buttonPrimaryText}>Create Job</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -1572,5 +1628,24 @@ const createStyles = (Colors: any) => StyleSheet.create({
     fontSize: 13,
     color: Colors.text,
     lineHeight: 18,
+  },
+  templateInfoBox: {
+    backgroundColor: Colors.backgroundSecondary,
+    padding: 16,
+    borderRadius: 12,
+    marginBottom: 24,
+    borderLeftWidth: 3,
+    borderLeftColor: Colors.accent,
+  },
+  templateInfoTitle: {
+    fontSize: 18,
+    fontWeight: '600' as const,
+    color: Colors.text,
+    marginBottom: 8,
+  },
+  templateInfoText: {
+    fontSize: 14,
+    color: Colors.textSecondary,
+    marginBottom: 4,
   },
 });
