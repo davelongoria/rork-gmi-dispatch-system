@@ -418,7 +418,9 @@ export default function JobsScreen() {
           {item.containerSize && (
             <View style={styles.jobMeta}>
               <Package size={14} color={Colors.textSecondary} />
-              <Text style={styles.jobMetaText}>{item.containerSize}{item.material ? ` - ${item.material}` : ''}</Text>
+              <Text style={styles.jobMetaText}>
+                {item.containerSize}{item.material ? ` - ${item.material}` : ''}
+              </Text>
             </View>
           )}
           <View style={styles.jobMeta}>
@@ -458,7 +460,9 @@ export default function JobsScreen() {
           {item.containerSize && (
             <View style={styles.jobMeta}>
               <Package size={14} color={Colors.textSecondary} />
-              <Text style={styles.jobMetaText}>{item.containerSize}{item.material ? ` - ${item.material}` : ''}</Text>
+              <Text style={styles.jobMetaText}>
+                {item.containerSize}{item.material ? ` - ${item.material}` : ''}
+              </Text>
             </View>
           )}
           <View style={styles.jobMeta}>
@@ -524,7 +528,9 @@ export default function JobsScreen() {
           {item.containerSize && (
             <View style={styles.jobMeta}>
               <Package size={14} color={Colors.textSecondary} />
-              <Text style={styles.jobMetaText}>{item.containerSize}{item.material ? ` - ${item.material}` : ''}</Text>
+              <Text style={styles.jobMetaText}>
+                {item.containerSize}{item.material ? ` - ${item.material}` : ''}
+              </Text>
             </View>
           )}
         </View>
