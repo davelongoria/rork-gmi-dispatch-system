@@ -764,7 +764,6 @@ export default function JobsScreen() {
                 numberOfLines={3}
               />
 
-
               <View style={styles.cardHeaderRow}>
                 <CreditCard size={18} color={Colors.primary} />
                 <Text style={[styles.label, { marginTop: 0 }]}>Card on File (Optional)</Text>
@@ -1040,7 +1039,6 @@ export default function JobsScreen() {
                 multiline
                 numberOfLines={3}
               />
-
 
               <View style={styles.cardHeaderRow}>
                 <CreditCard size={18} color={Colors.primary} />
