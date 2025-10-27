@@ -121,9 +121,17 @@ export default function JobsScreen() {
         {
           text: 'Delete',
           style: 'destructive',
-          onPress: async () => {
-            await deleteJob(job.id);
-            Alert.alert('Success', 'Job deleted successfully');
+          onPress: () => {
+            console.log('Deleting job:', job.id);
+            deleteJob(job.id)
+              .then(() => {
+                console.log('Job deleted successfully:', job.id);
+                Alert.alert('Success', 'Job deleted successfully');
+              })
+              .catch((error) => {
+                console.error('Failed to delete job:', error);
+                Alert.alert('Error', 'Failed to delete job');
+              });
           },
         },
       ]
@@ -280,9 +288,17 @@ export default function JobsScreen() {
         {
           text: 'Delete',
           style: 'destructive',
-          onPress: async () => {
-            await deleteRecurringJob(recurringJob.id);
-            Alert.alert('Success', 'Recurring job template deleted');
+          onPress: () => {
+            console.log('Deleting recurring job:', recurringJob.id);
+            deleteRecurringJob(recurringJob.id)
+              .then(() => {
+                console.log('Recurring job deleted successfully:', recurringJob.id);
+                Alert.alert('Success', 'Recurring job template deleted');
+              })
+              .catch((error) => {
+                console.error('Failed to delete recurring job:', error);
+                Alert.alert('Error', 'Failed to delete recurring job');
+              });
           },
         },
       ]
