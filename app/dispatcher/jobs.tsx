@@ -9,6 +9,7 @@ import {
   Alert,
   ScrollView,
   TextInput,
+  Platform,
 } from 'react-native';
 import { useData } from '@/contexts/DataContext';
 import { useTheme } from '@/contexts/ThemeContext';
@@ -117,29 +118,45 @@ export default function JobsScreen() {
   };
 
   const handleDeleteJob = (job: Job) => {
-    Alert.alert(
-      'Delete Job',
-      `Are you sure you want to delete this job for ${job.customerName}?`,
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Delete',
-          style: 'destructive',
-          onPress: () => {
-            console.log('Deleting job:', job.id);
-            deleteJob(job.id)
-              .then(() => {
-                console.log('Job deleted successfully:', job.id);
-                Alert.alert('Success', 'Job deleted successfully');
-              })
-              .catch((error) => {
-                console.error('Failed to delete job:', error);
-                Alert.alert('Error', 'Failed to delete job');
-              });
+    if (Platform.OS === 'web') {
+      const confirmed = window.confirm(`Are you sure you want to delete this job for ${job.customerName}?`);
+      if (confirmed) {
+        console.log('Deleting job:', job.id);
+        deleteJob(job.id)
+          .then(() => {
+            console.log('Job deleted successfully:', job.id);
+            window.alert('Job deleted successfully');
+          })
+          .catch((error) => {
+            console.error('Failed to delete job:', error);
+            window.alert('Failed to delete job');
+          });
+      }
+    } else {
+      Alert.alert(
+        'Delete Job',
+        `Are you sure you want to delete this job for ${job.customerName}?`,
+        [
+          { text: 'Cancel', style: 'cancel' },
+          {
+            text: 'Delete',
+            style: 'destructive',
+            onPress: () => {
+              console.log('Deleting job:', job.id);
+              deleteJob(job.id)
+                .then(() => {
+                  console.log('Job deleted successfully:', job.id);
+                  Alert.alert('Success', 'Job deleted successfully');
+                })
+                .catch((error) => {
+                  console.error('Failed to delete job:', error);
+                  Alert.alert('Error', 'Failed to delete job');
+                });
+            },
           },
-        },
-      ]
-    );
+        ]
+      );
+    }
   };
 
   const handleSaveJob = async () => {
@@ -284,29 +301,45 @@ export default function JobsScreen() {
   };
 
   const handleDeleteRecurringJob = (recurringJob: RecurringJob) => {
-    Alert.alert(
-      'Delete Recurring Job',
-      `Are you sure you want to delete this recurring job template for ${recurringJob.customerName}?`,
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Delete',
-          style: 'destructive',
-          onPress: () => {
-            console.log('Deleting recurring job:', recurringJob.id);
-            deleteRecurringJob(recurringJob.id)
-              .then(() => {
-                console.log('Recurring job deleted successfully:', recurringJob.id);
-                Alert.alert('Success', 'Recurring job template deleted');
-              })
-              .catch((error) => {
-                console.error('Failed to delete recurring job:', error);
-                Alert.alert('Error', 'Failed to delete recurring job');
-              });
+    if (Platform.OS === 'web') {
+      const confirmed = window.confirm(`Are you sure you want to delete this recurring job template for ${recurringJob.customerName}?`);
+      if (confirmed) {
+        console.log('Deleting recurring job:', recurringJob.id);
+        deleteRecurringJob(recurringJob.id)
+          .then(() => {
+            console.log('Recurring job deleted successfully:', recurringJob.id);
+            window.alert('Recurring job template deleted');
+          })
+          .catch((error) => {
+            console.error('Failed to delete recurring job:', error);
+            window.alert('Failed to delete recurring job');
+          });
+      }
+    } else {
+      Alert.alert(
+        'Delete Recurring Job',
+        `Are you sure you want to delete this recurring job template for ${recurringJob.customerName}?`,
+        [
+          { text: 'Cancel', style: 'cancel' },
+          {
+            text: 'Delete',
+            style: 'destructive',
+            onPress: () => {
+              console.log('Deleting recurring job:', recurringJob.id);
+              deleteRecurringJob(recurringJob.id)
+                .then(() => {
+                  console.log('Recurring job deleted successfully:', recurringJob.id);
+                  Alert.alert('Success', 'Recurring job template deleted');
+                })
+                .catch((error) => {
+                  console.error('Failed to delete recurring job:', error);
+                  Alert.alert('Error', 'Failed to delete recurring job');
+                });
+            },
           },
-        },
-      ]
-    );
+        ]
+      );
+    }
   };
 
   const handleCreateJobFromRecurring = (recurringJob: RecurringJob) => {
