@@ -69,6 +69,10 @@ export default function JobsScreen() {
 
   const unassignedJobs = jobs.filter(j => !j.routeId && j.status === 'PLANNED');
   const suspendedJobs = jobs.filter(j => j.status === 'SUSPENDED' && !j.willCompleteToday);
+  
+  console.log('Total jobs:', jobs.length);
+  console.log('Unassigned jobs:', unassignedJobs.length);
+  console.log('Suspended jobs:', suspendedJobs.length);
 
   const handleCreateJob = () => {
     setEditingJob(null);

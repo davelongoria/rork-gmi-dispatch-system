@@ -717,10 +717,15 @@ export const [DataProvider, useData] = createContextHook(() => {
   }, [customers, syncToBackend]);
 
   const deleteJob = useCallback(async (id: string) => {
+    console.log('deleteJob called with id:', id);
+    console.log('Current jobs count:', jobs.length);
     const updated = jobs.filter(j => j.id !== id);
+    console.log('Updated jobs count after filter:', updated.length);
     setJobs(updated);
     await AsyncStorage.setItem(STORAGE_KEYS.JOBS, JSON.stringify(updated));
+    console.log('Jobs saved to AsyncStorage');
     await syncToBackend({ jobs: updated });
+    console.log('Jobs synced to backend');
   }, [jobs, syncToBackend]);
 
   const deleteRoute = useCallback(async (id: string) => {
