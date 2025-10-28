@@ -125,7 +125,7 @@ export default function LoginScreen() {
           </TouchableOpacity>
           
           <View style={styles.logoContainer}>
-            {theme?.logo && (
+            {theme?.logo ? (
               <Image
                 source={{ uri: theme.logo }}
                 style={styles.logo}
@@ -133,7 +133,7 @@ export default function LoginScreen() {
                 onLoad={() => setLogoLoaded(true)}
                 onError={() => setLogoLoaded(false)}
               />
-            )}
+            ) : null}
           </View>
           {(!theme?.logo || !logoLoaded) && <Text style={[styles.title, { color: colors.primary }]}>{theme?.name || 'Login'}</Text>}
           <Text style={[styles.subtitle, { color: colors.textSecondary }]}>Driver & Dispatch System</Text>

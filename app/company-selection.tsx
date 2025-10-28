@@ -56,11 +56,13 @@ export default function CompanySelectionScreen() {
               activeOpacity={0.7}
             >
               <View style={styles.logoContainer}>
-                <Image
-                  source={{ uri: company.logo }}
-                  style={styles.logo}
-                  resizeMode="contain"
-                />
+                {company.logo ? (
+                  <Image
+                    source={{ uri: company.logo }}
+                    style={styles.logo}
+                    resizeMode="contain"
+                  />
+                ) : null}
               </View>
               <Text style={styles.companyName}>{company.name}</Text>
               {selectedId === company.id && (
