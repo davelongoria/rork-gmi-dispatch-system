@@ -166,29 +166,59 @@ export default function ContainerRoutesScreen() {
 
   const handleDispatchRoute = async (routeId: string) => {
     const route = containerRoutes.find(r => r.id === routeId);
-    if (!route) return;
+    if (!route) {
+      console.log('Route not found:', routeId);
+      return;
+    }
+
+    console.log('handleDispatchRoute called for container route:', route.id, 'Status:', route.status);
+    console.log('Route details - Driver:', route.driverId, 'Truck:', route.truckId, 'Jobs:', route.jobIds.length);
 
     if (!route.driverId) {
+      console.log('Dispatch failed: Missing driver');
       Alert.alert('Error', 'Please assign a driver before dispatching');
       return;
     }
 
     if (route.jobIds.length === 0) {
+      console.log('Dispatch failed: No jobs assigned');
       Alert.alert('Error', 'Please add jobs to the route before dispatching');
       return;
     }
 
     const today = new Date();
     const dateStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+    console.log('Showing dispatch confirmation dialog...');
 
-    await updateContainerRoute(routeId, {
-      status: 'DISPATCHED',
-      dispatchedAt: new Date().toISOString(),
-      date: dateStr,
-    });
-
-    console.log('Container route dispatched:', routeId, 'for date:', dateStr);
-    Alert.alert('Success', `Route dispatched to ${route.driverName} for today`);
+    Alert.alert(
+      'Dispatch Route',
+      `Dispatch route to ${route.driverName}?`,
+      [
+        { 
+          text: 'Cancel', 
+          style: 'cancel',
+          onPress: () => console.log('Dispatch cancelled by user')
+        },
+        {
+          text: 'Dispatch',
+          onPress: async () => {
+            try {
+              console.log('User confirmed dispatch, updating container route...');
+              await updateContainerRoute(routeId, {
+                status: 'DISPATCHED',
+                dispatchedAt: new Date().toISOString(),
+                date: dateStr,
+              });
+              console.log('Container route dispatched successfully:', routeId, 'for date:', dateStr);
+              Alert.alert('Success', `Route dispatched to ${route.driverName} for today`);
+            } catch (error) {
+              console.error('Failed to dispatch container route:', error);
+              Alert.alert('Error', 'Failed to dispatch route. Please try again.');
+            }
+          },
+        },
+      ]
+    );
   };
 
   const handleEditRoute = (routeId: string) => {

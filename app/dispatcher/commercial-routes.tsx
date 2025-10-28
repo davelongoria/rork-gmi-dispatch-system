@@ -419,34 +419,50 @@ export default function CommercialRoutesScreen() {
   );
 
   const handleDispatchRoute = async (route: CommercialRoute) => {
+    console.log('handleDispatchRoute called for commercial route:', route.id, 'Status:', route.status);
+    console.log('Route details - Driver:', route.driverId, 'Truck:', route.truckId, 'Stops:', route.stopIds.length);
+    
     if (!route.driverId || !route.truckId) {
+      console.log('Dispatch failed: Missing driver or truck');
       Alert.alert('Error', 'Please assign a driver and truck before dispatching');
       return;
     }
 
     if (route.stopIds.length === 0) {
+      console.log('Dispatch failed: No stops assigned');
       Alert.alert('Error', 'Please add stops to the route before dispatching');
       return;
     }
 
     const today = new Date();
     const dateStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+    console.log('Showing dispatch confirmation dialog...');
 
     Alert.alert(
       'Dispatch Route',
       `Dispatch route to ${route.driverName}?`,
       [
-        { text: 'Cancel', style: 'cancel' },
+        { 
+          text: 'Cancel', 
+          style: 'cancel',
+          onPress: () => console.log('Dispatch cancelled by user')
+        },
         {
           text: 'Dispatch',
           onPress: async () => {
-            await updateCommercialRoute(route.id, {
-              status: 'DISPATCHED',
-              dispatchedAt: new Date().toISOString(),
-              date: dateStr,
-            });
-            console.log('Commercial route dispatched:', route.id, 'for date:', dateStr);
-            Alert.alert('Success', `Route dispatched to ${route.driverName} for today`);
+            try {
+              console.log('User confirmed dispatch, updating commercial route...');
+              await updateCommercialRoute(route.id, {
+                status: 'DISPATCHED',
+                dispatchedAt: new Date().toISOString(),
+                date: dateStr,
+              });
+              console.log('Commercial route dispatched successfully:', route.id, 'for date:', dateStr);
+              Alert.alert('Success', `Route dispatched to ${route.driverName} for today`);
+            } catch (error) {
+              console.error('Failed to dispatch commercial route:', error);
+              Alert.alert('Error', 'Failed to dispatch route. Please try again.');
+            }
           },
         },
       ]
