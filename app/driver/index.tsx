@@ -24,6 +24,8 @@ import {
   ArrowRight,
   MessageCircle,
   X,
+  Plus,
+  Home,
 } from 'lucide-react-native';
 import * as Location from 'expo-location';
 import type { TimeLog } from '@/types';
@@ -39,6 +41,9 @@ export default function DriverDashboard() {
   const [currentShiftStart, setCurrentShiftStart] = useState<string | null>(null);
   const [showOdometerModal, setShowOdometerModal] = useState<boolean>(false);
   const [odometerReading, setOdometerReading] = useState<string>('');
+  const [showReturnToBaseModal, setShowReturnToBaseModal] = useState<boolean>(false);
+  const [returnToBaseOdometer, setReturnToBaseOdometer] = useState<string>('');
+  const [returnToBaseState, setReturnToBaseState] = useState<string>('');
   const [odometerAction, setOdometerAction] = useState<'clock-in' | 'clock-out' | null>(null);
 
   useEffect(() => {
@@ -365,6 +370,20 @@ export default function DriverDashboard() {
           </View>
         </TouchableOpacity>
 
+        <TouchableOpacity
+          style={[styles.actionButton, !isClockedIn && styles.actionButtonDisabled]}
+          onPress={() => router.push('/driver/add-stop' as any)}
+          disabled={!isClockedIn}
+        >
+          <View style={styles.actionIcon}>
+            <Plus size={24} color={colors.primary} />
+          </View>
+          <View style={styles.actionContent}>
+            <Text style={styles.actionTitle}>Add Stop</Text>
+            <Text style={styles.actionSubtitle}>Add a rolloff job to your route</Text>
+          </View>
+        </TouchableOpacity>
+
         {activeRoutes.length > 0 && (
           <View style={styles.routesSection}>
             <Text style={styles.sectionTitle}>Active Routes</Text>
@@ -676,6 +695,23 @@ export default function DriverDashboard() {
             ))}
           </View>
         )}
+
+        {isClockedIn && (activeRoutes.length > 0 || activeCommercialRoutes.length > 0 || activeResidentialRoutes.length > 0 || activeContainerRoutes.length > 0) && (
+          <View style={styles.routesSection}>
+            <Text style={styles.sectionTitle}>End of Day</Text>
+            <TouchableOpacity
+              style={styles.returnToBaseButton}
+              onPress={() => {
+                setReturnToBaseOdometer('');
+                setReturnToBaseState('');
+                setShowReturnToBaseModal(true);
+              }}
+            >
+              <Home size={24} color={colors.background} />
+              <Text style={styles.returnToBaseButtonText}>Return to Base</Text>
+            </TouchableOpacity>
+          </View>
+        )}
       </ScrollView>
 
       <Modal
@@ -783,6 +819,160 @@ export default function DriverDashboard() {
                   }}
                 >
                   <Text style={styles.buttonPrimaryText}>Submit</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
+      <Modal
+        visible={showReturnToBaseModal}
+        animationType="slide"
+        transparent={true}
+        onRequestClose={() => setShowReturnToBaseModal(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Return to Base</Text>
+              <TouchableOpacity onPress={() => setShowReturnToBaseModal(false)}>
+                <X size={24} color={colors.text} />
+              </TouchableOpacity>
+            </View>
+
+            <View style={styles.form}>
+              <Text style={styles.inputLabel}>Current Odometer Reading</Text>
+              <TextInput
+                style={styles.input}
+                value={returnToBaseOdometer}
+                onChangeText={setReturnToBaseOdometer}
+                placeholder="Enter odometer reading"
+                placeholderTextColor={colors.textSecondary}
+                keyboardType="numeric"
+                autoFocus
+              />
+
+              <Text style={styles.inputLabel}>State</Text>
+              <ScrollView style={styles.stateScrollView} contentContainerStyle={styles.stateGrid}>
+                {[
+                  { code: 'AL' }, { code: 'AK' }, { code: 'AZ' }, { code: 'AR' }, { code: 'CA' },
+                  { code: 'CO' }, { code: 'CT' }, { code: 'DE' }, { code: 'FL' }, { code: 'GA' },
+                  { code: 'HI' }, { code: 'ID' }, { code: 'IL' }, { code: 'IN' }, { code: 'IA' },
+                  { code: 'KS' }, { code: 'KY' }, { code: 'LA' }, { code: 'ME' }, { code: 'MD' },
+                  { code: 'MA' }, { code: 'MI' }, { code: 'MN' }, { code: 'MS' }, { code: 'MO' },
+                  { code: 'MT' }, { code: 'NE' }, { code: 'NV' }, { code: 'NH' }, { code: 'NJ' },
+                  { code: 'NM' }, { code: 'NY' }, { code: 'NC' }, { code: 'ND' }, { code: 'OH' },
+                  { code: 'OK' }, { code: 'OR' }, { code: 'PA' }, { code: 'RI' }, { code: 'SC' },
+                  { code: 'SD' }, { code: 'TN' }, { code: 'TX' }, { code: 'UT' }, { code: 'VT' },
+                  { code: 'VA' }, { code: 'WA' }, { code: 'WV' }, { code: 'WI' }, { code: 'WY' },
+                ].map((state) => (
+                  <TouchableOpacity
+                    key={state.code}
+                    style={[
+                      styles.stateButton,
+                      returnToBaseState === state.code && styles.stateButtonSelected,
+                    ]}
+                    onPress={() => setReturnToBaseState(state.code)}
+                  >
+                    <Text
+                      style={[
+                        styles.stateButtonText,
+                        returnToBaseState === state.code && styles.stateButtonTextSelected,
+                      ]}
+                    >
+                      {state.code}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </ScrollView>
+
+              <View style={styles.buttonRow}>
+                <TouchableOpacity
+                  style={[styles.button, styles.buttonSecondary]}
+                  onPress={() => setShowReturnToBaseModal(false)}
+                >
+                  <Text style={styles.buttonSecondaryText}>Cancel</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[styles.button, styles.buttonPrimary]}
+                  onPress={async () => {
+                    if (!returnToBaseOdometer) {
+                      Alert.alert('Required', 'Please enter odometer reading');
+                      return;
+                    }
+                    if (!returnToBaseState) {
+                      Alert.alert('Required', 'Please select a state');
+                      return;
+                    }
+
+                    const odometer = parseFloat(returnToBaseOdometer);
+                    const todayRoutes = routes.filter(r => {
+                      const today = new Date().toISOString().split('T')[0];
+                      return r.date === today && r.driverId === user?.id && r.truckId;
+                    });
+
+                    if (todayRoutes.length > 0 && todayRoutes[0].truckId) {
+                      const truck = trucks.find(t => t.id === todayRoutes[0].truckId);
+                      if (truck) {
+                        await addMileageLog({
+                          id: `ml_${Date.now()}`,
+                          driverId: user?.id || '',
+                          driverName: user?.name,
+                          truckId: truck.id,
+                          truckUnitNumber: truck.unitNumber,
+                          timestamp: new Date().toISOString(),
+                          odometer,
+                          state: returnToBaseState,
+                          createdAt: new Date().toISOString(),
+                        });
+
+                        Alert.alert(
+                          'Arrived at Base?',
+                          'Have you arrived at home base?',
+                          [
+                            {
+                              text: 'Not Yet',
+                              onPress: () => {
+                                setShowReturnToBaseModal(false);
+                                Alert.alert('Return to Base Logged', 'Mileage logged for return trip.');
+                              },
+                            },
+                            {
+                              text: 'Yes, Arrived',
+                              onPress: async () => {
+                                setShowReturnToBaseModal(false);
+                                const arrivedOdometer = prompt('Enter odometer reading at base:');
+                                const arrivedState = prompt('Enter state code:');
+                                
+                                if (arrivedOdometer && arrivedState) {
+                                  await addMileageLog({
+                                    id: `ml_${Date.now() + 1}`,
+                                    driverId: user?.id || '',
+                                    driverName: user?.name,
+                                    truckId: truck.id,
+                                    truckUnitNumber: truck.unitNumber,
+                                    timestamp: new Date().toISOString(),
+                                    odometer: parseFloat(arrivedOdometer),
+                                    state: arrivedState,
+                                    createdAt: new Date().toISOString(),
+                                  });
+                                  Alert.alert('Success', 'Arrival at base logged successfully');
+                                } else {
+                                  Alert.alert('Success', 'Return to base logged. Remember to log arrival.');
+                                }
+                              },
+                            },
+                          ]
+                        );
+                      }
+                    } else {
+                      setShowReturnToBaseModal(false);
+                      Alert.alert('Error', 'No truck found for today\'s route');
+                    }
+                  }}
+                >
+                  <Text style={styles.buttonPrimaryText}>Log Return</Text>
                 </TouchableOpacity>
               </View>
             </View>
@@ -1081,5 +1271,51 @@ const createStyles = (colors: any) => StyleSheet.create({
     fontSize: 16,
     fontWeight: '600' as const,
     color: colors.text,
+  },
+  returnToBaseButton: {
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    justifyContent: 'center' as const,
+    backgroundColor: colors.accent,
+    paddingVertical: 14,
+    borderRadius: 12,
+    gap: 8,
+  },
+  returnToBaseButtonText: {
+    fontSize: 16,
+    fontWeight: '600' as const,
+    color: colors.background,
+  },
+  stateScrollView: {
+    maxHeight: 200,
+    marginBottom: 16,
+  },
+  stateGrid: {
+    flexDirection: 'row' as const,
+    flexWrap: 'wrap' as const,
+    gap: 8,
+    paddingBottom: 8,
+  },
+  stateButton: {
+    width: 56,
+    height: 40,
+    backgroundColor: colors.backgroundSecondary,
+    borderRadius: 8,
+    justifyContent: 'center' as const,
+    alignItems: 'center' as const,
+    borderWidth: 2,
+    borderColor: colors.border,
+  },
+  stateButtonSelected: {
+    backgroundColor: colors.primary,
+    borderColor: colors.primary,
+  },
+  stateButtonText: {
+    fontSize: 14,
+    fontWeight: '600' as const,
+    color: colors.text,
+  },
+  stateButtonTextSelected: {
+    color: colors.background,
   },
 });
