@@ -57,7 +57,7 @@ function AppContent() {
       timer = setTimeout(() => {
         setIsReady(true);
         SplashScreen.hideAsync().catch(() => {});
-      }, 100);
+      }, 50);
     };
     run();
     return () => {
