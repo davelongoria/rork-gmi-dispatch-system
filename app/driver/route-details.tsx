@@ -938,7 +938,7 @@ export default function RouteDetailsScreen() {
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
             <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>What&apos;s Next?</Text>
+              <Text style={styles.modalTitle}>What's Next?</Text>
               <TouchableOpacity onPress={() => setShowJobActionModal(false)}>
                 <X size={24} color={Colors.text} />
               </TouchableOpacity>
