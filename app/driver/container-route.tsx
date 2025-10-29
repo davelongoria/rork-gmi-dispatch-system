@@ -295,8 +295,8 @@ export default function DriverContainerRouteScreen() {
                     <TouchableOpacity
                       style={[
                         styles.statusButton,
-                        selectedStatus === 'COMPLETED' && styles.statusButtonSelected,
                         { borderColor: colors.success },
+                        selectedStatus === 'COMPLETED' && { backgroundColor: colors.success },
                       ]}
                       onPress={() => setSelectedStatus('COMPLETED')}
                     >
@@ -317,8 +317,8 @@ export default function DriverContainerRouteScreen() {
                     <TouchableOpacity
                       style={[
                         styles.statusButton,
-                        selectedStatus === 'BLOCKED' && styles.statusButtonSelected,
                         { borderColor: colors.error },
+                        selectedStatus === 'BLOCKED' && { backgroundColor: colors.error },
                       ]}
                       onPress={() => setSelectedStatus('BLOCKED')}
                     >
@@ -599,10 +599,7 @@ const createStyles = (colors: any) => StyleSheet.create({
     borderWidth: 2,
     gap: 4,
   },
-  statusButtonSelected: {
-    backgroundColor: colors.success,
-    borderColor: colors.success,
-  },
+
   statusButtonText: {
     fontSize: 13,
     fontWeight: '600' as const,

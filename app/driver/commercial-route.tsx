@@ -273,8 +273,8 @@ export default function DriverCommercialRouteScreen() {
                     <TouchableOpacity
                       style={[
                         styles.statusButton,
-                        selectedStatus === 'COMPLETED' && styles.statusButtonSelected,
                         { borderColor: Colors.success },
+                        selectedStatus === 'COMPLETED' && { backgroundColor: Colors.success },
                       ]}
                       onPress={() => setSelectedStatus('COMPLETED')}
                     >
@@ -295,8 +295,8 @@ export default function DriverCommercialRouteScreen() {
                     <TouchableOpacity
                       style={[
                         styles.statusButton,
-                        selectedStatus === 'NOT_OUT' && styles.statusButtonSelected,
                         { borderColor: Colors.warning },
+                        selectedStatus === 'NOT_OUT' && { backgroundColor: Colors.warning },
                       ]}
                       onPress={() => setSelectedStatus('NOT_OUT')}
                     >
@@ -317,8 +317,8 @@ export default function DriverCommercialRouteScreen() {
                     <TouchableOpacity
                       style={[
                         styles.statusButton,
-                        selectedStatus === 'BLOCKED' && styles.statusButtonSelected,
                         { borderColor: Colors.error },
+                        selectedStatus === 'BLOCKED' && { backgroundColor: Colors.error },
                       ]}
                       onPress={() => setSelectedStatus('BLOCKED')}
                     >
@@ -594,10 +594,7 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     gap: 4,
   },
-  statusButtonSelected: {
-    backgroundColor: Colors.success,
-    borderColor: Colors.success,
-  },
+
   statusButtonText: {
     fontSize: 13,
     fontWeight: '600' as const,
