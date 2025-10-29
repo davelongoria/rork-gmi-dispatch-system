@@ -738,6 +738,7 @@ const createStyles = (colors: any) => StyleSheet.create({
     color: colors.background,
   },
   dispatchButton: {
+    flex: 1,
     flexDirection: 'row' as const,
     alignItems: 'center' as const,
     justifyContent: 'center' as const,
