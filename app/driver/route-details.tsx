@@ -557,11 +557,50 @@ export default function RouteDetailsScreen() {
           )}
         </View>
 
-        {route.status === 'DISPATCHED' && (
-          <TouchableOpacity style={styles.startButton} onPress={handleStartRoute}>
-            <Play size={20} color={Colors.background} />
-            <Text style={styles.startButtonText}>Start Route</Text>
-          </TouchableOpacity>
+        {(route.status === 'PLANNED' || route.status === 'DISPATCHED') && (
+          <View style={styles.routeActionsContainer}>
+            {route.status === 'DISPATCHED' && (
+              <TouchableOpacity style={styles.startButton} onPress={handleStartRoute}>
+                <Play size={20} color={Colors.background} />
+                <Text style={styles.startButtonText}>Start Route</Text>
+              </TouchableOpacity>
+            )}
+            <TouchableOpacity 
+              style={styles.sendBackButton} 
+              onPress={() => {
+                Alert.alert(
+                  'Send Route Back',
+                  'Send this route back to the dispatcher? All jobs will be unassigned from you.',
+                  [
+                    { text: 'Cancel', style: 'cancel' },
+                    {
+                      text: 'Send Back',
+                      style: 'destructive',
+                      onPress: async () => {
+                        for (const jobId of route.jobIds) {
+                          await updateJob(jobId, {
+                            routeId: undefined,
+                            status: 'PLANNED',
+                          });
+                        }
+                        await updateRoute(route.id, {
+                          driverId: undefined,
+                          driverName: undefined,
+                          status: 'PLANNED',
+                          jobIds: [],
+                        });
+                        Alert.alert('Success', 'Route sent back to dispatcher');
+                        router.back();
+                      },
+                    },
+                  ]
+                );
+              }}
+            >
+              <Package size={20} color={Colors.error} />
+              <Text style={styles.sendBackButtonText}>Send Back to Dispatcher</Text>
+            </TouchableOpacity>
+          </View>
         )}
 
         {route.status === 'IN_PROGRESS' && routeJobs.length > 0 && (
@@ -1923,6 +1962,22 @@ const styles = StyleSheet.create({
     borderColor: Colors.error,
   },
   sendToDispatchButtonText: {
+    fontSize: 16,
+    fontWeight: '600' as const,
+    color: Colors.error,
+  },
+  sendBackButton: {
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    justifyContent: 'center' as const,
+    backgroundColor: Colors.backgroundSecondary,
+    padding: 16,
+    borderRadius: 12,
+    gap: 8,
+    borderWidth: 2,
+    borderColor: Colors.error,
+  },
+  sendBackButtonText: {
     fontSize: 16,
     fontWeight: '600' as const,
     color: Colors.error,

@@ -102,8 +102,9 @@ export default function DriverDashboard() {
       return r.date === today && r.driverId === user?.id;
     });
 
-    
-    const routesWithIncompleteJobs = todayRoutes.filter(r => {
+    const startedRoutesWithIncompleteJobs = todayRoutes.filter(r => {
+      if (r.status !== 'IN_PROGRESS') return false;
+      
       const routeJobs = r.jobIds
         .map(jId => jobs.find(j => j.id === jId))
         .filter(j => j !== undefined);
@@ -113,10 +114,10 @@ export default function DriverDashboard() {
       );
     });
     
-    if (routesWithIncompleteJobs.length > 0) {
+    if (startedRoutesWithIncompleteJobs.length > 0) {
       Alert.alert(
         'Incomplete Routes',
-        `You have ${routesWithIncompleteJobs.length} route(s) with incomplete jobs. Please complete all routes before clocking out.`,
+        `You have ${startedRoutesWithIncompleteJobs.length} started route(s) with incomplete jobs. Please complete all routes before clocking out.`,
         [{ text: 'OK' }]
       );
       return;
