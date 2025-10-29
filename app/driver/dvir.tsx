@@ -143,18 +143,24 @@ export default function DVIRScreen() {
       createdAt: new Date().toISOString(),
     };
 
-    await addDVIR(dvir);
-    
-    if (inspectionType === 'PRE_TRIP' && todayRoute && todayRoute.truckId !== truckId) {
-      Alert.alert(
-        'Truck Changed',
-        'You selected a different truck than assigned to your route. The route truck has been updated.',
-        [{ text: 'OK', onPress: () => router.back() }]
-      );
-    } else {
-      Alert.alert('Success', 'DVIR submitted successfully', [
-        { text: 'OK', onPress: () => router.back() },
-      ]);
+    try {
+      await addDVIR(dvir);
+      
+      if (inspectionType === 'PRE_TRIP' && todayRoute && todayRoute.truckId !== truckId) {
+        Alert.alert(
+          'Truck Changed',
+          'You selected a different truck than assigned to your route. The route truck has been updated.',
+          [{ text: 'OK', onPress: () => router.back() }]
+        );
+      } else {
+        router.back();
+        setTimeout(() => {
+          Alert.alert('Success', 'DVIR submitted successfully');
+        }, 300);
+      }
+    } catch (error) {
+      console.error('Failed to submit DVIR:', error);
+      Alert.alert('Error', 'Failed to submit DVIR. Please try again.');
     }
   };
 

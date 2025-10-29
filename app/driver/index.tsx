@@ -113,11 +113,15 @@ export default function DriverDashboard() {
         !(j.status === 'SUSPENDED' && !j.willCompleteToday)
       );
     });
+
+    const todayCommercialRoutesInProgress = todayCommercialRoutes.filter(r => r.status === 'IN_PROGRESS');
+    const todayResidentialRoutesInProgress = todayResidentialRoutes.filter(r => r.status === 'IN_PROGRESS');
+    const todayContainerRoutesInProgress = todayContainerRoutes.filter(r => r.status === 'IN_PROGRESS');
     
-    if (startedRoutesWithIncompleteJobs.length > 0) {
+    if (startedRoutesWithIncompleteJobs.length > 0 || todayCommercialRoutesInProgress.length > 0 || todayResidentialRoutesInProgress.length > 0 || todayContainerRoutesInProgress.length > 0) {
       Alert.alert(
         'Incomplete Routes',
-        `You have ${startedRoutesWithIncompleteJobs.length} started route(s) with incomplete jobs. Please complete all routes before clocking out.`,
+        `You have started route(s) that are in progress. Please complete all routes before clocking out.`,
         [{ text: 'OK' }]
       );
       return;
