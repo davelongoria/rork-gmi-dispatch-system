@@ -248,12 +248,17 @@ export default function RouteDetailsScreen() {
   const handleCompleteJob = async () => {
     if (!selectedJobForAction) return;
     
+    console.log('handleCompleteJob called for job:', selectedJobForAction.id);
     setShowJobActionModal(false);
-    setOdometerReading('');
-    setOdometerState('');
-    setOdometerAction('complete-job');
-    setJobForOdometer(selectedJobForAction);
-    setShowOdometerModal(true);
+    
+    setTimeout(() => {
+      console.log('Opening odometer modal');
+      setOdometerReading('');
+      setOdometerState('');
+      setOdometerAction('complete-job');
+      setJobForOdometer(selectedJobForAction);
+      setShowOdometerModal(true);
+    }, 300);
   };
 
   const handleReturnToCustomer = async () => {
