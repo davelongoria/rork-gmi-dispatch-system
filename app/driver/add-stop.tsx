@@ -43,11 +43,11 @@ export default function DriverAddStopScreen() {
 
   const today = new Date().toISOString().split('T')[0];
   const todayRoutes = routes.filter(r => {
-    return r.date === today && r.driverId === user?.id && r.status === 'IN_PROGRESS';
+    return r.date === today && r.driverId === user?.id && (r.status === 'IN_PROGRESS' || r.status === 'COMPLETED');
   });
 
   const todayContainerRoutes = containerRoutes.filter(r => {
-    return r.date === today && r.driverId === user?.id && r.status === 'IN_PROGRESS';
+    return r.date === today && r.driverId === user?.id && (r.status === 'IN_PROGRESS' || r.status === 'COMPLETED');
   });
 
   const hasActiveRoute = todayRoutes.length > 0 || todayContainerRoutes.length > 0;
@@ -107,31 +107,56 @@ export default function DriverAddStopScreen() {
                 const activeRoute = todayRoutes[0];
                 const updatedJobIds = [...activeRoute.jobIds, newJob.id];
                 
-                await updateRoute(activeRoute.id, {
+                const routeUpdates: any = {
                   jobIds: updatedJobIds,
-                });
+                };
+                
+                if (activeRoute.status === 'COMPLETED') {
+                  routeUpdates.status = 'IN_PROGRESS';
+                  routeUpdates.completedAt = undefined;
+                  console.log('Reopening completed route:', activeRoute.id);
+                }
+                
+                await updateRoute(activeRoute.id, routeUpdates);
                 
                 await addJob({
                   ...newJob,
                   routeId: activeRoute.id,
                   status: 'ASSIGNED',
                 });
+                
+                const message = activeRoute.status === 'COMPLETED' 
+                  ? 'Route reopened and job added' 
+                  : 'Job added to your route';
+                Alert.alert('Success', message);
               } else if (todayContainerRoutes.length > 0) {
                 const activeRoute = todayContainerRoutes[0];
                 const updatedJobIds = [...activeRoute.jobIds, newJob.id];
                 
-                await updateContainerRoute(activeRoute.id, {
+                const routeUpdates: any = {
                   jobIds: updatedJobIds,
-                });
+                };
+                
+                if (activeRoute.status === 'COMPLETED') {
+                  routeUpdates.status = 'IN_PROGRESS';
+                  routeUpdates.completedAt = undefined;
+                  console.log('Reopening completed container route:', activeRoute.id);
+                }
+                
+                await updateContainerRoute(activeRoute.id, routeUpdates);
                 
                 await addJob({
                   ...newJob,
                   routeId: activeRoute.id,
                   status: 'ASSIGNED',
                 });
+                
+                const message = activeRoute.status === 'COMPLETED' 
+                  ? 'Route reopened and job added' 
+                  : 'Job added to your route';
+                Alert.alert('Success', message);
               }
               
-              Alert.alert('Success', 'Job added to your route');
               router.back();
             },
           },
