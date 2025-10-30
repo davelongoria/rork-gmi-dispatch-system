@@ -252,13 +252,22 @@ export default function RouteDetailsScreen() {
     setShowJobActionModal(false);
     
     setTimeout(() => {
-      console.log('Opening odometer modal');
+      console.log('Opening odometer modal for job completion');
       setOdometerReading('');
       setOdometerState('');
       setOdometerAction('complete-job');
       setJobForOdometer(selectedJobForAction);
       setShowOdometerModal(true);
     }, 300);
+  };
+
+  const handleDirectCompleteJob = async (job: Job) => {
+    console.log('handleDirectCompleteJob called for job:', job.id, 'type:', job.type);
+    setOdometerReading('');
+    setOdometerState('');
+    setOdometerAction('complete-job');
+    setJobForOdometer(job);
+    setShowOdometerModal(true);
   };
 
   const handleReturnToCustomer = async () => {
@@ -373,6 +382,7 @@ export default function RouteDetailsScreen() {
   };
 
   const handleArrivedAtCustomer = (job: Job) => {
+    console.log('handleArrivedAtCustomer called for job:', job.id, 'type:', job.type);
     setSelectedJobForArrival(job);
     setShowArrivedAtCustomerModal(true);
   };
@@ -1007,13 +1017,132 @@ export default function RouteDetailsScreen() {
             </View>
 
             <View style={styles.actionButtons}>
-              <TouchableOpacity
-                style={styles.actionButton}
-                onPress={() => setShowArrivedAtCustomerModal(false)}
-              >
-                <CheckCircle size={32} color={Colors.success} />
-                <Text style={styles.actionButtonText}>Continue with Service</Text>
-              </TouchableOpacity>
+              {selectedJobForArrival?.type === 'DELIVER' && (
+                <TouchableOpacity
+                  style={styles.actionButton}
+                  onPress={() => {
+                    setShowArrivedAtCustomerModal(false);
+                    setTimeout(() => {
+                      Alert.alert(
+                        'Complete Delivery',
+                        'Have you completed your delivery?',
+                        [
+                          { text: 'No', style: 'cancel' },
+                          {
+                            text: 'Yes, Complete Job',
+                            onPress: () => {
+                              if (selectedJobForArrival) {
+                                handleDirectCompleteJob(selectedJobForArrival);
+                              }
+                            },
+                          },
+                        ]
+                      );
+                    }, 300);
+                  }}
+                >
+                  <CheckCircle size={32} color={Colors.success} />
+                  <Text style={styles.actionButtonText}>Complete Delivery</Text>
+                </TouchableOpacity>
+              )}
+
+              {(selectedJobForArrival?.type === 'PICKUP' || selectedJobForArrival?.type === 'ROUND_TRIP') && (
+                <>
+                  <TouchableOpacity
+                    style={styles.actionButton}
+                    onPress={() => {
+                      setShowArrivedAtCustomerModal(false);
+                      setTimeout(() => {
+                        if (selectedJobForArrival) {
+                          handleGetDirectionsToDump(selectedJobForArrival);
+                        }
+                      }, 300);
+                    }}
+                  >
+                    <Navigation size={32} color={Colors.primary} />
+                    <Text style={styles.actionButtonText}>Navigate to Dump</Text>
+                  </TouchableOpacity>
+
+                  <TouchableOpacity
+                    style={styles.actionButton}
+                    onPress={() => {
+                      setShowArrivedAtCustomerModal(false);
+                      setTimeout(() => {
+                        if (selectedJobForArrival) {
+                          handleReturnToDropYard();
+                        }
+                      }, 300);
+                    }}
+                  >
+                    <Warehouse size={32} color={Colors.accent} />
+                    <Text style={styles.actionButtonText}>Go to Yard</Text>
+                  </TouchableOpacity>
+
+                  <TouchableOpacity
+                    style={styles.actionButton}
+                    onPress={() => {
+                      setShowArrivedAtCustomerModal(false);
+                      setTimeout(() => {
+                        if (selectedJobForArrival) {
+                          handleSuspendLoad(selectedJobForArrival);
+                        }
+                      }, 300);
+                    }}
+                  >
+                    <PauseCircle size={32} color={Colors.error} />
+                    <Text style={styles.actionButtonText}>Suspend Load</Text>
+                  </TouchableOpacity>
+                </>
+              )}
+
+              {selectedJobForArrival?.type === 'SWITCH' && (
+                <>
+                  <TouchableOpacity
+                    style={styles.actionButton}
+                    onPress={() => {
+                      setShowArrivedAtCustomerModal(false);
+                      setTimeout(() => {
+                        Alert.alert(
+                          'Pick Up Container',
+                          'Do you need to go to a yard or base to pick up a container?',
+                          [
+                            {
+                              text: 'Yes, Go to Yard',
+                              onPress: () => {
+                                handleReturnToDropYard();
+                              },
+                            },
+                            {
+                              text: 'No, Continue',
+                              onPress: () => {
+                                setShowArrivedAtCustomerModal(false);
+                              },
+                            },
+                          ]
+                        );
+                      }, 300);
+                    }}
+                  >
+                    <TruckIcon size={32} color={Colors.primary} />
+                    <Text style={styles.actionButtonText}>Continue Service</Text>
+                  </TouchableOpacity>
+
+                  <TouchableOpacity
+                    style={styles.actionButton}
+                    onPress={() => {
+                      setShowArrivedAtCustomerModal(false);
+                      setTimeout(() => {
+                        if (selectedJobForArrival) {
+                          handleGetDirectionsToDump(selectedJobForArrival);
+                        }
+                      }, 300);
+                    }}
+                  >
+                    <Navigation size={32} color={Colors.accent} />
+                    <Text style={styles.actionButtonText}>Navigate to Dump</Text>
+                  </TouchableOpacity>
+                </>
+              )}
 
               <TouchableOpacity
                 style={styles.actionButton}
@@ -1292,12 +1421,14 @@ export default function RouteDetailsScreen() {
                       setJobForOdometer(null);
                       Alert.alert('Job Started', 'You can now navigate to the job location.');
                     } else if (odometerAction === 'complete-job' && jobForOdometer) {
+                      console.log('Completing job:', jobForOdometer.id);
                       await updateJob(jobForOdometer.id, {
                         status: 'COMPLETED',
                         completedAt: new Date().toISOString(),
                         completedByDriverId: user?.id,
                         endMileage: odometer,
                       });
+                      console.log('Job status updated to COMPLETED');
 
                       if (odometer && route.truckId) {
                         await addMileageLog({
@@ -1313,13 +1444,16 @@ export default function RouteDetailsScreen() {
                           routeId: route.id,
                           createdAt: new Date().toISOString(),
                         });
+                        console.log('Mileage log added');
                       }
 
                       setShowOdometerModal(false);
                       setJobForOdometer(null);
                       setSelectedJobForAction(null);
                       setShowJobActionModal(false);
+                      setSelectedJobForArrival(null);
                       Alert.alert('Success', 'Job completed successfully');
+                      console.log('Job completion flow finished');
                     }
 
                     setOdometerAction(null);
