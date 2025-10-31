@@ -11,10 +11,11 @@ import {
   ScrollView,
   Share,
   Platform,
+  Linking,
 } from 'react-native';
 import { useData } from '@/contexts/DataContext';
 import { useTheme } from '@/contexts/ThemeContext';
-import { Plus, Search, Phone, Mail, Truck as TruckIcon, X, Building2, QrCode, Share2 } from 'lucide-react-native';
+import { Plus, Search, Phone, Mail, Truck as TruckIcon, X, Building2, QrCode, Share2, MapPin } from 'lucide-react-native';
 import type { Driver } from '@/types';
 import { HAULING_COMPANIES } from '@/constants/haulingCompanies';
 import QRCode from 'react-native-qrcode-svg';
@@ -22,7 +23,7 @@ import * as MailComposer from 'expo-mail-composer';
 import * as FileSystem from 'expo-file-system';
 
 export default function DriversScreen() {
-  const { drivers, trucks, addDriver, updateDriver, deleteDriver } = useData();
+  const { drivers, trucks, yards, addDriver, updateDriver, deleteDriver } = useData();
   const { theme } = useTheme();
   const colors = theme.colors;
   const styles = createStyles(colors);
@@ -300,6 +301,34 @@ export default function DriversScreen() {
     }
   };
 
+  const handleLocateDriver = (driver: Driver) => {
+    let latitude = driver.lastKnownLatitude;
+    let longitude = driver.lastKnownLongitude;
+    let locationName = driver.name;
+    
+    if (!latitude || !longitude) {
+      const gmiHomeBase = yards.find(y => y.name === 'GMI Home Base');
+      if (gmiHomeBase && gmiHomeBase.latitude && gmiHomeBase.longitude) {
+        latitude = gmiHomeBase.latitude;
+        longitude = gmiHomeBase.longitude;
+        locationName = 'GMI Home Base (Default)';
+      } else {
+        latitude = 41.5133;
+        longitude = -87.6088;
+        locationName = 'GMI Home Base (Default)';
+      }
+    }
+    
+    const url = Platform.OS === 'ios'
+      ? `maps://maps.apple.com/?q=${latitude},${longitude}`
+      : `geo:${latitude},${longitude}?q=${latitude},${longitude}(${encodeURIComponent(locationName)})`;
+    
+    Linking.openURL(url).catch(err => {
+      Alert.alert('Error', 'Unable to open maps application');
+      console.error('Failed to open maps:', err);
+    });
+  };
+
   const renderDriver = ({ item }: { item: Driver }) => {
     const assignedTruck = trucks.find(t => t.id === item.assignedTruckId);
     const haulingCompany = HAULING_COMPANIES.find(c => c.id === item.haulingCompanyId);
@@ -348,15 +377,25 @@ export default function DriversScreen() {
             <Text style={styles.statusText}>{item.active ? 'Active' : 'Inactive'}</Text>
           </View>
         </TouchableOpacity>
-        <TouchableOpacity
-          style={styles.qrButton}
-          onPress={() => handleGenerateQR(item)}
-        >
-          <QrCode size={20} color={colors.primary} />
-          <Text style={styles.qrButtonText}>
-            {item.qrToken ? 'View QR' : 'Generate QR'}
-          </Text>
-        </TouchableOpacity>
+        <View style={styles.actionButtonsRow}>
+          <TouchableOpacity
+            style={styles.qrButton}
+            onPress={() => handleGenerateQR(item)}
+          >
+            <QrCode size={20} color={colors.primary} />
+            <Text style={styles.qrButtonText}>
+              {item.qrToken ? 'View QR' : 'Generate QR'}
+            </Text>
+          </TouchableOpacity>
+          
+          <TouchableOpacity
+            style={styles.locateButton}
+            onPress={() => handleLocateDriver(item)}
+          >
+            <MapPin size={20} color={colors.accent} />
+            <Text style={styles.locateButtonText}>Locate Driver</Text>
+          </TouchableOpacity>
+        </View>
       </View>
     );
   };
@@ -864,19 +903,41 @@ const createStyles = (colors: any) => StyleSheet.create({
     alignItems: 'flex-start' as const,
   },
   qrButton: {
+    flex: 1,
     flexDirection: 'row' as const,
     alignItems: 'center' as const,
+    justifyContent: 'center' as const,
     paddingHorizontal: 12,
     paddingVertical: 8,
     backgroundColor: colors.backgroundSecondary,
     borderRadius: 8,
-    marginTop: 12,
     gap: 6,
   },
   qrButtonText: {
     fontSize: 14,
     fontWeight: '600' as const,
     color: colors.primary,
+  },
+  actionButtonsRow: {
+    flexDirection: 'row' as const,
+    gap: 8,
+    marginTop: 12,
+  },
+  locateButton: {
+    flex: 1,
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    justifyContent: 'center' as const,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    backgroundColor: colors.backgroundSecondary,
+    borderRadius: 8,
+    gap: 6,
+  },
+  locateButtonText: {
+    fontSize: 14,
+    fontWeight: '600' as const,
+    color: colors.accent,
   },
   qrModalContent: {
     backgroundColor: colors.background,

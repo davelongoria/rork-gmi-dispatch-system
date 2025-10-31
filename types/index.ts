@@ -29,6 +29,9 @@ export interface Driver {
   notes?: string;
   active: boolean;
   qrToken?: string;
+  lastKnownLatitude?: number;
+  lastKnownLongitude?: number;
+  lastLocationUpdate?: string;
   createdAt: string;
 }
 
