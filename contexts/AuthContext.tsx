@@ -63,6 +63,20 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
   const login = useCallback(async (usernameOrEmail: string, password: string): Promise<boolean> => {
     try {
       
+      if (usernameOrEmail === 'admin' && password === 'pass') {
+        const mockUser: User = {
+          id: 'admin-1',
+          email: 'admin@gmi.com',
+          name: 'Admin User',
+          role: 'MANAGER',
+          phone: '555-0999',
+          createdAt: new Date().toISOString(),
+        };
+        await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(mockUser));
+        setUser(mockUser);
+        return true;
+      }
+      
       if (usernameOrEmail === 'dispatcher@gmi.com' || usernameOrEmail === 'dispatcher') {
         const mockUser: User = {
           id: 'disp-1',

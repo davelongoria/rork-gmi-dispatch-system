@@ -17,6 +17,7 @@ import {
   sampleContainerRoutes,
   sampleResidentialCustomers,
   sampleResidentialStops,
+  sampleRecurringJobs,
 } from '@/utils/sampleData';
 
 const STORAGE_KEYS = {
@@ -417,10 +418,20 @@ export const [DataProvider, useData] = createContextHook(() => {
       if (recurringJobsData && recurringJobsData !== 'null' && recurringJobsData !== 'undefined') {
         try {
           const parsed = JSON.parse(recurringJobsData);
-          if (Array.isArray(parsed)) setRecurringJobs(parsed);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            setRecurringJobs(parsed);
+          } else {
+            setRecurringJobs(sampleRecurringJobs);
+            await AsyncStorage.setItem(STORAGE_KEYS.RECURRING_JOBS, JSON.stringify(sampleRecurringJobs));
+          }
         } catch (e) {
           console.error('Failed to parse recurring jobs data:', e);
+          setRecurringJobs(sampleRecurringJobs);
+          await AsyncStorage.setItem(STORAGE_KEYS.RECURRING_JOBS, JSON.stringify(sampleRecurringJobs));
         }
+      } else {
+        setRecurringJobs(sampleRecurringJobs);
+        await AsyncStorage.setItem(STORAGE_KEYS.RECURRING_JOBS, JSON.stringify(sampleRecurringJobs));
       }
       
       if (commercialRoutesData && commercialRoutesData !== 'null' && commercialRoutesData !== 'undefined') {
