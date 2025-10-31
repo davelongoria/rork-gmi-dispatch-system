@@ -29,10 +29,12 @@ import {
 } from 'lucide-react-native';
 import * as Location from 'expo-location';
 import type { TimeLog } from '@/types';
+import { useLocationTracking } from '@/hooks/useLocationTracking';
+import { useCallback } from 'react';
 
 export default function DriverDashboard() {
   const { user, logout } = useAuth();
-  const { timeLogs, routes, commercialRoutes, residentialRoutes, containerRoutes, addTimeLog, dvirs, fuelLogs, dumpTickets, jobs, addMileageLog, trucks } = useData();
+  const { timeLogs, routes, commercialRoutes, residentialRoutes, containerRoutes, addTimeLog, dvirs, fuelLogs, dumpTickets, jobs, addMileageLog, trucks, updateDriver } = useData();
   const { theme } = useTheme();
   const colors = theme.colors;
   const router = useRouter();
@@ -45,6 +47,24 @@ export default function DriverDashboard() {
   const [returnToBaseOdometer, setReturnToBaseOdometer] = useState<string>('');
   const [returnToBaseState, setReturnToBaseState] = useState<string>('');
   const [odometerAction, setOdometerAction] = useState<'clock-in' | 'clock-out' | null>(null);
+
+  const handleLocationUpdate = useCallback(async (latitude: number, longitude: number) => {
+    if (user?.id) {
+      console.log('Updating driver location:', user.id, latitude, longitude);
+      await updateDriver(user.id, {
+        lastKnownLatitude: latitude,
+        lastKnownLongitude: longitude,
+        lastLocationUpdate: new Date().toISOString(),
+      });
+    }
+  }, [user?.id, updateDriver]);
+
+  useLocationTracking({
+    driverId: user?.id || '',
+    enabled: isClockedIn && !!user?.id,
+    onLocationUpdate: handleLocationUpdate,
+    intervalMs: 30000,
+  });
 
   useEffect(() => {
     const userTimeLogs = timeLogs.filter(log => log.driverId === user?.id);
