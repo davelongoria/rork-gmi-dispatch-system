@@ -104,6 +104,14 @@ export default function DriverLayout() {
           headerShown: true,
         }}
       />
+      <Stack.Screen
+        name="add-stop"
+        options={{
+          title: 'Add Stop',
+          headerShown: true,
+          presentation: 'modal',
+        }}
+      />
     </Stack>
   );
 }
