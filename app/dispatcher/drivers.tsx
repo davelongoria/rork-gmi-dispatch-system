@@ -15,9 +15,10 @@ import {
 } from 'react-native';
 import { useData } from '@/contexts/DataContext';
 import { useTheme } from '@/contexts/ThemeContext';
-import { Plus, Search, Phone, Mail, Truck as TruckIcon, X, Building2, QrCode, Share2, MapPin } from 'lucide-react-native';
+import { Plus, Search, Phone, Mail, Truck as TruckIcon, X, Building2, QrCode, Share2, MapPin, History } from 'lucide-react-native';
 import type { Driver } from '@/types';
 import { HAULING_COMPANIES } from '@/constants/haulingCompanies';
+import { router } from 'expo-router';
 import QRCode from 'react-native-qrcode-svg';
 import * as MailComposer from 'expo-mail-composer';
 import * as FileSystem from 'expo-file-system';
@@ -329,6 +330,10 @@ export default function DriversScreen() {
     });
   };
 
+  const handleViewHistory = (driver: Driver) => {
+    router.push(`/dispatcher/driver-location-history?driverId=${driver.id}`);
+  };
+
   const renderDriver = ({ item }: { item: Driver }) => {
     const assignedTruck = trucks.find(t => t.id === item.assignedTruckId);
     const haulingCompany = HAULING_COMPANIES.find(c => c.id === item.haulingCompanyId);
@@ -382,9 +387,9 @@ export default function DriversScreen() {
             style={styles.qrButton}
             onPress={() => handleGenerateQR(item)}
           >
-            <QrCode size={20} color={colors.primary} />
+            <QrCode size={18} color={colors.primary} />
             <Text style={styles.qrButtonText}>
-              {item.qrToken ? 'View QR' : 'Generate QR'}
+              {item.qrToken ? 'QR' : 'QR'}
             </Text>
           </TouchableOpacity>
           
@@ -392,8 +397,16 @@ export default function DriversScreen() {
             style={styles.locateButton}
             onPress={() => handleLocateDriver(item)}
           >
-            <MapPin size={20} color={colors.accent} />
-            <Text style={styles.locateButtonText}>Locate Driver</Text>
+            <MapPin size={18} color={colors.accent} />
+            <Text style={styles.locateButtonText}>Locate</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.historyButton}
+            onPress={() => handleViewHistory(item)}
+          >
+            <History size={18} color={colors.success} />
+            <Text style={styles.historyButtonText}>History</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -938,6 +951,22 @@ const createStyles = (colors: any) => StyleSheet.create({
     fontSize: 14,
     fontWeight: '600' as const,
     color: colors.accent,
+  },
+  historyButton: {
+    flex: 1,
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    justifyContent: 'center' as const,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    backgroundColor: colors.backgroundSecondary,
+    borderRadius: 8,
+    gap: 6,
+  },
+  historyButtonText: {
+    fontSize: 14,
+    fontWeight: '600' as const,
+    color: colors.success,
   },
   qrModalContent: {
     backgroundColor: colors.background,

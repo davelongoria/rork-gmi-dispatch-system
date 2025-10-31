@@ -9,11 +9,12 @@
     "lint": "expo lint"
   },
   "dependencies": {
-    "@ai-sdk/react": "^2.0.81",
+    "@ai-sdk/react": "^2.0.84",
     "@expo/vector-icons": "^15.0.3",
     "@hono/trpc-server": "^0.4.0",
     "@nkzw/create-context-hook": "^1.1.0",
     "@react-native-async-storage/async-storage": "2.2.0",
+    "@react-native-community/slider": "5.0.1",
     "@stardazed/streams-text-encoding": "^1.0.2",
     "@tanstack/eslint-plugin-query": "^5.91.2",
     "@tanstack/react-query": "^5.90.5",
@@ -65,7 +66,7 @@
     "@expo/ngrok": "^4.1.0",
     "@types/react": "~19.1.10",
     "eslint": "9.31.0",
-    "eslint-config-expo": "~10.0.0",
+    "eslint-config-expo": "9.2.0",
     "typescript": "~5.9.2"
   },
   "private": true

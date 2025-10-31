@@ -4,6 +4,8 @@ import { syncDataProcedure } from "./routes/data/sync/route";
 import { getAllDataProcedure } from "./routes/data/get-all/route";
 import { exportAsDefaultsProcedure } from "./routes/data/export-as-defaults/route";
 import { resetDatabaseProcedure } from "./routes/data/reset-database/route";
+import { addLocationHistoryProcedure } from "./routes/location/add-history/route";
+import { getLocationHistoryProcedure } from "./routes/location/get-history/route";
 
 export const appRouter = createTRPCRouter({
   example: createTRPCRouter({
@@ -14,6 +16,10 @@ export const appRouter = createTRPCRouter({
     getAll: getAllDataProcedure,
     exportAsDefaults: exportAsDefaultsProcedure,
     resetDatabase: resetDatabaseProcedure,
+  }),
+  location: createTRPCRouter({
+    addHistory: addLocationHistoryProcedure,
+    getHistory: getLocationHistoryProcedure,
   }),
 });
 

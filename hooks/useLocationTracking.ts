@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react';
 import * as Location from 'expo-location';
+import { trpcClient } from '@/lib/trpc';
 
 interface LocationTrackingOptions {
   driverId: string;
@@ -52,6 +53,22 @@ export function useLocationTracking({
               lastLocationRef.current = { latitude, longitude };
               onLocationUpdate(latitude, longitude);
               console.log('Location updated for driver:', driverId, latitude, longitude);
+              
+              try {
+                await trpcClient.location.addHistory.mutate({
+                  driverId,
+                  latitude,
+                  longitude,
+                  speed: location.coords.speed || undefined,
+                  heading: location.coords.heading || undefined,
+                  altitude: location.coords.altitude || undefined,
+                  accuracy: location.coords.accuracy || undefined,
+                  timestamp: new Date(location.timestamp).toISOString(),
+                });
+                console.log('Location history saved for driver:', driverId);
+              } catch (error) {
+                console.error('Failed to save location history:', error);
+              }
             }
           } catch (error) {
             console.error('Failed to get location:', error);

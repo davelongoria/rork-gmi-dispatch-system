@@ -270,6 +270,21 @@ export interface GPSBreadcrumb {
   createdAt: string;
 }
 
+export interface LocationHistory {
+  id: string;
+  driverId: string;
+  driverName?: string;
+  truckId?: string;
+  latitude: number;
+  longitude: number;
+  speed?: number;
+  heading?: number;
+  altitude?: number;
+  accuracy?: number;
+  timestamp: string;
+  createdAt: string;
+}
+
 export interface AuditLog {
   id: string;
   userId: string;

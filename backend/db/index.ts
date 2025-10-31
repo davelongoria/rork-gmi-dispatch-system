@@ -441,6 +441,21 @@ db.exec(`
     updatedAt TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
   );
 
+  CREATE TABLE IF NOT EXISTS locationHistory (
+    id TEXT PRIMARY KEY,
+    driverId TEXT NOT NULL,
+    driverName TEXT,
+    truckId TEXT,
+    latitude REAL NOT NULL,
+    longitude REAL NOT NULL,
+    speed REAL,
+    heading REAL,
+    altitude REAL,
+    accuracy REAL,
+    timestamp TEXT NOT NULL,
+    createdAt TEXT NOT NULL
+  );
+
   CREATE INDEX IF NOT EXISTS idx_jobs_routeId ON jobs(routeId);
   CREATE INDEX IF NOT EXISTS idx_jobs_status ON jobs(status);
   CREATE INDEX IF NOT EXISTS idx_routes_driverId ON routes(driverId);
@@ -451,6 +466,8 @@ db.exec(`
   CREATE INDEX IF NOT EXISTS idx_residentialStops_customerId ON residentialStops(customerId);
   CREATE INDEX IF NOT EXISTS idx_residentialStops_routeId ON residentialStops(routeId);
   CREATE INDEX IF NOT EXISTS idx_containerJobs_routeId ON containerJobs(routeId);
+  CREATE INDEX IF NOT EXISTS idx_locationHistory_driverId ON locationHistory(driverId);
+  CREATE INDEX IF NOT EXISTS idx_locationHistory_timestamp ON locationHistory(timestamp);
 `);
 
 const driversCount = db.prepare('SELECT COUNT(*) as count FROM drivers').get() as { count: number };
