@@ -138,6 +138,12 @@ export default function DispatcherLayout() {
           href: null,
         }}
       />
+      <Tabs.Screen
+        name="driver-location-history"
+        options={{
+          href: null,
+        }}
+      />
     </Tabs>
   );
 }
