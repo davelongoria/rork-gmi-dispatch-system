@@ -81,7 +81,7 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
         const mockUser: User = {
           id: 'disp-1',
           email: 'dispatcher@gmi.com',
-          name: 'John Dispatcher',
+          name: 'Dispatcher',
           role: 'DISPATCHER',
           phone: '555-0100',
           createdAt: new Date().toISOString(),
@@ -144,7 +144,7 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
               const mockUser: User = {
                 id: 'disp-1',
                 email: 'dispatcher@gmi.com',
-                name: 'John Dispatcher',
+                name: 'Dispatcher',
                 role: 'DISPATCHER',
                 phone: '555-0100',
                 createdAt: new Date().toISOString(),
