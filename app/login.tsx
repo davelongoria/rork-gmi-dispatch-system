@@ -58,7 +58,7 @@ export default function LoginScreen() {
     }
 
     if (auth && auth.isAuthenticated && !auth.isLoading) {
-      if (auth.isDispatcher) {
+      if (auth.isDispatcher || auth.isManager) {
         router.replace('/dispatcher' as any);
       } else if (auth.isDriver) {
         router.replace('/driver' as any);
@@ -262,6 +262,7 @@ export default function LoginScreen() {
 
             <View style={[styles.demoInfo, { backgroundColor: colors.backgroundSecondary }]}>
               <Text style={[styles.demoTitle, { color: colors.text }]}>Demo Accounts:</Text>
+              <Text style={[styles.demoText, { color: colors.textSecondary }]}>Admin: admin / pass</Text>
               <Text style={[styles.demoText, { color: colors.textSecondary }]}>Dispatcher: dispatcher@gmi.com or &quot;dispatcher&quot;</Text>
               <Text style={[styles.demoText, { color: colors.textSecondary }]}>Drivers: Use email or username set in Drivers screen</Text>
               <Text style={[styles.demoText, { color: colors.textSecondary }]}>Password: Set in driver settings (required if configured)</Text>
