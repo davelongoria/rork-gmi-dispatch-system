@@ -36,15 +36,18 @@ export const [ThemeProvider, useTheme] = createContextHook(() => {
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
   useEffect(() => {
+    console.log('[THEME_CONTEXT] Initializing...');
     loadData();
   }, []);
 
   const loadData = async () => {
+    console.log('[THEME_CONTEXT] Loading theme data...');
     try {
       const [selectedId, companiesData] = await Promise.all([
         AsyncStorage.getItem(THEME_STORAGE_KEY),
         AsyncStorage.getItem('@gmi_companies'),
       ]);
+      console.log('[THEME_CONTEXT] AsyncStorage data loaded:', { selectedId, hasCompaniesData: !!companiesData });
       
       if (companiesData && companiesData !== 'null' && companiesData !== 'undefined') {
         try {
@@ -61,8 +64,9 @@ export const [ThemeProvider, useTheme] = createContextHook(() => {
         setSelectedCompanyId(selectedId);
       }
     } catch (error) {
-      console.error('Failed to load theme data:', error);
+      console.error('[THEME_CONTEXT] Failed to load theme data:', error);
     } finally {
+      console.log('[THEME_CONTEXT] Loading complete, setting isLoading = false');
       setIsLoading(false);
     }
   };

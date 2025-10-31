@@ -33,23 +33,39 @@ export default function LoginScreen() {
   const router = useRouter();
 
   useEffect(() => {
+    console.log('[INDEX] State check:', { 
+      themeLoading, 
+      selectedCompany: selectedCompany?.name,
+      authLoading: auth?.isLoading, 
+      isAuthenticated: auth?.isAuthenticated,
+      isDispatcher: auth?.isDispatcher,
+      isDriver: auth?.isDriver
+    });
+
     if (themeLoading) {
+      console.log('[INDEX] Theme still loading, waiting...');
       return;
     }
 
     if (!selectedCompany) {
+      console.log('[INDEX] No company selected, redirecting to company-selection');
       router.replace('/company-selection' as any);
       return;
     }
 
     if (auth && auth.isAuthenticated && !auth.isLoading) {
       if (auth.isDispatcher) {
+        console.log('[INDEX] Authenticated as dispatcher, redirecting to /dispatcher');
         router.replace('/dispatcher' as any);
       } else if (auth.isDriver) {
+        console.log('[INDEX] Authenticated as driver, redirecting to /driver');
         router.replace('/driver' as any);
       }
     } else if (auth && !auth.isAuthenticated && !auth.isLoading) {
+      console.log('[INDEX] Not authenticated, redirecting to /login');
       router.replace('/login' as any);
+    } else {
+      console.log('[INDEX] Auth still loading, waiting...');
     }
   }, [auth, router, selectedCompany, themeLoading]);
 

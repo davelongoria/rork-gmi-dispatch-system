@@ -43,20 +43,25 @@ function AppContent() {
   const [isReady, setIsReady] = useState(false);
 
   useEffect(() => {
+    console.log('[APP_LAYOUT] AppContent mounting...');
     let timer: ReturnType<typeof setTimeout> | undefined;
     const run = async () => {
       if (Platform.OS !== 'web') {
         try {
           await ScreenOrientation.unlockAsync();
+          console.log('[APP_LAYOUT] Screen orientation unlocked');
         } catch (e) {
-          console.log('ScreenOrientation unlock error', e);
+          console.log('[APP_LAYOUT] ScreenOrientation unlock error', e);
         }
       } else {
-        console.log('Web platform, orientation control limited');
+        console.log('[APP_LAYOUT] Web platform detected, skipping orientation control');
       }
       timer = setTimeout(() => {
+        console.log('[APP_LAYOUT] Setting app as ready, hiding splash screen');
         setIsReady(true);
-        SplashScreen.hideAsync().catch(() => {});
+        SplashScreen.hideAsync().catch((e) => {
+          console.log('[APP_LAYOUT] Error hiding splash:', e);
+        });
       }, 50);
     };
     run();

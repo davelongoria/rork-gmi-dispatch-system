@@ -12,25 +12,32 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
   const [drivers, setDrivers] = useState<Driver[]>([]);
 
   const loadUser = async () => {
+    console.log('[AUTH_CONTEXT] Loading user...');
     const timeout = setTimeout(() => {
-      console.warn('Auth loading timeout, continuing anyway');
+      console.warn('[AUTH_CONTEXT] Auth loading timeout, continuing anyway');
       setIsLoading(false);
     }, 2000);
 
     try {
       const stored = await AsyncStorage.getItem(STORAGE_KEY);
+      console.log('[AUTH_CONTEXT] AsyncStorage user data:', stored ? 'Found' : 'Not found');
       if (stored && stored !== 'null' && stored !== 'undefined') {
         try {
-          setUser(JSON.parse(stored));
+          const user = JSON.parse(stored);
+          console.log('[AUTH_CONTEXT] User loaded:', user.name, user.role);
+          setUser(user);
         } catch (e) {
-          console.error('Failed to parse user data:', e);
+          console.error('[AUTH_CONTEXT] Failed to parse user data:', e);
           await AsyncStorage.removeItem(STORAGE_KEY);
         }
+      } else {
+        console.log('[AUTH_CONTEXT] No stored user found');
       }
     } catch (error) {
-      console.error('Failed to load user:', error);
+      console.error('[AUTH_CONTEXT] Failed to load user:', error);
     } finally {
       clearTimeout(timeout);
+      console.log('[AUTH_CONTEXT] Loading complete, setting isLoading = false');
       setIsLoading(false);
     }
   };
@@ -50,6 +57,7 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
   }, []);
 
   useEffect(() => {
+    console.log('[AUTH_CONTEXT] Initializing...');
     loadUser();
     loadDrivers();
 
