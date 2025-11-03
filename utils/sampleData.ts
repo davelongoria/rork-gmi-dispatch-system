@@ -164,6 +164,15 @@ export const sampleYards: Yard[] = [
     active: true,
     createdAt: new Date().toISOString(),
   },
+  {
+    id: 'yard-2',
+    name: 'USX Laydown Yard',
+    address: '1 N Broadway, Gary, IN 46402',
+    latitude: 41.5900,
+    longitude: -87.3439,
+    active: true,
+    createdAt: new Date().toISOString(),
+  },
 ];
 
 export const sampleCustomers: Customer[] = [
