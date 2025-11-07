@@ -87,7 +87,7 @@ export const sampleDrivers: Driver[] = [
     username: 'Dump2',
     password: 'dump2',
     licenseNumber: 'DL789012',
-    assignedTruckId: null,
+    assignedTruckId: undefined,
     haulingCompanyId: 'region',
     active: true,
     createdAt: new Date().toISOString(),
