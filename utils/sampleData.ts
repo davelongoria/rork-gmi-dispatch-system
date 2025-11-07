@@ -315,15 +315,7 @@ export const sampleCustomers: Customer[] = [
     active: true,
     createdAt: new Date().toISOString(),
   },
-  {
-    id: 'customer-15',
-    name: 'Crominent',
-    address: '',
-    phone: '(219) 555-0315',
-    email: 'info@crominent.com',
-    active: true,
-    createdAt: new Date().toISOString(),
-  },
+
 ];
 
 export const sampleCommercialRoutes: CommercialRoute[] = [
@@ -1526,8 +1518,8 @@ export const sampleRecurringJobs: RecurringJob[] = [
   },
   {
     id: 'recurring-76',
-    customerId: 'customer-15',
-    customerName: 'Crominent',
+    customerId: 'customer-1',
+    customerName: 'Cronimet Chicago',
     type: 'SWITCH',
     containerSize: '30 Yard',
     material: 'Scrap Metal',
@@ -1539,8 +1531,8 @@ export const sampleRecurringJobs: RecurringJob[] = [
   },
   {
     id: 'recurring-77',
-    customerId: 'customer-15',
-    customerName: 'Crominent',
+    customerId: 'customer-1',
+    customerName: 'Cronimet Chicago',
     type: 'SWITCH',
     containerSize: '30 Yard',
     material: 'Scrap Metal',
@@ -1552,8 +1544,8 @@ export const sampleRecurringJobs: RecurringJob[] = [
   },
   {
     id: 'recurring-78',
-    customerId: 'customer-15',
-    customerName: 'Crominent',
+    customerId: 'customer-1',
+    customerName: 'Cronimet Chicago',
     type: 'SWITCH',
     containerSize: '20 Yard',
     material: 'Scrap Metal',
@@ -1565,8 +1557,8 @@ export const sampleRecurringJobs: RecurringJob[] = [
   },
   {
     id: 'recurring-79',
-    customerId: 'customer-15',
-    customerName: 'Crominent',
+    customerId: 'customer-1',
+    customerName: 'Cronimet Chicago',
     type: 'SWITCH',
     containerSize: '20 Yard',
     material: 'Scrap Metal',
