@@ -10,7 +10,8 @@ import {
   sampleCommercialRoutes,
   sampleResidentialRoutes,
   sampleResidentialCustomers,
-  sampleResidentialStops
+  sampleResidentialStops,
+  sampleRecurringJobs
 } from '../../utils/sampleData';
 
 const dataDir = join(process.cwd(), 'data');
@@ -635,6 +636,27 @@ if (driversCount.count === 0) {
       stop.status,
       stop.active ? 1 : 0,
       stop.createdAt
+    );
+  }
+  
+  const insertRecurringJob = db.prepare(`
+    INSERT INTO recurringJobs (id, customerId, customerName, type, containerSize, material, address, notes, dumpSiteId, projectName, createdAt)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+  `);
+  
+  for (const job of sampleRecurringJobs) {
+    insertRecurringJob.run(
+      job.id,
+      job.customerId,
+      job.customerName || null,
+      job.type,
+      job.containerSize || null,
+      job.material || null,
+      job.address,
+      job.notes || null,
+      job.dumpSiteId || null,
+      job.projectName || null,
+      job.createdAt
     );
   }
   
