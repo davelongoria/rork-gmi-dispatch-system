@@ -373,6 +373,19 @@ export const sampleDumpSites: DumpSite[] = [
     active: true,
     createdAt: new Date().toISOString(),
   },
+  {
+    id: 'dump-18',
+    name: 'BL DUKE',
+    address: '1 Industrial Ave Gate 2, Joliet, IL 60435',
+    latitude: 41.5250,
+    longitude: -88.0817,
+    acceptedMaterials: ['General Waste', 'Construction Debris'],
+    hours: 'Mon-Fri 7AM-5PM',
+    contactName: '',
+    contactPhone: '',
+    active: true,
+    createdAt: new Date().toISOString(),
+  },
 ];
 
 export const sampleYards: Yard[] = [
