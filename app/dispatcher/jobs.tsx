@@ -65,6 +65,7 @@ export default function JobsScreen() {
   const [rCardCvc, setRCardCvc] = useState<string>('');
   const [rCardBrand, setRCardBrand] = useState<CardOnFile['brand']>('VISA');
   const [showRecurringJobs, setShowRecurringJobs] = useState<boolean>(false);
+  const [selectedRecurringCustomer, setSelectedRecurringCustomer] = useState<string | null>(null);
   const [createFromTemplateModal, setCreateFromTemplateModal] = useState<boolean>(false);
   const [selectedRecurringJob, setSelectedRecurringJob] = useState<RecurringJob | null>(null);
   const [templateServiceDate, setTemplateServiceDate] = useState<string>(new Date().toISOString().split('T')[0]);
@@ -556,59 +557,54 @@ export default function JobsScreen() {
     </View>
   );
 
-  const renderRecurringJob = ({ item }: { item: RecurringJob }) => (
-    <View style={styles.recurringJobCard}>
-      <View style={styles.jobHeader}>
-        <View style={styles.jobInfo}>
-          <View style={styles.recurringBadgeRow}>
-            <Text style={styles.jobTitle}>{item.customerName}</Text>
-            {item.projectName && (
-              <View style={styles.projectBadge}>
-                <Folder size={12} color={Colors.background} />
-                <Text style={styles.projectBadgeText}>{item.projectName}</Text>
+  const renderRecurringJob = ({ item }: { item: RecurringJob }) => {
+    const displayName = item.projectName || item.address;
+    return (
+      <View style={styles.recurringJobCard}>
+        <View style={styles.jobHeader}>
+          <View style={styles.jobInfo}>
+            <Text style={styles.jobTitle}>{displayName}</Text>
+            <View style={styles.jobMeta}>
+              <MapPin size={14} color={Colors.textSecondary} />
+              <Text style={styles.jobMetaText} numberOfLines={1}>{item.address}</Text>
+            </View>
+            {item.containerSize && (
+              <View style={styles.jobMeta}>
+                <Package size={14} color={Colors.textSecondary} />
+                <Text style={styles.jobMetaText}>
+                  {item.containerSize}{item.material ? ` - ${item.material}` : ''}
+                </Text>
               </View>
             )}
           </View>
-          <View style={styles.jobMeta}>
-            <MapPin size={14} color={Colors.textSecondary} />
-            <Text style={styles.jobMetaText} numberOfLines={1}>{item.address}</Text>
+          <View style={[styles.typeBadge, { backgroundColor: getJobTypeColor(item.type) }]}>
+            <Text style={styles.typeText}>{getJobTypeLabel(item.type)}</Text>
           </View>
-          {item.containerSize && (
-            <View style={styles.jobMeta}>
-              <Package size={14} color={Colors.textSecondary} />
-              <Text style={styles.jobMetaText}>
-                {item.containerSize}{item.material ? ` - ${item.material}` : ''}
-              </Text>
-            </View>
-          )}
         </View>
-        <View style={[styles.typeBadge, { backgroundColor: getJobTypeColor(item.type) }]}>
-          <Text style={styles.typeText}>{getJobTypeLabel(item.type)}</Text>
+        <View style={styles.jobActions}>
+          <TouchableOpacity 
+            style={styles.actionButtonCreate} 
+            onPress={() => handleCreateJobFromRecurring(item)}
+          >
+            <Plus size={18} color={Colors.success} />
+            <Text style={styles.actionButtonTextCreate}>Create Job</Text>
+          </TouchableOpacity>
+          <TouchableOpacity 
+            style={styles.actionButton} 
+            onPress={() => handleEditRecurringJob(item)}
+          >
+            <Edit size={18} color={Colors.primary} />
+          </TouchableOpacity>
+          <TouchableOpacity 
+            style={styles.actionButtonDelete} 
+            onPress={() => handleDeleteRecurringJob(item)}
+          >
+            <Trash2 size={18} color={Colors.primary} />
+          </TouchableOpacity>
         </View>
       </View>
-      <View style={styles.jobActions}>
-        <TouchableOpacity 
-          style={styles.actionButtonCreate} 
-          onPress={() => handleCreateJobFromRecurring(item)}
-        >
-          <Plus size={18} color={Colors.success} />
-          <Text style={styles.actionButtonTextCreate}>Create Job</Text>
-        </TouchableOpacity>
-        <TouchableOpacity 
-          style={styles.actionButton} 
-          onPress={() => handleEditRecurringJob(item)}
-        >
-          <Edit size={18} color={Colors.primary} />
-        </TouchableOpacity>
-        <TouchableOpacity 
-          style={styles.actionButtonDelete} 
-          onPress={() => handleDeleteRecurringJob(item)}
-        >
-          <Trash2 size={18} color={Colors.primary} />
-        </TouchableOpacity>
-      </View>
-    </View>
-  );
+    );
+  };
 
   const jobTypes: JobType[] = ['DELIVER', 'PICKUP', 'SWITCH', 'ROUND_TRIP'];
 
@@ -640,18 +636,75 @@ export default function JobsScreen() {
       </View>
 
       {showRecurringJobs ? (
-        <FlatList
-          data={recurringJobs}
-          renderItem={renderRecurringJob}
-          keyExtractor={item => item.id}
-          contentContainerStyle={styles.listContent}
-          ListEmptyComponent={
-            <View style={styles.emptyContainer}>
-              <Text style={styles.emptyText}>No recurring job templates</Text>
-              <Text style={styles.emptySubtext}>Tap + to create a recurring job template</Text>
+        selectedRecurringCustomer ? (
+          <View style={{ flex: 1 }}>
+            <View style={styles.breadcrumbBar}>
+              <TouchableOpacity 
+                style={styles.backButton}
+                onPress={() => setSelectedRecurringCustomer(null)}
+              >
+                <Text style={styles.backButtonText}>← Back to Customers</Text>
+              </TouchableOpacity>
             </View>
-          }
-        />
+            <FlatList
+              data={recurringJobs.filter(rj => rj.customerId === selectedRecurringCustomer)}
+              renderItem={renderRecurringJob}
+              keyExtractor={item => item.id}
+              contentContainerStyle={styles.listContent}
+              ListEmptyComponent={
+                <View style={styles.emptyContainer}>
+                  <Text style={styles.emptyText}>No recurring jobs for this customer</Text>
+                </View>
+              }
+            />
+          </View>
+        ) : (
+          <FlatList
+            data={(() => {
+              const customerJobCounts = recurringJobs.reduce((acc, job) => {
+                if (!acc[job.customerId]) {
+                  acc[job.customerId] = { 
+                    customerId: job.customerId,
+                    customerName: job.customerName || 'Unknown Customer',
+                    count: 0 
+                  };
+                }
+                acc[job.customerId].count++;
+                return acc;
+              }, {} as Record<string, { customerId: string, customerName: string, count: number }>);
+              return Object.values(customerJobCounts).sort((a, b) => 
+                a.customerName.localeCompare(b.customerName)
+              );
+            })()}
+            renderItem={({ item }) => (
+              <TouchableOpacity
+                style={styles.customerCard}
+                onPress={() => setSelectedRecurringCustomer(item.customerId)}
+              >
+                <View style={styles.customerCardContent}>
+                  <View style={styles.customerCardIcon}>
+                    <User size={24} color={Colors.primary} />
+                  </View>
+                  <View style={styles.customerCardInfo}>
+                    <Text style={styles.customerCardName}>{item.customerName}</Text>
+                    <Text style={styles.customerCardCount}>
+                      {item.count} recurring {item.count === 1 ? 'job' : 'jobs'}
+                    </Text>
+                  </View>
+                  <Folder size={20} color={Colors.textSecondary} />
+                </View>
+              </TouchableOpacity>
+            )}
+            keyExtractor={item => item.customerId}
+            contentContainerStyle={styles.listContent}
+            ListEmptyComponent={
+              <View style={styles.emptyContainer}>
+                <Text style={styles.emptyText}>No recurring job templates</Text>
+                <Text style={styles.emptySubtext}>Tap + to create a recurring job template</Text>
+              </View>
+            }
+          />
+        )
       ) : (
         <ScrollView contentContainerStyle={styles.listContent}>
           {suspendedJobs.length > 0 && (
@@ -1752,5 +1805,55 @@ const createStyles = (Colors: any) => StyleSheet.create({
     fontSize: 14,
     color: Colors.textSecondary,
     marginBottom: 4,
+  },
+  breadcrumbBar: {
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    backgroundColor: Colors.backgroundSecondary,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.border,
+  },
+  backButton: {
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+  },
+  backButtonText: {
+    fontSize: 16,
+    color: Colors.primary,
+    fontWeight: '600' as const,
+  },
+  customerCard: {
+    backgroundColor: Colors.background,
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 12,
+    borderWidth: 2,
+    borderColor: Colors.border,
+  },
+  customerCardContent: {
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    gap: 12,
+  },
+  customerCardIcon: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: Colors.backgroundSecondary,
+    justifyContent: 'center' as const,
+    alignItems: 'center' as const,
+  },
+  customerCardInfo: {
+    flex: 1,
+  },
+  customerCardName: {
+    fontSize: 18,
+    fontWeight: '600' as const,
+    color: Colors.text,
+    marginBottom: 4,
+  },
+  customerCardCount: {
+    fontSize: 14,
+    color: Colors.textSecondary,
   },
 });
