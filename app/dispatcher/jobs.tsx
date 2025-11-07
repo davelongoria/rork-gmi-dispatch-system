@@ -38,6 +38,7 @@ export default function JobsScreen() {
   const [recurringModalVisible, setRecurringModalVisible] = useState<boolean>(false);
   const [editingJob, setEditingJob] = useState<Job | null>(null);
   const [editingRecurringJob, setEditingRecurringJob] = useState<RecurringJob | null>(null);
+  const [recurringJobStep, setRecurringJobStep] = useState<'customer' | 'details'>('customer');
   const [selectedCustomer, setSelectedCustomer] = useState<string>('');
   const [jobType, setJobType] = useState<JobType>('DELIVER');
   const [address, setAddress] = useState<string>('');
@@ -227,6 +228,7 @@ export default function JobsScreen() {
     setRCardExpiry('');
     setRCardCvc('');
     setRCardBrand('VISA');
+    setRecurringJobStep('customer');
     setRecurringModalVisible(true);
   };
 
@@ -248,7 +250,17 @@ export default function JobsScreen() {
     setRCardExpiry(recurringJob.cardOnFile?.expiry || '');
     setRCardCvc(recurringJob.cardOnFile?.cvc || '');
     setRCardBrand(recurringJob.cardOnFile?.brand || 'VISA');
+    setRecurringJobStep('details');
     setRecurringModalVisible(true);
+  };
+
+  const handleSelectCustomerForRecurring = (customerId: string) => {
+    setSelectedCustomer(customerId);
+    setRecurringJobStep('details');
+  };
+
+  const handleBackToCustomerSelection = () => {
+    setRecurringJobStep('customer');
   };
 
   const handleSaveRecurringJob = async () => {
@@ -295,9 +307,45 @@ export default function JobsScreen() {
         createdAt: new Date().toISOString(),
       };
       await addRecurringJob(newRecurringJob);
-      Alert.alert('Success', 'Recurring job template created successfully');
+      
+      setJobType('DELIVER');
+      setAddress('');
+      setContainerSize('');
+      setMaterial('');
+      setNotes('');
+      setProjectName('');
+      setSelectedDumpSite('');
+      setRJobSiteBillingAddress('');
+      setRJobSiteContactEmail('');
+      setRJobSiteContactPhone('');
+      setRCardName('');
+      setRCardNumber('');
+      setRCardExpiry('');
+      setRCardCvc('');
+      setRCardBrand('VISA');
+      
+      if (Platform.OS === 'web') {
+        const addAnother = window.confirm('Recurring job template created successfully. Add another for this customer?');
+        if (!addAnother) {
+          setRecurringModalVisible(false);
+        }
+      } else {
+        Alert.alert(
+          'Success',
+          'Recurring job template created successfully. Add another for this customer?',
+          [
+            {
+              text: 'Done',
+              onPress: () => setRecurringModalVisible(false),
+            },
+            {
+              text: 'Add Another',
+              onPress: () => {},
+            },
+          ]
+        );
+      }
     }
-    setRecurringModalVisible(false);
   };
 
   const handleDeleteRecurringJob = (recurringJob: RecurringJob) => {
