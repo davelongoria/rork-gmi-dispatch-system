@@ -69,6 +69,7 @@ export default function JobsScreen() {
   const [createFromTemplateModal, setCreateFromTemplateModal] = useState<boolean>(false);
   const [selectedRecurringJob, setSelectedRecurringJob] = useState<RecurringJob | null>(null);
   const [templateServiceDate, setTemplateServiceDate] = useState<string>(new Date().toISOString().split('T')[0]);
+  const [templateJobType, setTemplateJobType] = useState<JobType>('DELIVER');
 
   const unassignedJobs = jobs.filter(j => !j.routeId && j.status === 'PLANNED');
   const suspendedJobs = jobs.filter(j => j.status === 'SUSPENDED' && !j.willCompleteToday);
@@ -394,6 +395,7 @@ export default function JobsScreen() {
   const handleCreateJobFromRecurring = (recurringJob: RecurringJob) => {
     setSelectedRecurringJob(recurringJob);
     setTemplateServiceDate(new Date().toISOString().split('T')[0]);
+    setTemplateJobType(recurringJob.type);
     setCreateFromTemplateModal(true);
   };
 
@@ -404,7 +406,7 @@ export default function JobsScreen() {
       id: `job-${Date.now()}`,
       customerId: selectedRecurringJob.customerId,
       customerName: selectedRecurringJob.customerName,
-      type: selectedRecurringJob.type,
+      type: templateJobType,
       containerSize: selectedRecurringJob.containerSize,
       material: selectedRecurringJob.material,
       address: selectedRecurringJob.address,
@@ -661,17 +663,22 @@ export default function JobsScreen() {
         ) : (
           <FlatList
             data={(() => {
-              const customerJobCounts = recurringJobs.reduce((acc, job) => {
-                if (!acc[job.customerId]) {
-                  acc[job.customerId] = { 
-                    customerId: job.customerId,
-                    customerName: job.customerName || 'Unknown Customer',
-                    count: 0 
-                  };
+              const customerJobCounts: Record<string, { customerId: string, customerName: string, count: number }> = {};
+              
+              customers.filter(c => c.active).forEach(customer => {
+                customerJobCounts[customer.id] = {
+                  customerId: customer.id,
+                  customerName: customer.name,
+                  count: 0
+                };
+              });
+              
+              recurringJobs.forEach(job => {
+                if (customerJobCounts[job.customerId]) {
+                  customerJobCounts[job.customerId].count++;
                 }
-                acc[job.customerId].count++;
-                return acc;
-              }, {} as Record<string, { customerId: string, customerName: string, count: number }>);
+              });
+              
               return Object.values(customerJobCounts).sort((a, b) => 
                 a.customerName.localeCompare(b.customerName)
               );
@@ -1297,17 +1304,42 @@ export default function JobsScreen() {
               </TouchableOpacity>
             </View>
 
-            <View style={styles.form}>
+            <ScrollView style={styles.form}>
               {selectedRecurringJob && (
                 <View style={styles.templateInfoBox}>
                   <Text style={styles.templateInfoTitle}>{selectedRecurringJob.customerName}</Text>
                   <Text style={styles.templateInfoText}>{selectedRecurringJob.address}</Text>
-                  <Text style={styles.templateInfoText}>
-                    {getJobTypeLabel(selectedRecurringJob.type)}
-                    {selectedRecurringJob.containerSize && ` - ${selectedRecurringJob.containerSize}`}
-                  </Text>
+                  {selectedRecurringJob.containerSize && (
+                    <Text style={styles.templateInfoText}>
+                      {selectedRecurringJob.containerSize}
+                      {selectedRecurringJob.material && ` - ${selectedRecurringJob.material}`}
+                    </Text>
+                  )}
                 </View>
               )}
+
+              <Text style={styles.label}>Service Type</Text>
+              <View style={styles.typeSelector}>
+                {jobTypes.map(type => (
+                  <TouchableOpacity
+                    key={type}
+                    style={[
+                      styles.typeButton,
+                      templateJobType === type && { backgroundColor: getJobTypeColor(type) },
+                    ]}
+                    onPress={() => setTemplateJobType(type)}
+                  >
+                    <Text
+                      style={[
+                        styles.typeButtonText,
+                        templateJobType === type && styles.typeButtonTextSelected,
+                      ]}
+                    >
+                      {getJobTypeLabel(type)}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
 
               <Text style={styles.label}>Service Date</Text>
               <TextInput
@@ -1332,7 +1364,7 @@ export default function JobsScreen() {
                   <Text style={styles.buttonPrimaryText}>Create Job</Text>
                 </TouchableOpacity>
               </View>
-            </View>
+            </ScrollView>
           </View>
         </View>
       </Modal>
