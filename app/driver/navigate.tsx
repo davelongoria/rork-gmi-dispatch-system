@@ -62,6 +62,8 @@ export default function NavigateScreen() {
   const [showDumpSiteModal, setShowDumpSiteModal] = useState<boolean>(false);
   const [newContainerSize, setNewContainerSize] = useState<string>('');
   const [selectedDumpSiteId, setSelectedDumpSiteId] = useState<string>('');
+  const [showDumpSelectionModal, setShowDumpSelectionModal] = useState<boolean>(false);
+  const [manualDumpAddress, setManualDumpAddress] = useState<string>('');
   const [isNavigating, setIsNavigating] = useState<boolean>(false);
 
   if (!job || !route) {
@@ -346,25 +348,42 @@ export default function NavigateScreen() {
   };
 
   const handleNavigateToDump = () => {
-    const dumpSiteId = job.dumpSiteId || route.dumpSiteEndId;
+    setShowDumpSelectionModal(true);
+  };
+
+  const handleDumpSiteSelected = () => {
+    let address = '';
     
-    if (!dumpSiteId) {
-      Alert.alert('Error', 'No dump site assigned');
-      return;
-    }
-    
-    const dumpSite = dumpSites.find(d => d.id === dumpSiteId);
-    if (!dumpSite) {
-      Alert.alert('Error', 'Dump site not found');
+    if (selectedDumpSiteId === 'manual') {
+      if (!manualDumpAddress.trim()) {
+        Alert.alert('Error', 'Please enter a dump address');
+        return;
+      }
+      address = manualDumpAddress.trim();
+    } else if (selectedDumpSiteId) {
+      const dumpSite = dumpSites.find(d => d.id === selectedDumpSiteId);
+      if (!dumpSite) {
+        Alert.alert('Error', 'Dump site not found');
+        return;
+      }
+      address = dumpSite.address;
+      
+      updateJob(job.id, {
+        dumpSiteId: selectedDumpSiteId,
+      });
+    } else {
+      Alert.alert('Error', 'Please select a dump site or enter a manual address');
       return;
     }
 
-    const address = encodeURIComponent(dumpSite.address);
+    setShowDumpSelectionModal(false);
+    setIsNavigating(true);
     
+    const encodedAddress = encodeURIComponent(address);
     if (Platform.OS === 'ios') {
-      Linking.openURL(`maps://maps.apple.com/?daddr=${address}`);
+      Linking.openURL(`maps://maps.apple.com/?daddr=${encodedAddress}`);
     } else {
-      Linking.openURL(`google.navigation:q=${address}`);
+      Linking.openURL(`google.navigation:q=${encodedAddress}`);
     }
   };
 
@@ -772,6 +791,103 @@ export default function NavigateScreen() {
                   onPress={handleSaveDumpSite}
                 >
                   <Text style={styles.buttonPrimaryText}>Save</Text>
+                </TouchableOpacity>
+              </View>
+            </ScrollView>
+          </View>
+        </View>
+      </Modal>
+
+      <Modal
+        visible={showDumpSelectionModal}
+        animationType="slide"
+        transparent={true}
+        onRequestClose={() => setShowDumpSelectionModal(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Select Dump Location</Text>
+              <TouchableOpacity onPress={() => setShowDumpSelectionModal(false)}>
+                <X size={24} color={Colors.text} />
+              </TouchableOpacity>
+            </View>
+
+            <ScrollView style={styles.form}>
+              <Text style={styles.inputLabel}>Choose from available dump sites:</Text>
+              {dumpSites.filter(d => d.active).map(dumpSite => (
+                <TouchableOpacity
+                  key={dumpSite.id}
+                  style={[
+                    styles.selectionItem,
+                    selectedDumpSiteId === dumpSite.id && styles.selectionItemSelected,
+                  ]}
+                  onPress={() => {
+                    setSelectedDumpSiteId(dumpSite.id);
+                    setManualDumpAddress('');
+                  }}
+                >
+                  <Text
+                    style={[
+                      styles.selectionText,
+                      selectedDumpSiteId === dumpSite.id && styles.selectionTextSelected,
+                    ]}
+                  >
+                    {dumpSite.name}
+                  </Text>
+                  <Text style={styles.selectionSubtext}>{dumpSite.address}</Text>
+                </TouchableOpacity>
+              ))}
+
+              <Text style={[styles.inputLabel, { marginTop: 20 }]}>Or enter a manual address:</Text>
+              <TouchableOpacity
+                style={[
+                  styles.selectionItem,
+                  selectedDumpSiteId === 'manual' && styles.selectionItemSelected,
+                ]}
+                onPress={() => {
+                  setSelectedDumpSiteId('manual');
+                }}
+              >
+                <Text
+                  style={[
+                    styles.selectionText,
+                    selectedDumpSiteId === 'manual' && styles.selectionTextSelected,
+                  ]}
+                >
+                  Manual Address
+                </Text>
+              </TouchableOpacity>
+              
+              {selectedDumpSiteId === 'manual' && (
+                <TextInput
+                  style={[styles.input, styles.textArea]}
+                  value={manualDumpAddress}
+                  onChangeText={setManualDumpAddress}
+                  placeholder="Enter dump address"
+                  placeholderTextColor={Colors.textSecondary}
+                  multiline
+                  numberOfLines={3}
+                  autoFocus
+                />
+              )}
+
+              <View style={styles.buttonRow}>
+                <TouchableOpacity
+                  style={[styles.button, styles.buttonSecondary]}
+                  onPress={() => {
+                    setShowDumpSelectionModal(false);
+                    setSelectedDumpSiteId('');
+                    setManualDumpAddress('');
+                  }}
+                >
+                  <Text style={styles.buttonSecondaryText}>Cancel</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[styles.button, styles.buttonPrimary]}
+                  onPress={handleDumpSiteSelected}
+                >
+                  <Text style={styles.buttonPrimaryText}>Navigate</Text>
                 </TouchableOpacity>
               </View>
             </ScrollView>
