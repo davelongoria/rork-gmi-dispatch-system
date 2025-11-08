@@ -33,7 +33,9 @@ import * as ImagePicker from 'expo-image-picker';
 import type { Job } from '@/types';
 
 export default function NavigateScreen() {
-  const { jobId, destination } = useLocalSearchParams();
+  const params = useLocalSearchParams();
+  const jobId = Array.isArray(params.jobId) ? params.jobId[0] : params.jobId;
+  const destination = Array.isArray(params.destination) ? params.destination[0] : params.destination;
   const { user } = useAuth();
   const { 
     jobs, 
@@ -66,11 +68,22 @@ export default function NavigateScreen() {
   const [manualDumpAddress, setManualDumpAddress] = useState<string>('');
   const [isNavigating, setIsNavigating] = useState<boolean>(false);
 
+  useEffect(() => {
+    console.log('Navigate screen params:', { jobId, destination });
+    console.log('Job found:', job ? 'yes' : 'no');
+    console.log('Route found:', route ? 'yes' : 'no');
+    if (jobId) {
+      console.log('Looking for job with ID:', jobId);
+      console.log('Available jobs:', jobs.map(j => ({ id: j.id, status: j.status })));
+    }
+  }, [jobId, destination, job, route, jobs]);
+
   if (!job || !route) {
     return (
       <View style={styles.container}>
         <Stack.Screen options={{ title: 'Navigation' }} />
         <Text style={styles.errorText}>Job not found</Text>
+        <Text style={styles.errorText}>Job ID: {String(jobId)}</Text>
       </View>
     );
   }
