@@ -467,25 +467,15 @@ export default function RouteDetailsScreen() {
   };
 
   const handleGetDirectionsToDump = (job?: Job) => {
-    const dumpSiteId = job?.dumpSiteId || route.dumpSiteEndId;
-    
-    if (!dumpSiteId) {
-      Alert.alert('Error', 'No dump site assigned');
-      return;
-    }
-    
-    const dumpSite = dumpSites.find(d => d.id === dumpSiteId);
-    if (!dumpSite) {
-      Alert.alert('Error', 'Dump site not found');
+    if (!job) {
+      Alert.alert('Error', 'No job selected');
       return;
     }
 
-    if (job) {
-      router.push({
-        pathname: '/driver/navigate',
-        params: { jobId: job.id, destination: 'dump' }
-      });
-    }
+    router.push({
+      pathname: '/driver/navigate',
+      params: { jobId: job.id, destination: 'dump' }
+    });
   };
 
   const handleMoveJobUp = async (index: number) => {

@@ -76,6 +76,13 @@ export default function NavigateScreen() {
       console.log('Looking for job with ID:', jobId);
       console.log('Available jobs:', jobs.map(j => ({ id: j.id, status: j.status })));
     }
+    
+    if (destination === 'dump' && job && route) {
+      console.log('Destination is dump, opening dump selection modal');
+      const dumpSiteId = job.dumpSiteId || route.dumpSiteEndId || '';
+      setSelectedDumpSiteId(dumpSiteId);
+      setShowDumpSelectionModal(true);
+    }
   }, [jobId, destination, job, route, jobs]);
 
   if (!job || !route) {
@@ -183,6 +190,7 @@ export default function NavigateScreen() {
   };
 
   const handleCompleteJob = async () => {
+    // @ts-ignore - Alert.prompt typing doesn't support async callbacks
     Alert.prompt(
       'Complete Job',
       'Enter current odometer reading:',
@@ -306,6 +314,7 @@ export default function NavigateScreen() {
   };
 
   const handleDryRun = () => {
+    // @ts-ignore - Alert.prompt typing doesn't support async callbacks
     Alert.prompt(
       'Dry Run',
       'Enter notes for dry run (container empty or not present):',
