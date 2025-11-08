@@ -77,9 +77,9 @@ export default function NavigateScreen() {
       console.log('Available jobs:', jobs.map(j => ({ id: j.id, status: j.status })));
     }
     
-    if (destination === 'dump' && job && route) {
+    if (destination === 'dump') {
       console.log('Destination is dump, opening dump selection modal');
-      const dumpSiteId = job.dumpSiteId || route.dumpSiteEndId || '';
+      const dumpSiteId = job?.dumpSiteId || route?.dumpSiteEndId || '';
       setSelectedDumpSiteId(dumpSiteId);
       setTimeout(() => {
         setShowDumpSelectionModal(true);
@@ -88,6 +88,148 @@ export default function NavigateScreen() {
   }, [jobId, destination, job, route, jobs]);
 
   if (!job || !route) {
+    if (destination === 'dump' && showDumpSelectionModal) {
+      return (
+        <View style={styles.container}>
+          <Stack.Screen options={{ title: 'Select Dump Location' }} />
+          <Modal
+            visible={showDumpSelectionModal}
+            animationType="slide"
+            transparent={false}
+            onRequestClose={() => {
+              setShowDumpSelectionModal(false);
+              router.back();
+            }}
+          >
+            <View style={[styles.container, { paddingTop: 60 }]}>
+              <View style={styles.modalHeader}>
+                <Text style={styles.modalTitle}>Select Dump Location</Text>
+                <TouchableOpacity onPress={() => {
+                  setShowDumpSelectionModal(false);
+                  router.back();
+                }}>
+                  <X size={24} color={Colors.text} />
+                </TouchableOpacity>
+              </View>
+
+              <ScrollView style={styles.form}>
+                <Text style={styles.inputLabel}>Choose from available dump sites:</Text>
+                {dumpSites.filter(d => d.active).map(dumpSite => (
+                  <TouchableOpacity
+                    key={dumpSite.id}
+                    style={[
+                      styles.selectionItem,
+                      selectedDumpSiteId === dumpSite.id && styles.selectionItemSelected,
+                    ]}
+                    onPress={() => {
+                      setSelectedDumpSiteId(dumpSite.id);
+                      setManualDumpAddress('');
+                    }}
+                  >
+                    <Text
+                      style={[
+                        styles.selectionText,
+                        selectedDumpSiteId === dumpSite.id && styles.selectionTextSelected,
+                      ]}
+                    >
+                      {dumpSite.name}
+                    </Text>
+                    <Text style={styles.selectionSubtext}>{dumpSite.address}</Text>
+                  </TouchableOpacity>
+                ))}
+
+                <Text style={[styles.inputLabel, { marginTop: 20 }]}>Or enter a manual address:</Text>
+                <TouchableOpacity
+                  style={[
+                    styles.selectionItem,
+                    selectedDumpSiteId === 'manual' && styles.selectionItemSelected,
+                  ]}
+                  onPress={() => {
+                    setSelectedDumpSiteId('manual');
+                  }}
+                >
+                  <Text
+                    style={[
+                      styles.selectionText,
+                      selectedDumpSiteId === 'manual' && styles.selectionTextSelected,
+                    ]}
+                  >
+                    Manual Address
+                  </Text>
+                </TouchableOpacity>
+                
+                {selectedDumpSiteId === 'manual' && (
+                  <TextInput
+                    style={[styles.input, styles.textArea]}
+                    value={manualDumpAddress}
+                    onChangeText={setManualDumpAddress}
+                    placeholder="Enter dump address"
+                    placeholderTextColor={Colors.textSecondary}
+                    multiline
+                    numberOfLines={3}
+                    autoFocus
+                  />
+                )}
+
+                <View style={styles.buttonRow}>
+                  <TouchableOpacity
+                    style={[styles.button, styles.buttonSecondary]}
+                    onPress={() => {
+                      setShowDumpSelectionModal(false);
+                      setSelectedDumpSiteId('');
+                      setManualDumpAddress('');
+                      router.back();
+                    }}
+                  >
+                    <Text style={styles.buttonSecondaryText}>Cancel</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={[styles.button, styles.buttonPrimary]}
+                    onPress={() => {
+                      let address = '';
+                      
+                      if (selectedDumpSiteId === 'manual') {
+                        if (!manualDumpAddress.trim()) {
+                          Alert.alert('Error', 'Please enter a dump address');
+                          return;
+                        }
+                        address = manualDumpAddress.trim();
+                      } else if (selectedDumpSiteId) {
+                        const dumpSite = dumpSites.find(d => d.id === selectedDumpSiteId);
+                        if (!dumpSite) {
+                          Alert.alert('Error', 'Dump site not found');
+                          return;
+                        }
+                        address = dumpSite.address;
+                      } else {
+                        Alert.alert('Error', 'Please select a dump site or enter a manual address');
+                        return;
+                      }
+
+                      setShowDumpSelectionModal(false);
+                      
+                      const encodedAddress = encodeURIComponent(address);
+                      if (Platform.OS === 'ios') {
+                        Linking.openURL(`maps://maps.apple.com/?daddr=${encodedAddress}`);
+                      } else {
+                        Linking.openURL(`google.navigation:q=${encodedAddress}`);
+                      }
+                      
+                      setTimeout(() => {
+                        router.back();
+                      }, 500);
+                    }}
+                  >
+                    <Text style={styles.buttonPrimaryText}>Navigate</Text>
+                  </TouchableOpacity>
+                </View>
+              </ScrollView>
+            </View>
+          </Modal>
+        </View>
+      );
+    }
+    
     return (
       <View style={styles.container}>
         <Stack.Screen options={{ title: 'Navigation' }} />
