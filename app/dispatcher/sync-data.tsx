@@ -35,6 +35,14 @@ const STORAGE_KEYS = {
   DISPATCHER_SETTINGS: '@gmi_dispatcher_settings',
   REPORTS: '@gmi_reports',
   RECURRING_JOBS: '@gmi_recurring_jobs',
+  COMMERCIAL_ROUTES: '@gmi_commercial_routes',
+  COMMERCIAL_STOPS: '@gmi_commercial_stops',
+  COMPANIES: '@gmi_companies',
+  RESIDENTIAL_CUSTOMERS: '@gmi_residential_customers',
+  RESIDENTIAL_ROUTES: '@gmi_residential_routes',
+  RESIDENTIAL_STOPS: '@gmi_residential_stops',
+  CONTAINER_ROUTES: '@gmi_container_routes',
+  CONTAINER_JOBS: '@gmi_container_jobs',
   LAST_SYNC: '@gmi_last_sync',
 };
 
@@ -99,7 +107,9 @@ export default function SyncDataScreen() {
         driversData, trucksData, dumpSitesData, yardsData, customersData,
         jobsData, routesData, timeLogsData, dvirsData, fuelLogsData,
         dumpTicketsData, messagesData, gpsData, mileageLogsData, settingsData,
-        reportsData, recurringJobsData
+        reportsData, recurringJobsData, commercialRoutesData, commercialStopsData,
+        companiesData, residentialCustomersData, residentialRoutesData,
+        residentialStopsData, containerRoutesData, containerJobsData
       ] = await Promise.all([
         AsyncStorage.getItem(STORAGE_KEYS.DRIVERS),
         AsyncStorage.getItem(STORAGE_KEYS.TRUCKS),
@@ -118,6 +128,14 @@ export default function SyncDataScreen() {
         AsyncStorage.getItem(STORAGE_KEYS.DISPATCHER_SETTINGS),
         AsyncStorage.getItem(STORAGE_KEYS.REPORTS),
         AsyncStorage.getItem(STORAGE_KEYS.RECURRING_JOBS),
+        AsyncStorage.getItem(STORAGE_KEYS.COMMERCIAL_ROUTES),
+        AsyncStorage.getItem(STORAGE_KEYS.COMMERCIAL_STOPS),
+        AsyncStorage.getItem(STORAGE_KEYS.COMPANIES),
+        AsyncStorage.getItem(STORAGE_KEYS.RESIDENTIAL_CUSTOMERS),
+        AsyncStorage.getItem(STORAGE_KEYS.RESIDENTIAL_ROUTES),
+        AsyncStorage.getItem(STORAGE_KEYS.RESIDENTIAL_STOPS),
+        AsyncStorage.getItem(STORAGE_KEYS.CONTAINER_ROUTES),
+        AsyncStorage.getItem(STORAGE_KEYS.CONTAINER_JOBS),
       ]);
 
       const payload: any = {};
@@ -173,6 +191,30 @@ export default function SyncDataScreen() {
       if (recurringJobsData && recurringJobsData !== 'null') {
         payload.recurringJobs = JSON.parse(recurringJobsData);
       }
+      if (commercialRoutesData && commercialRoutesData !== 'null') {
+        payload.commercialRoutes = JSON.parse(commercialRoutesData);
+      }
+      if (commercialStopsData && commercialStopsData !== 'null') {
+        payload.commercialStops = JSON.parse(commercialStopsData);
+      }
+      if (companiesData && companiesData !== 'null') {
+        payload.companies = JSON.parse(companiesData);
+      }
+      if (residentialCustomersData && residentialCustomersData !== 'null') {
+        payload.residentialCustomers = JSON.parse(residentialCustomersData);
+      }
+      if (residentialRoutesData && residentialRoutesData !== 'null') {
+        payload.residentialRoutes = JSON.parse(residentialRoutesData);
+      }
+      if (residentialStopsData && residentialStopsData !== 'null') {
+        payload.residentialStops = JSON.parse(residentialStopsData);
+      }
+      if (containerRoutesData && containerRoutesData !== 'null') {
+        payload.containerRoutes = JSON.parse(containerRoutesData);
+      }
+      if (containerJobsData && containerJobsData !== 'null') {
+        payload.containerJobs = JSON.parse(containerJobsData);
+      }
 
       const logEntries: string[] = [
         'Data collected from device:',
@@ -192,6 +234,14 @@ export default function SyncDataScreen() {
         `- Mileage Logs: ${payload.mileageLogs?.length || 0}`,
         `- Reports: ${payload.reports?.length || 0}`,
         `- Recurring Jobs: ${payload.recurringJobs?.length || 0}`,
+        `- Commercial Routes: ${payload.commercialRoutes?.length || 0}`,
+        `- Commercial Stops: ${payload.commercialStops?.length || 0}`,
+        `- Companies: ${payload.companies?.length || 0}`,
+        `- Residential Customers: ${payload.residentialCustomers?.length || 0}`,
+        `- Residential Routes: ${payload.residentialRoutes?.length || 0}`,
+        `- Residential Stops: ${payload.residentialStops?.length || 0}`,
+        `- Container Routes: ${payload.containerRoutes?.length || 0}`,
+        `- Container Jobs: ${payload.containerJobs?.length || 0}`,
       ];
       setUploadLog(logEntries);
       console.log('Uploading local data to backend:', Object.keys(payload));
@@ -245,6 +295,14 @@ export default function SyncDataScreen() {
         `- Dump Sites: ${data.dumpSites?.length || 0}`,
         `- Jobs: ${data.jobs?.length || 0}`,
         `- Routes: ${data.routes?.length || 0}`,
+        `- Commercial Routes: ${data.commercialRoutes?.length || 0}`,
+        `- Commercial Stops: ${data.commercialStops?.length || 0}`,
+        `- Companies: ${data.companies?.length || 0}`,
+        `- Residential Customers: ${data.residentialCustomers?.length || 0}`,
+        `- Residential Routes: ${data.residentialRoutes?.length || 0}`,
+        `- Residential Stops: ${data.residentialStops?.length || 0}`,
+        `- Container Routes: ${data.containerRoutes?.length || 0}`,
+        `- Container Jobs: ${data.containerJobs?.length || 0}`,
       ];
       setDownloadLog(logEntries);
       
@@ -266,6 +324,14 @@ export default function SyncDataScreen() {
         AsyncStorage.setItem(STORAGE_KEYS.DISPATCHER_SETTINGS, JSON.stringify(data.dispatcherSettings)),
         AsyncStorage.setItem(STORAGE_KEYS.REPORTS, JSON.stringify(data.reports || [])),
         AsyncStorage.setItem(STORAGE_KEYS.RECURRING_JOBS, JSON.stringify(data.recurringJobs || [])),
+        AsyncStorage.setItem(STORAGE_KEYS.COMMERCIAL_ROUTES, JSON.stringify(data.commercialRoutes || [])),
+        AsyncStorage.setItem(STORAGE_KEYS.COMMERCIAL_STOPS, JSON.stringify(data.commercialStops || [])),
+        AsyncStorage.setItem(STORAGE_KEYS.COMPANIES, JSON.stringify(data.companies || [])),
+        AsyncStorage.setItem(STORAGE_KEYS.RESIDENTIAL_CUSTOMERS, JSON.stringify(data.residentialCustomers || [])),
+        AsyncStorage.setItem(STORAGE_KEYS.RESIDENTIAL_ROUTES, JSON.stringify(data.residentialRoutes || [])),
+        AsyncStorage.setItem(STORAGE_KEYS.RESIDENTIAL_STOPS, JSON.stringify(data.residentialStops || [])),
+        AsyncStorage.setItem(STORAGE_KEYS.CONTAINER_ROUTES, JSON.stringify(data.containerRoutes || [])),
+        AsyncStorage.setItem(STORAGE_KEYS.CONTAINER_JOBS, JSON.stringify(data.containerJobs || [])),
         AsyncStorage.setItem(STORAGE_KEYS.LAST_SYNC, new Date().toISOString()),
       ]);
       
