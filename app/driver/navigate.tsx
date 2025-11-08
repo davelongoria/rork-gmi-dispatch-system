@@ -81,7 +81,9 @@ export default function NavigateScreen() {
       console.log('Destination is dump, opening dump selection modal');
       const dumpSiteId = job.dumpSiteId || route.dumpSiteEndId || '';
       setSelectedDumpSiteId(dumpSiteId);
-      setShowDumpSelectionModal(true);
+      setTimeout(() => {
+        setShowDumpSelectionModal(true);
+      }, 100);
     }
   }, [jobId, destination, job, route, jobs]);
 
@@ -89,8 +91,36 @@ export default function NavigateScreen() {
     return (
       <View style={styles.container}>
         <Stack.Screen options={{ title: 'Navigation' }} />
-        <Text style={styles.errorText}>Job not found</Text>
-        <Text style={styles.errorText}>Job ID: {String(jobId)}</Text>
+        <View style={{ padding: 20 }}>
+          <Text style={styles.errorText}>Job not found</Text>
+          <Text style={styles.errorText}>Job ID: {String(jobId)}</Text>
+          <Text style={[styles.errorText, { fontSize: 14, marginTop: 20 }]}>
+            Debug Info:
+          </Text>
+          <Text style={[styles.errorText, { fontSize: 12, marginTop: 10 }]}>
+            Total jobs available: {jobs.length}
+          </Text>
+          <Text style={[styles.errorText, { fontSize: 12, marginTop: 5 }]}>
+            Looking for: {String(jobId)}
+          </Text>
+          <Text style={[styles.errorText, { fontSize: 12, marginTop: 5 }]}>
+            Destination: {String(destination)}
+          </Text>
+          <TouchableOpacity
+            style={{
+              backgroundColor: Colors.primary,
+              padding: 16,
+              borderRadius: 8,
+              marginTop: 20,
+              alignItems: 'center',
+            }}
+            onPress={() => router.back()}
+          >
+            <Text style={{ color: Colors.background, fontSize: 16, fontWeight: '600' }}>
+              Go Back
+            </Text>
+          </TouchableOpacity>
+        </View>
       </View>
     );
   }
