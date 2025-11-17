@@ -370,7 +370,7 @@ export default function NavigateScreen() {
         { text: 'Cancel', style: 'cancel' },
         {
           text: 'Complete',
-          onPress: async (odometerText) => {
+          onPress: async (odometerText: string) => {
             const odometer = odometerText ? parseFloat(odometerText) : undefined;
             
             await updateJob(job.id, {
@@ -494,7 +494,7 @@ export default function NavigateScreen() {
         { text: 'Cancel', style: 'cancel' },
         {
           text: 'Complete as Dry Run',
-          onPress: async (notes) => {
+          onPress: async (notes: string) => {
             await updateJob(job.id, {
               status: 'COMPLETED',
               completedAt: new Date().toISOString(),
